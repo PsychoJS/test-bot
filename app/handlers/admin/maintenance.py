@@ -34,53 +34,53 @@ async def show_maintenance_panel(callback: types.CallbackQuery, db_user: User, d
         rw_service = RemnaWaveService()
         panel_status = await rw_service.get_panel_status_summary()
     except Exception as e:
-        logger.error('Ошибка получения статуса панели', error=e)
-        panel_status = {'description': '❓ Не удалось проверить', 'has_issues': True}
+        logger.error('Error retrieving panel status', error=e)
+        panel_status = {'description': '❓ بررسی ناموفق بود', 'has_issues': True}
 
     status_emoji = '🔧' if status_info['is_active'] else '✅'
-    status_text = 'Включен' if status_info['is_active'] else 'Выключен'
+    status_text = 'فعال' if status_info['is_active'] else 'غیرفعال'
 
     api_emoji = '✅' if status_info['api_status'] else '❌'
-    api_text = 'Доступно' if status_info['api_status'] else 'Недоступно'
+    api_text = 'در دسترس' if status_info['api_status'] else 'در دسترس نیست'
 
     monitoring_emoji = '🔄' if status_info['monitoring_active'] else '⏹️'
-    monitoring_text = 'Запущен' if status_info['monitoring_active'] else 'Остановлен'
+    monitoring_text = 'در حال اجرا' if status_info['monitoring_active'] else 'متوقف'
 
     enabled_info = ''
     if status_info['is_active'] and status_info['enabled_at']:
         enabled_time = status_info['enabled_at'].strftime('%d.%m.%Y %H:%M:%S')
-        enabled_info = f'\n📅 <b>Включен:</b> {enabled_time}'
+        enabled_info = f'\n📅 <b>فعال شده در:</b> {enabled_time}'
         if status_info['reason']:
-            enabled_info += f'\n📝 <b>Причина:</b> {status_info["reason"]}'
+            enabled_info += f'\n📝 <b>دلیل:</b> {status_info["reason"]}'
 
     last_check_info = ''
     if status_info['last_check']:
         last_check_time = status_info['last_check'].strftime('%H:%M:%S')
-        last_check_info = f'\n🕐 <b>Последняя проверка:</b> {last_check_time}'
+        last_check_info = f'\n🕐 <b>آخرین بررسی:</b> {last_check_time}'
 
     failures_info = ''
     if status_info['consecutive_failures'] > 0:
-        failures_info = f'\n⚠️ <b>Неудачных проверок подряд:</b> {status_info["consecutive_failures"]}'
+        failures_info = f'\n⚠️ <b>بررسی‌های ناموفق متوالی:</b> {status_info["consecutive_failures"]}'
 
-    panel_info = f'\n🌐 <b>Панель Remnawave:</b> {panel_status["description"]}'
+    panel_info = f'\n🌐 <b>پنل Remnawave:</b> {panel_status["description"]}'
     if panel_status.get('response_time'):
-        panel_info += f'\n⚡ <b>Время отклика:</b> {panel_status["response_time"]}с'
+        panel_info += f'\n⚡ <b>زمان پاسخ:</b> {panel_status["response_time"]}s'
 
     message_text = f"""
-🔧 <b>Управление техническими работами</b>
+🔧 <b>مدیریت نگهداری سیستم</b>
 
-{status_emoji} <b>Режим техработ:</b> {status_text}
+{status_emoji} <b>حالت نگهداری:</b> {status_text}
 {api_emoji} <b>API Remnawave:</b> {api_text}
-{monitoring_emoji} <b>Мониторинг:</b> {monitoring_text}
-🛠️ <b>Автозапуск мониторинга:</b> {'Включен' if status_info['monitoring_configured'] else 'Отключен'}
-⏱️ <b>Интервал проверки:</b> {status_info['check_interval']}с
-🤖 <b>Автовключение:</b> {'Включено' if status_info['auto_enable_configured'] else 'Отключено'}
+{monitoring_emoji} <b>پایش:</b> {monitoring_text}
+🛠️ <b>راه‌اندازی خودکار پایش:</b> {'فعال' if status_info['monitoring_configured'] else 'غیرفعال'}
+⏱️ <b>بازه بررسی:</b> {status_info['check_interval']}s
+🤖 <b>فعال‌سازی خودکار:</b> {'فعال' if status_info['auto_enable_configured'] else 'غیرفعال'}
 {panel_info}
 {enabled_info}
 {last_check_info}
 {failures_info}
 
-ℹ️ <i>В режиме техработ обычные пользователи не могут использовать бота. Администраторы имеют полный доступ.</i>
+ℹ️ <i>در حالت نگهداری، کاربران عادی نمی‌توانند از ربات استفاده کنند. مدیران دسترسی کامل دارند.</i>
 """
 
     await callback.message.edit_text(
@@ -103,15 +103,15 @@ async def toggle_maintenance_mode(callback: types.CallbackQuery, db_user: User, 
     if is_active:
         success = await maintenance_service.disable_maintenance()
         if success:
-            await callback.answer('Режим техработ выключен', show_alert=True)
+            await callback.answer('حالت نگهداری غیرفعال شد', show_alert=True)
         else:
-            await callback.answer('Ошибка выключения режима техработ', show_alert=True)
+            await callback.answer('خطا در غیرفعال کردن حالت نگهداری', show_alert=True)
     else:
         await state.set_state(MaintenanceStates.waiting_for_reason)
         await callback.message.edit_text(
-            '🔧 <b>Включение режима техработ</b>\n\nВведите причину включения техработ или отправьте /skip для пропуска:',
+            '🔧 <b>فعال‌سازی حالت نگهداری</b>\n\nدلیل فعال‌سازی را وارد کنید یا برای رد شدن /skip ارسال کنید:',
             reply_markup=types.InlineKeyboardMarkup(
-                inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='maintenance_panel')]]
+                inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='maintenance_panel')]]
             ),
         )
 
@@ -133,20 +133,20 @@ async def process_maintenance_reason(message: types.Message, db_user: User, db: 
     success = await maintenance_service.enable_maintenance(reason=reason, auto=False)
 
     if success:
-        response_text = 'Режим техработ включен'
+        response_text = 'حالت نگهداری فعال شد'
         if reason:
-            response_text += f'\nПричина: {html.escape(reason)}'
+            response_text += f'\nدلیل: {html.escape(reason)}'
     else:
-        response_text = 'Ошибка включения режима техработ'
+        response_text = 'خطا در فعال‌سازی حالت نگهداری'
 
     await message.answer(response_text)
     await state.clear()
 
     maintenance_service.get_status_info()
     await message.answer(
-        'Вернуться к панели управления техработами:',
+        'بازگشت به پنل مدیریت نگهداری:',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='🔧 Панель техработ', callback_data='maintenance_panel')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='🔧 پنل نگهداری', callback_data='maintenance_panel')]]
         ),
     )
 
@@ -158,10 +158,10 @@ async def toggle_monitoring(callback: types.CallbackQuery, db_user: User, db: As
 
     if status_info['monitoring_active']:
         success = await maintenance_service.stop_monitoring()
-        message = 'Мониторинг остановлен' if success else 'Ошибка остановки мониторинга'
+        message = 'پایش متوقف شد' if success else 'خطا در توقف پایش'
     else:
         success = await maintenance_service.start_monitoring()
-        message = 'Мониторинг запущен' if success else 'Ошибка запуска мониторинга'
+        message = 'پایش آغاز شد' if success else 'خطا در راه‌اندازی پایش'
 
     await callback.answer(message, show_alert=True)
 
@@ -171,15 +171,15 @@ async def toggle_monitoring(callback: types.CallbackQuery, db_user: User, db: As
 @admin_required
 @error_handler
 async def force_api_check(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    await callback.answer('Проверка API...', show_alert=False)
+    await callback.answer('در حال بررسی API...', show_alert=False)
 
     check_result = await maintenance_service.force_api_check()
 
     if check_result['success']:
-        status_text = 'доступно' if check_result['api_available'] else 'недоступно'
-        message = f'API {status_text}\nВремя ответа: {check_result["response_time"]}с'
+        status_text = 'در دسترس' if check_result['api_available'] else 'در دسترس نیست'
+        message = f'API {status_text}\nزمان پاسخ: {check_result["response_time"]}s'
     else:
-        message = f'Ошибка проверки: {check_result.get("error", "Неизвестная ошибка")}'
+        message = f'خطا در بررسی: {check_result.get("error", "خطای ناشناخته")}'
 
     await callback.message.answer(message)
 
@@ -189,7 +189,7 @@ async def force_api_check(callback: types.CallbackQuery, db_user: User, db: Asyn
 @admin_required
 @error_handler
 async def check_panel_status(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    await callback.answer('Проверка статуса панели...', show_alert=False)
+    await callback.answer('در حال بررسی وضعیت پنل...', show_alert=False)
 
     try:
         from app.services.remnawave_service import RemnaWaveService
@@ -199,32 +199,32 @@ async def check_panel_status(callback: types.CallbackQuery, db_user: User, db: A
         status_data = await rw_service.check_panel_health()
 
         status_text = {
-            'online': '🟢 Панель работает нормально',
-            'offline': '🔴 Панель недоступна',
-            'degraded': '🟡 Панель работает со сбоями',
-        }.get(status_data['status'], '❓ Статус неизвестен')
+            'online': '🟢 پنل به درستی کار می‌کند',
+            'offline': '🔴 پنل در دسترس نیست',
+            'degraded': '🟡 پنل با اختلال کار می‌کند',
+        }.get(status_data['status'], '❓ وضعیت نامشخص')
 
         message_parts = [
-            '🌐 <b>Статус панели Remnawave</b>\n',
+            '🌐 <b>وضعیت پنل Remnawave</b>\n',
             f'{status_text}',
-            f'⚡ Время отклика: {status_data.get("response_time", 0)}с',
-            f'👥 Пользователей онлайн: {status_data.get("users_online", 0)}',
-            f'🖥️ Нод онлайн: {status_data.get("nodes_online", 0)}/{status_data.get("total_nodes", 0)}',
+            f'⚡ زمان پاسخ: {status_data.get("response_time", 0)}s',
+            f'👥 کاربران آنلاین: {status_data.get("users_online", 0)}',
+            f'🖥️ نودهای آنلاین: {status_data.get("nodes_online", 0)}/{status_data.get("total_nodes", 0)}',
         ]
 
         attempts_used = status_data.get('attempts_used')
         if attempts_used:
-            message_parts.append(f'🔁 Попыток проверки: {attempts_used}')
+            message_parts.append(f'🔁 تعداد تلاش‌های بررسی: {attempts_used}')
 
         if status_data.get('api_error'):
-            message_parts.append(f'❌ Ошибка: {status_data["api_error"][:100]}')
+            message_parts.append(f'❌ خطا: {status_data["api_error"][:100]}')
 
         message = '\n'.join(message_parts)
 
         await callback.message.answer(message, parse_mode='HTML')
 
     except Exception as e:
-        await callback.message.answer(f'❌ Ошибка проверки статуса: {e!s}')
+        await callback.message.answer(f'❌ خطا در بررسی وضعیت: {e!s}')
 
 
 @admin_required
@@ -235,19 +235,19 @@ async def send_manual_notification(callback: types.CallbackQuery, db_user: User,
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                types.InlineKeyboardButton(text='🟢 Онлайн', callback_data='manual_notify_online'),
-                types.InlineKeyboardButton(text='🔴 Офлайн', callback_data='manual_notify_offline'),
+                types.InlineKeyboardButton(text='🟢 آنلاین', callback_data='manual_notify_online'),
+                types.InlineKeyboardButton(text='🔴 آفلاین', callback_data='manual_notify_offline'),
             ],
             [
-                types.InlineKeyboardButton(text='🟡 Проблемы', callback_data='manual_notify_degraded'),
-                types.InlineKeyboardButton(text='🔧 Обслуживание', callback_data='manual_notify_maintenance'),
+                types.InlineKeyboardButton(text='🟡 اختلال', callback_data='manual_notify_degraded'),
+                types.InlineKeyboardButton(text='🔧 نگهداری', callback_data='manual_notify_maintenance'),
             ],
-            [types.InlineKeyboardButton(text='❌ Отмена', callback_data='maintenance_panel')],
+            [types.InlineKeyboardButton(text='❌ لغو', callback_data='maintenance_panel')],
         ]
     )
 
     await callback.message.edit_text(
-        '📢 <b>Ручная отправка уведомления</b>\n\nВыберите статус для уведомления:', reply_markup=keyboard
+        '📢 <b>ارسال دستی اطلاعیه</b>\n\nوضعیت مورد نظر را انتخاب کنید:', reply_markup=keyboard
     )
 
 
@@ -263,23 +263,23 @@ async def handle_manual_notification(callback: types.CallbackQuery, db_user: Use
 
     status = status_map.get(callback.data)
     if not status:
-        await callback.answer('Неизвестный статус')
+        await callback.answer('وضعیت ناشناخته')
         return
 
     await state.update_data(notification_status=status)
 
     status_names = {
-        'online': '🟢 Онлайн',
-        'offline': '🔴 Офлайн',
-        'degraded': '🟡 Проблемы',
-        'maintenance': '🔧 Обслуживание',
+        'online': '🟢 آنلاین',
+        'offline': '🔴 آفلاین',
+        'degraded': '🟡 اختلال',
+        'maintenance': '🔧 نگهداری',
     }
 
     await callback.message.edit_text(
-        f'📢 <b>Отправка уведомления: {status_names[status]}</b>\n\n'
-        f'Введите сообщение для уведомления или отправьте /skip для отправки без дополнительного текста:',
+        f'📢 <b>ارسال اطلاعیه: {status_names[status]}</b>\n\n'
+        f'پیام اطلاعیه را وارد کنید یا برای ارسال بدون متن اضافی /skip ارسال کنید:',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='maintenance_panel')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='maintenance_panel')]]
         ),
     )
 
@@ -296,7 +296,7 @@ async def process_notification_message(message: types.Message, db_user: User, db
     status = data.get('notification_status')
 
     if not status:
-        await message.answer('Ошибка: статус не выбран')
+        await message.answer('خطا: وضعیت انتخاب نشده')
         await state.clear()
         return
 
@@ -312,20 +312,20 @@ async def process_notification_message(message: types.Message, db_user: User, db
         success = await rw_service.send_manual_status_notification(message.bot, status, notification_message)
 
         if success:
-            await message.answer('✅ Уведомление отправлено')
+            await message.answer('✅ اطلاعیه ارسال شد')
         else:
-            await message.answer('❌ Ошибка отправки уведомления')
+            await message.answer('❌ خطا در ارسال اطلاعیه')
 
     except Exception as e:
-        logger.error('Ошибка отправки ручного уведомления', error=e)
-        await message.answer(f'❌ Ошибка: {e!s}')
+        logger.error('Error sending manual notification', error=e)
+        await message.answer(f'❌ خطا: {e!s}')
 
     await state.clear()
 
     await message.answer(
-        'Вернуться к панели техработ:',
+        'بازگشت به پنل نگهداری:',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='🔧 Панель техработ', callback_data='maintenance_panel')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='🔧 پنل نگهداری', callback_data='maintenance_panel')]]
         ),
     )
 

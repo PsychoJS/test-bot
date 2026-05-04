@@ -23,36 +23,36 @@ logger = structlog.get_logger(__name__)
 
 def validate_html_tags(text: str) -> tuple[bool, str]:
     """
-    Проверяет HTML-теги в тексте на соответствие требованиям Telegram API.
+    Validates HTML tags in text against Telegram API requirements.
 
     Args:
-        text: Текст для проверки
+        text: Text to validate
 
     Returns:
-        Кортеж из (валидно ли, сообщение об ошибке или None)
+        Tuple of (is_valid, error_message or None)
     """
-    # Поддерживаемые теги в parse_mode="HTML" для Telegram API
+    # Supported tags in parse_mode="HTML" for Telegram API
     allowed_tags = {
         'b',
-        'strong',  # жирный
+        'strong',  # bold
         'i',
-        'em',  # курсив
+        'em',  # italic
         'u',
-        'ins',  # подчеркнуто
+        'ins',  # underline
         's',
         'strike',
-        'del',  # зачеркнуто
-        'code',  # моноширинный для коротких фрагментов
-        'pre',  # моноширинный блок кода
-        'a',  # ссылки
+        'del',  # strikethrough
+        'code',  # monospace for short fragments
+        'pre',  # monospace code block
+        'a',  # links
     }
 
-    # Убираем плейсхолдеры из строки перед проверкой тегов
-    # Плейсхолдеры имеют формат {ключ}, и не являются тегами
+    # Remove placeholders from string before checking tags
+    # Placeholders have format {key} and are not tags
     placeholder_pattern = r'\{[^{}]+\}'
     clean_text = re.sub(placeholder_pattern, '', text)
 
-    # Находим все открывающие и закрывающие теги
+    # Find all opening and closing tags
     tag_pattern = r'<(/?)([a-zA-Z]+)(\s[^>]*)?>'
     tags_with_pos = [
         (m.group(1), m.group(2), m.group(3), m.start(), m.end()) for m in re.finditer(tag_pattern, clean_text)
@@ -61,35 +61,35 @@ def validate_html_tags(text: str) -> tuple[bool, str]:
     for closing, tag, attrs, start_pos, end_pos in tags_with_pos:
         tag_lower = tag.lower()
 
-        # Проверяем, является ли тег поддерживаемым
+        # Check if the tag is supported
         if tag_lower not in allowed_tags:
             return (
                 False,
                 f'تگ HTML پشتیبانی نمی‌شود: <{tag}>. فقط از تگ‌های زیر استفاده کنید: {", ".join(sorted(allowed_tags))}',
             )
 
-        # Проверяем атрибуты для тега <a>
+        # Check attributes for <a> tag
         if tag_lower == 'a':
             if closing:
-                continue  # Для закрывающего тега не нужно проверять атрибуты
+                continue  # No need to check attributes for closing tag
             if not attrs:
                 return False, "تگ <a> باید دارای ویژگی href باشد، مثال: <a href='URL'>لینک</a>"
 
-            # Проверяем, что есть атрибут href
+            # Check that href attribute is present
             if 'href=' not in attrs.lower():
                 return False, "تگ <a> باید دارای ویژگی href باشد، مثال: <a href='URL'>لینک</a>"
 
-            # Проверяем формат URL
+            # Check URL format
             href_match = re.search(r'href\s*=\s*[\'"]([^\'"]+)[\'"]', attrs, re.IGNORECASE)
             if href_match:
                 url = href_match.group(1)
-                # Проверяем, что URL начинается с поддерживаемой схемы
+                # Check that URL starts with a supported scheme
                 if not re.match(r'^https?://|^tg://', url, re.IGNORECASE):
                     return False, f'URL در تگ <a> باید با http://، https:// یا tg:// شروع شود. مقدار یافت‌شده: {url}'
             else:
                 return False, 'نتوانستیم URL را از ویژگی href تگ <a> استخراج کنیم'
 
-    # Проверяем парность тегов с использованием стека
+    # Check tag pairing using a stack
     stack = []
     for closing, tag, attrs, start_pos, end_pos in tags_with_pos:
         tag_lower = tag.lower()
@@ -98,7 +98,7 @@ def validate_html_tags(text: str) -> tuple[bool, str]:
             continue
 
         if closing:
-            # Это закрывающий тег
+            # This is a closing tag
             if not stack:
                 return False, f'تگ بسته‌شونده اضافی: </{tag}>'
 
@@ -106,10 +106,10 @@ def validate_html_tags(text: str) -> tuple[bool, str]:
             if last_opening_tag.lower() != tag_lower:
                 return False, f'تگ </{tag}> با تگ باز‌شونده <{last_opening_tag}> مطابقت ندارد'
         else:
-            # Это открывающий тег
+            # This is an opening tag
             stack.append(tag)
 
-    # Если остались незакрытые теги
+    # Check for unclosed tags
     if stack:
         unclosed_tags = ', '.join([f'<{tag}>' for tag in stack])
         return False, f'تگ‌های بسته‌نشده: {unclosed_tags}'
@@ -278,7 +278,7 @@ async def process_welcome_text_edit(message: types.Message, state: FSMContext, d
         await message.answer('❌ متن خیلی طولانی است! حداکثر ۴۰۰۰ کاراکتر.')
         return
 
-    # Проверяем HTML-теги на валидность
+    # Validate HTML tags
     is_valid, error_msg = validate_html_tags(new_text)
     if not is_valid:
         await message.answer(f'❌ خطا در قالب‌بندی HTML:\n\n{error_msg}')

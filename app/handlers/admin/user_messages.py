@@ -270,7 +270,7 @@ async def toggle_message_status(callback: types.CallbackQuery, db_user: User, db
 @admin_required
 @error_handler
 async def delete_message_confirm(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Подтвердить удаление сообщения"""
+    """تأیید حذف پیام"""
     try:
         message_id = int(callback.data.split(':')[1])
     except (ValueError, IndexError):

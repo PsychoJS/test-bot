@@ -26,13 +26,13 @@ from app.utils.decorators import admin_required, error_handler
 logger = structlog.get_logger(__name__)
 
 EDITABLE_FIELDS: dict[str, dict] = {
-    'prize_type': {'type': str, 'label': 'тип приза (days/balance/custom)'},
-    'prize_value': {'type': str, 'label': 'значение приза'},
-    'max_winners': {'type': int, 'min': 1, 'label': 'макс. победителей'},
-    'attempts_per_user': {'type': int, 'min': 1, 'label': 'попыток на пользователя'},
-    'times_per_day': {'type': int, 'min': 1, 'label': 'раундов в день'},
-    'schedule_times': {'type': str, 'label': 'расписание HH:MM через запятую'},
-    'cooldown_hours': {'type': int, 'min': 1, 'label': 'длительность раунда (часы)'},
+    'prize_type': {'type': str, 'label': 'نوع جایزه (days/balance/custom)'},
+    'prize_value': {'type': str, 'label': 'مقدار جایزه'},
+    'max_winners': {'type': int, 'min': 1, 'label': 'حداکثر برندگان'},
+    'attempts_per_user': {'type': int, 'min': 1, 'label': 'تلاش برای هر کاربر'},
+    'times_per_day': {'type': int, 'min': 1, 'label': 'دوره در روز'},
+    'schedule_times': {'type': str, 'label': 'برنامه زمانبندی HH:MM با کاما'},
+    'cooldown_hours': {'type': int, 'min': 1, 'label': 'مدت دوره (ساعت)'},
 }
 
 
@@ -50,31 +50,31 @@ async def show_daily_contests(
     texts = get_texts(db_user.language)
     templates = await list_templates(db, enabled_only=False)
 
-    lines = [texts.t('ADMIN_DAILY_CONTESTS_TITLE', '📆 Ежедневные конкурсы')]
+    lines = [texts.t('ADMIN_DAILY_CONTESTS_TITLE', '📆 مسابقات روزانه')]
     if not templates:
-        lines.append(texts.t('ADMIN_CONTESTS_EMPTY', 'Пока нет созданных конкурсов.'))
+        lines.append(texts.t('ADMIN_CONTESTS_EMPTY', 'هنوز مسابقه‌ای ایجاد نشده است.'))
     else:
         for tpl in templates:
             status = '🟢' if tpl.is_enabled else '⚪️'
             prize_info = f'{tpl.prize_value} ({tpl.prize_type})' if tpl.prize_type else tpl.prize_value
-            lines.append(f'{status} <b>{tpl.name}</b> (slug: {tpl.slug}) — приз {prize_info}, макс {tpl.max_winners}')
+            lines.append(f'{status} <b>{tpl.name}</b> (slug: {tpl.slug}) — جایزه {prize_info}، حداکثر {tpl.max_winners}')
 
     keyboard_rows = []
     if templates:
         keyboard_rows.append(
-            [types.InlineKeyboardButton(text='❌ Закрыть все активные раунды', callback_data='admin_daily_close_all')]
+            [types.InlineKeyboardButton(text='❌ بستن همه دوره‌های فعال', callback_data='admin_daily_close_all')]
         )
         keyboard_rows.append(
             [
                 types.InlineKeyboardButton(
-                    text='� Сбросить попытки во всех активных раундах', callback_data='admin_daily_reset_all_attempts'
+                    text='� ریست تلاش‌ها در همه دوره‌های فعال', callback_data='admin_daily_reset_all_attempts'
                 )
             ]
         )
         keyboard_rows.append(
             [
                 types.InlineKeyboardButton(
-                    text='� Запустить все активные конкурсы', callback_data='admin_daily_start_all'
+                    text='� شروع همه مسابقات فعال', callback_data='admin_daily_start_all'
                 )
             ]
         )
@@ -107,23 +107,23 @@ async def show_daily_contest(
     try:
         template_id = int(callback.data.split('_')[-1])
     except Exception:
-        await callback.answer('Некорректный id', show_alert=True)
+        await callback.answer('شناسه نامعتبر', show_alert=True)
         return
 
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'), show_alert=True)
         return
 
     lines = [
         f'🏷 <b>{tpl.name}</b> (slug: {tpl.slug})',
-        f'{texts.t("ADMIN_CONTEST_STATUS_ACTIVE", "🟢 Активен") if tpl.is_enabled else texts.t("ADMIN_CONTEST_STATUS_INACTIVE", "⚪️ Выключен")}',
-        f'Тип приза: {tpl.prize_type or "days"} | Значение: {tpl.prize_value or "1"}',
-        f'Макс победителей: {tpl.max_winners}',
-        f'Попыток/польз: {tpl.attempts_per_user}',
-        f'Раундов в день: {tpl.times_per_day}',
-        f'Расписание: {tpl.schedule_times or "-"}',
-        f'Длительность раунда: {tpl.cooldown_hours} ч.',
+        f'{texts.t("ADMIN_CONTEST_STATUS_ACTIVE", "🟢 فعال") if tpl.is_enabled else texts.t("ADMIN_CONTEST_STATUS_INACTIVE", "⚪️ غیرفعال")}',
+        f'نوع جایزه: {tpl.prize_type or "days"} | مقدار: {tpl.prize_value or "1"}',
+        f'حداکثر برندگان: {tpl.max_winners}',
+        f'تلاش/کاربر: {tpl.attempts_per_user}',
+        f'دوره در روز: {tpl.times_per_day}',
+        f'برنامه زمانی: {tpl.schedule_times or "-"}',
+        f'مدت دوره: {tpl.cooldown_hours} ساعت.',
     ]
     await callback.message.edit_text(
         '\n'.join(lines),
@@ -143,11 +143,11 @@ async def toggle_daily_contest(
     template_id = int(callback.data.split('_')[-1])
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'), show_alert=True)
         return
     tpl.is_enabled = not tpl.is_enabled
     await db.commit()
-    await callback.answer(texts.t('ADMIN_UPDATED', 'Обновлено'))
+    await callback.answer(texts.t('ADMIN_UPDATED', 'به‌روز شد'))
     await show_daily_contest(callback, db_user, db)
 
 
@@ -162,7 +162,7 @@ async def start_round_now(
     template_id = int(callback.data.split('_')[-1])
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'), show_alert=True)
         return
 
     if not tpl.is_enabled:
@@ -185,7 +185,7 @@ async def start_round_now(
         now,
         ends,
     )
-    await callback.answer(texts.t('ADMIN_ROUND_STARTED', 'Раунд запущен'), show_alert=True)
+    await callback.answer(texts.t('ADMIN_ROUND_STARTED', 'دوره شروع شد'), show_alert=True)
     await show_daily_contest(callback, db_user, db)
 
 
@@ -200,19 +200,19 @@ async def manual_start_round(
     template_id = int(callback.data.split('_')[-1])
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'), show_alert=True)
         return
 
-    # Проверяем, есть ли уже активный раунд для этого шаблона
+    # Check if an active round already exists for this template
     from app.database.crud.contest import get_active_round_by_template
 
     exists = await get_active_round_by_template(db, tpl.id)
     if exists:
-        await callback.answer(texts.t('ADMIN_ROUND_ALREADY_ACTIVE', 'Раунд уже активен.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_ROUND_ALREADY_ACTIVE', 'دوره از قبل فعال است.'), show_alert=True)
         await show_daily_contest(callback, db_user, db)
         return
 
-    # Для ручного старта не включаем конкурс, если он выключен
+    # Do not enable the contest if it is disabled (manual start)
     payload = contest_rotation_service._build_payload_for_template(tpl)  # type: ignore[attr-defined]
     now = datetime.now(UTC)
     ends = now + timedelta(hours=tpl.cooldown_hours)
@@ -224,13 +224,13 @@ async def manual_start_round(
         payload=payload,
     )
 
-    # Анонсируем всем пользователям (как тест)
+    # Announce to all users (test run)
     await contest_rotation_service._announce_round_start(  # type: ignore[attr-defined]
         tpl,
         now,
         ends,
     )
-    await callback.answer(texts.t('ADMIN_ROUND_STARTED', 'Тестовый раунд запущен'), show_alert=True)
+    await callback.answer(texts.t('ADMIN_ROUND_STARTED', 'دوره آزمایشی شروع شد'), show_alert=True)
     await show_daily_contest(callback, db_user, db)
 
 
@@ -245,11 +245,11 @@ async def prompt_edit_field(
     texts = get_texts(db_user.language)
     parts = callback.data.split('_')
     template_id = int(parts[3])
-    field = '_'.join(parts[4:])  # поле может содержать подчеркивания
+    field = '_'.join(parts[4:])  # field name may contain underscores
 
     tpl = await _get_template(db, template_id)
     if not tpl or field not in EDITABLE_FIELDS:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'), show_alert=True)
         return
 
     meta = EDITABLE_FIELDS[field]
@@ -268,7 +268,7 @@ async def prompt_edit_field(
     await callback.message.edit_text(
         texts.t(
             'ADMIN_CONTEST_FIELD_PROMPT',
-            'Введите новое значение для {label}:',
+            'مقدار جدید را برای {label} وارد کنید:',
         ).format(label=meta.get('label', field)),
         reply_markup=kb,
     )
@@ -294,7 +294,7 @@ async def process_edit_field(
 
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await message.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'))
+        await message.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'))
         await state.clear()
         return
 
@@ -308,7 +308,7 @@ async def process_edit_field(
         else:
             value = raw.strip()
     except Exception:
-        await message.answer(texts.t('ADMIN_INVALID_NUMBER', 'Некорректное число'))
+        await message.answer(texts.t('ADMIN_INVALID_NUMBER', 'عدد نامعتبر'))
         await state.clear()
         return
 
@@ -323,7 +323,7 @@ async def process_edit_field(
             ]
         ]
     )
-    await message.answer(texts.t('ADMIN_UPDATED', 'Обновлено'), reply_markup=back_kb)
+    await message.answer(texts.t('ADMIN_UPDATED', 'به‌روز شد'), reply_markup=back_kb)
     await state.clear()
 
 
@@ -339,7 +339,7 @@ async def edit_payload(
     template_id = int(callback.data.split('_')[-1])
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'), show_alert=True)
         return
 
     await state.set_state(AdminStates.editing_daily_contest_value)
@@ -356,7 +356,7 @@ async def edit_payload(
         ]
     )
     await callback.message.edit_text(
-        texts.t('ADMIN_CONTEST_PAYLOAD_PROMPT', 'Отправьте JSON payload для игры (словарь настроек):\n')
+        texts.t('ADMIN_CONTEST_PAYLOAD_PROMPT', 'JSON payload بازی را ارسال کنید (دیکشنری تنظیمات):\n')
         + f'<code>{payload_json}</code>',
         reply_markup=kb,
     )
@@ -384,13 +384,13 @@ async def process_payload(
         if not isinstance(payload, dict):
             raise ValueError
     except Exception:
-        await message.answer(texts.t('ADMIN_INVALID_JSON', 'Некорректный JSON'))
+        await message.answer(texts.t('ADMIN_INVALID_JSON', 'JSON نامعتبر'))
         await state.clear()
         return
 
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await message.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'))
+        await message.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'))
         await state.clear()
         return
 
@@ -405,7 +405,7 @@ async def process_payload(
             ]
         ]
     )
-    await message.answer(texts.t('ADMIN_UPDATED', 'Обновлено'), reply_markup=back_kb)
+    await message.answer(texts.t('ADMIN_UPDATED', 'به‌روز شد'), reply_markup=back_kb)
     await state.clear()
 
 
@@ -419,7 +419,7 @@ async def start_all_contests(
     texts = get_texts(db_user.language)
     templates = await list_templates(db, enabled_only=True)
     if not templates:
-        await callback.answer(texts.t('ADMIN_CONTESTS_EMPTY', 'Нет активных конкурсов.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTESTS_EMPTY', 'مسابقه فعالی وجود ندارد.'), show_alert=True)
         return
 
     started_count = 0
@@ -428,7 +428,7 @@ async def start_all_contests(
 
         exists = await get_active_round_by_template(db, tpl.id)
         if exists:
-            continue  # уже запущен
+            continue  # already started
 
         payload = contest_rotation_service._build_payload_for_template(tpl)  # type: ignore[attr-defined]
         now = datetime.now(UTC)
@@ -447,7 +447,7 @@ async def start_all_contests(
         )
         started_count += 1
 
-    message = f'Запущено конкурсов: {started_count}'
+    message = f'مسابقات شروع شده: {started_count}'
     await callback.answer(message, show_alert=True)
     await show_daily_contests(callback, db_user, db)
 
@@ -464,14 +464,14 @@ async def close_all_rounds(
 
     active_rounds = await get_active_rounds(db)
     if not active_rounds:
-        await callback.answer('Нет активных раундов', show_alert=True)
+        await callback.answer('دوره فعالی وجود ندارد', show_alert=True)
         return
 
     for rnd in active_rounds:
         rnd.status = 'finished'
     await db.commit()
 
-    await callback.answer(f'Закрыто раундов: {len(active_rounds)}', show_alert=True)
+    await callback.answer(f'دوره‌های بسته شده: {len(active_rounds)}', show_alert=True)
     await show_daily_contests(callback, db_user, db)
 
 
@@ -487,7 +487,7 @@ async def reset_all_attempts(
 
     active_rounds = await get_active_rounds(db)
     if not active_rounds:
-        await callback.answer('Нет активных раундов', show_alert=True)
+        await callback.answer('دوره فعالی وجود ندارد', show_alert=True)
         return
 
     total_deleted = 0
@@ -495,7 +495,7 @@ async def reset_all_attempts(
         deleted = await clear_attempts(db, rnd.id)
         total_deleted += deleted
 
-    await callback.answer(f'Попытки сброшены: {total_deleted}', show_alert=True)
+    await callback.answer(f'تلاش‌ها ریست شدند: {total_deleted}', show_alert=True)
     await show_daily_contests(callback, db_user, db)
 
 
@@ -510,18 +510,18 @@ async def reset_attempts(
     template_id = int(callback.data.split('_')[-1])
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'), show_alert=True)
         return
 
     from app.database.crud.contest import clear_attempts, get_active_round_by_template
 
     round_obj = await get_active_round_by_template(db, tpl.id)
     if not round_obj:
-        await callback.answer('Нет активного раунда', show_alert=True)
+        await callback.answer('دوره فعالی وجود ندارد', show_alert=True)
         return
 
     deleted_count = await clear_attempts(db, round_obj.id)
-    await callback.answer(f'Попытки сброшены: {deleted_count}', show_alert=True)
+    await callback.answer(f'تلاش‌ها ریست شدند: {deleted_count}', show_alert=True)
     await show_daily_contest(callback, db_user, db)
 
 
@@ -536,21 +536,21 @@ async def close_round(
     template_id = int(callback.data.split('_')[-1])
     tpl = await _get_template(db, template_id)
     if not tpl:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه پیدا نشد.'), show_alert=True)
         return
 
     from app.database.crud.contest import get_active_round_by_template
 
     round_obj = await get_active_round_by_template(db, tpl.id)
     if not round_obj:
-        await callback.answer('Нет активного раунда', show_alert=True)
+        await callback.answer('دوره فعالی وجود ندارد', show_alert=True)
         return
 
     round_obj.status = 'finished'
     await db.commit()
     await db.refresh(round_obj)
 
-    await callback.answer('Раунд закрыт', show_alert=True)
+    await callback.answer('دوره بسته شد', show_alert=True)
     await show_daily_contest(callback, db_user, db)
 
 

@@ -1,5 +1,5 @@
 """
-Обработчики команд для массовой блокировки пользователей
+هندلرهای فرمان برای مسدودسازی دسته‌جمعی کاربران
 """
 
 import structlog
@@ -20,7 +20,7 @@ logger = structlog.get_logger(__name__)
 @error_handler
 async def start_bulk_ban_process(callback: types.CallbackQuery, db_user: User, state: FSMContext):
     """
-    Начало процесса массовой блокировки пользователей
+    شروع فرایند مسدودسازی دسته‌جمعی کاربران
     """
     await callback.message.edit_text(
         '🛑 <b>مسدودسازی دسته‌جمعی کاربران</b>\n\n'
@@ -50,7 +50,7 @@ async def start_bulk_ban_process(callback: types.CallbackQuery, db_user: User, s
 @error_handler
 async def process_bulk_ban_list(message: types.Message, db_user: User, state: FSMContext, db: AsyncSession):
     """
-    Обработка списка Telegram ID и выполнение массовой блокировки
+    پردازش لیست Telegram ID ها و اجرای مسدودسازی دسته‌جمعی
     """
     if not message.text:
         await message.answer(
@@ -72,7 +72,7 @@ async def process_bulk_ban_list(message: types.Message, db_user: User, state: FS
         )
         return
 
-    # Парсим ID из текста
+    # Parsing IDs from text
     try:
         telegram_ids = await bulk_ban_service.parse_telegram_ids_from_text(input_text)
     except Exception as e:
@@ -94,7 +94,7 @@ async def process_bulk_ban_list(message: types.Message, db_user: User, state: FS
         )
         return
 
-    if len(telegram_ids) > 1000:  # Ограничение на количество ID за раз
+    if len(telegram_ids) > 1000:  # Limit on number of IDs at once
         await message.answer(
             f'❌ تعداد ID ها خیلی زیاد است ({len(telegram_ids)}). حداکثر: 1000',
             reply_markup=types.InlineKeyboardMarkup(
@@ -103,19 +103,19 @@ async def process_bulk_ban_list(message: types.Message, db_user: User, state: FS
         )
         return
 
-    # Выполняем массовую блокировку
+    # Performing bulk ban
     try:
         successfully_banned, not_found, error_ids = await bulk_ban_service.ban_users_by_telegram_ids(
             db=db,
             admin_user_id=db_user.id,
             telegram_ids=telegram_ids,
-            reason='Массовая блокировка администратором',
+            reason='مسدودسازی دسته‌جمعی توسط ادمین',
             bot=message.bot,
             notify_admin=True,
             admin_name=db_user.full_name,
         )
 
-        # Подготавливаем сообщение с результатами
+        # Preparing result message
         result_text = '✅ <b>مسدودسازی دسته‌جمعی انجام شد</b>\n\n'
         result_text += '📊 <b>نتایج:</b>\n'
         result_text += f'✅ با موفقیت مسدود شد: {successfully_banned}\n'
@@ -126,10 +126,10 @@ async def process_bulk_ban_list(message: types.Message, db_user: User, state: FS
         if successfully_banned > 0:
             result_text += f'\n🎯 درصد موفقیت: {round((successfully_banned / len(telegram_ids)) * 100, 1)}%'
 
-        # Добавляем информацию об ошибках, если есть
+        # Adding error info if any
         if error_ids:
             result_text += '\n\n⚠️ <b>Telegram ID با خطا:</b>\n'
-            result_text += f'<code>{", ".join(map(str, error_ids[:10]))}</code>'  # Показываем первые 10
+            result_text += f'<code>{", ".join(map(str, error_ids[:10]))}</code>'  # Showing first 10
             if len(error_ids) > 10:
                 result_text += f' و {len(error_ids) - 10} مورد دیگر...'
 
@@ -155,10 +155,10 @@ async def process_bulk_ban_list(message: types.Message, db_user: User, state: FS
 
 def register_bulk_ban_handlers(dp):
     """
-    Регистрация обработчиков команд для массовой блокировки
+    ثبت هندلرهای فرمان برای مسدودسازی دسته‌جمعی
     """
-    # Обработчик команды начала массовой блокировки
+    # Handler for starting bulk ban
     dp.callback_query.register(start_bulk_ban_process, lambda c: c.data == 'admin_bulk_ban_start')
 
-    # Обработчик текстового сообщения с ID для блокировки
+    # Handler for text message with IDs to ban
     dp.message.register(process_bulk_ban_list, AdminStates.waiting_for_bulk_ban_list)
