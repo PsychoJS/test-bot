@@ -143,7 +143,7 @@ async def create_backup_handler(callback: types.CallbackQuery, db_user: User, db
         parse_mode='HTML',
     )
 
-    # Создаем бекап
+    # Creating backup
     created_by_id = db_user.telegram_id or db_user.email or f'#{db_user.id}'
     success, message, file_path = await backup_service.create_backup(created_by=created_by_id, compress=True)
 
@@ -286,7 +286,7 @@ async def delete_backup_execute(callback: types.CallbackQuery, db_user: User, db
 @error_handler
 async def restore_backup_start(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
     if callback.data.startswith('backup_restore_file_'):
-        # Восстановление из конкретного файла
+        # Restoring from specific file
         filename = callback.data.replace('backup_restore_file_', '')
 
         text = '📥 <b>بازیابی از پشتیبان</b>\n\n'
@@ -350,7 +350,7 @@ async def restore_backup_execute(callback: types.CallbackQuery, db_user: User, d
 
     await callback.answer('🔄 بازیابی آغاز شد...')
 
-    # Показываем прогресс
+    # Showing progress
     action_text = 'پاک کردن و بازیابی' if clear_existing else 'بازیابی'
     progress_msg = await callback.message.edit_text(
         f'📥 <b>در حال بازیابی از پشتیبان...</b>\n\n'

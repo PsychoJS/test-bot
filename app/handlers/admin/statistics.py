@@ -168,7 +168,7 @@ async def show_revenue_statistics(callback: types.CallbackQuery, db_user: User, 
 
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
-            # [types.InlineKeyboardButton(text="📈 Период", callback_data="admin_revenue_period")],
+            # [types.InlineKeyboardButton(text="📈 Period", callback_data="admin_revenue_period")],
             [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_stats_revenue')],
             [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_statistics')],
         ]

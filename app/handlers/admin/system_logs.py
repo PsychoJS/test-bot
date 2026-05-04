@@ -40,7 +40,7 @@ def _build_logs_message(log_path: Path) -> str:
 
     try:
         content = log_path.read_text(encoding='utf-8', errors='ignore')
-    except Exception as error:  # pragma: no cover - защита от проблем чтения
+    except Exception as error:  # pragma: no cover - protection against read errors
         logger.error('Error reading log file', log_path=log_path, error=error)
         message = f'❌ <b>خطا در خواندن لاگ‌ها</b>\n\nخواندن فایل <code>{log_path}</code> ممکن نشد.'
         return message
@@ -133,7 +133,7 @@ async def download_system_logs(
             f'🧾 فایل لاگ <code>{log_path.name}</code>\n📁 مسیر: <code>{log_path}</code>\n🕒 به‌روزرسانی: {updated_at}'
         )
         await callback.message.answer_document(document=document, caption=caption, parse_mode='HTML')
-    except Exception as error:  # pragma: no cover - защита от ошибок отправки
+    except Exception as error:  # pragma: no cover - protection against send errors
         logger.error('Error sending log file', log_path=log_path, error=error)
         await callback.message.answer(
             '❌ <b>ارسال فایل لاگ ممکن نشد</b>\n\nلاگ‌های برنامه را بررسی کنید یا بعداً دوباره امتحان کنید.',
