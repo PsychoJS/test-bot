@@ -218,39 +218,39 @@ async def show_subscriptions_stats(callback: types.CallbackQuery, db_user: User,
     expired = await get_expired_subscriptions(db)
 
     text = f"""
-📊 <b>Детальная статистика подписок</b>
+📊 <b>آمار تفصیلی اشتراک‌ها</b>
 
-<b>📱 Общая информация:</b>
-• Всего подписок: {stats['total_subscriptions']}
-• Активных: {stats['active_subscriptions']}
-• Неактивных: {stats['total_subscriptions'] - stats['active_subscriptions']}
+<b>📱 اطلاعات کلی:</b>
+• مجموع اشتراک‌ها: {stats['total_subscriptions']}
+• فعال: {stats['active_subscriptions']}
+• غیرفعال: {stats['total_subscriptions'] - stats['active_subscriptions']}
 
-<b>💎 По типам:</b>
-• Платных: {stats['paid_subscriptions']}
-• Триальных: {stats['trial_subscriptions']}
+<b>💎 بر اساس نوع:</b>
+• پولی: {stats['paid_subscriptions']}
+• آزمایشی: {stats['trial_subscriptions']}
 
-<b>📈 Продажи:</b>
-• Сегодня: {stats['purchased_today']}
-• За неделю: {stats['purchased_week']}
-• За месяц: {stats['purchased_month']}
+<b>📈 فروش:</b>
+• امروز: {stats['purchased_today']}
+• این هفته: {stats['purchased_week']}
+• این ماه: {stats['purchased_month']}
 
-<b>⏰ Истечение:</b>
-• Истекают через 3 дня: {len(expiring_3d)}
-• Истекают через 7 дней: {len(expiring_7d)}
-• Уже истекли: {len(expired)}
+<b>⏰ انقضا:</b>
+• منقضی می‌شود در ۳ روز: {len(expiring_3d)}
+• منقضی می‌شود در ۷ روز: {len(expiring_7d)}
+• قبلاً منقضی شده: {len(expired)}
 
-<b>💰 Конверсия:</b>
-• Из триала в платную: {stats.get('trial_to_paid_conversion', 0)}%
-• Продлений: {stats.get('renewals_count', 0)}
+<b>💰 تبدیل:</b>
+• از آزمایشی به پولی: {stats.get('trial_to_paid_conversion', 0)}%
+• تعداد تمدیدها: {stats.get('renewals_count', 0)}
 """
 
     keyboard = [
         # [
-        #     types.InlineKeyboardButton(text="📊 Экспорт данных", callback_data="admin_subs_export"),
-        #     types.InlineKeyboardButton(text="📈 Графики", callback_data="admin_subs_charts")
+        #     types.InlineKeyboardButton(text="📊 خروجی داده‌ها", callback_data="admin_subs_export"),
+        #     types.InlineKeyboardButton(text="📈 نمودارها", callback_data="admin_subs_charts")
         # ],
-        # [types.InlineKeyboardButton(text="🔄 Обновить", callback_data="admin_subs_stats")],
-        [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_subscriptions')]
+        # [types.InlineKeyboardButton(text="🔄 به‌روزرسانی", callback_data="admin_subs_stats")],
+        [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_subscriptions')]
     ]
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
@@ -268,10 +268,10 @@ async def show_countries_management(callback: types.CallbackQuery, db_user: User
         nodes_data = await remnawave_service.get_all_nodes()
         squads_data = await remnawave_service.get_all_squads()
 
-        text = '🌍 <b>Управление странами</b>\n\n'
+        text = '🌍 <b>مدیریت کشورها</b>\n\n'
 
         if nodes_data:
-            text += '<b>Доступные серверы:</b>\n'
+            text += '<b>سرورهای در دسترس:</b>\n'
             countries = {}
 
             for node in nodes_data:
@@ -287,57 +287,57 @@ async def show_countries_management(callback: types.CallbackQuery, db_user: User
                 total_nodes = len(nodes)
 
                 country_flag = get_country_flag(country)
-                text += f'{country_flag} {country}: {active_nodes}/{total_nodes} серверов\n'
+                text += f'{country_flag} {country}: {active_nodes}/{total_nodes} سرور\n'
 
                 total_users_online = sum(n.get('users_online', 0) or 0 for n in nodes)
                 if total_users_online > 0:
-                    text += f'   👥 Пользователей онлайн: {total_users_online}\n'
+                    text += f'   👥 کاربران آنلاین: {total_users_online}\n'
         else:
-            text += '❌ Не удалось загрузить данные о серверах\n'
+            text += '❌ بارگذاری اطلاعات سرورها ناموفق بود\n'
 
         if squads_data:
-            text += f'\n<b>Всего сквадов:</b> {len(squads_data)}\n'
+            text += f'\n<b>مجموع اسکوادها:</b> {len(squads_data)}\n'
 
             total_members = sum(squad.get('members_count', 0) for squad in squads_data)
-            text += f'<b>Участников в сквадах:</b> {total_members}\n'
+            text += f'<b>اعضای اسکوادها:</b> {total_members}\n'
 
-            text += '\n<b>Сквады:</b>\n'
+            text += '\n<b>اسکوادها:</b>\n'
             for squad in squads_data[:5]:
-                name = squad.get('name', 'Неизвестно')
+                name = squad.get('name', 'نامشخص')
                 members = squad.get('members_count', 0)
                 inbounds = squad.get('inbounds_count', 0)
-                text += f'• {name}: {members} участников, {inbounds} inbound(s)\n'
+                text += f'• {name}: {members} عضو، {inbounds} inbound(s)\n'
 
             if len(squads_data) > 5:
-                text += f'... и еще {len(squads_data) - 5} сквадов\n'
+                text += f'... و {len(squads_data) - 5} اسکواد دیگر\n'
 
         user_stats = await get_users_by_countries(db)
         if user_stats:
-            text += '\n<b>Пользователи по регионам:</b>\n'
+            text += '\n<b>کاربران بر اساس منطقه:</b>\n'
             for country, count in user_stats.items():
                 country_flag = get_country_flag(country)
-                text += f'{country_flag} {country}: {count} пользователей\n'
+                text += f'{country_flag} {country}: {count} کاربر\n'
 
     except Exception as e:
-        logger.error('Ошибка получения данных о странах', error=e)
+        logger.error('Error fetching country data', error=e)
         text = f"""
-🌍 <b>Управление странами</b>
+🌍 <b>مدیریت کشورها</b>
 
-❌ <b>Ошибка загрузки данных</b>
-Не удалось получить информацию о серверах.
+❌ <b>خطا در بارگذاری اطلاعات</b>
+اطلاعات سرورها بارگذاری نشد.
 
-Проверьте подключение к RemnaWave API.
+اتصال به RemnaWave API را بررسی کنید.
 
-<b>Детали ошибки:</b> {e!s}
+<b>جزئیات خطا:</b> {e!s}
 """
 
     keyboard = [
-        [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_subs_countries')],
+        [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_subs_countries')],
         [
-            types.InlineKeyboardButton(text='📊 Статистика нод', callback_data='admin_rw_nodes'),
-            types.InlineKeyboardButton(text='🔧 Сквады', callback_data='admin_rw_squads'),
+            types.InlineKeyboardButton(text='📊 آمار نودها', callback_data='admin_rw_nodes'),
+            types.InlineKeyboardButton(text='🔧 اسکوادها', callback_data='admin_rw_squads'),
         ],
-        [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_subscriptions')],
+        [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_subscriptions')],
     ]
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
@@ -348,7 +348,7 @@ async def show_countries_management(callback: types.CallbackQuery, db_user: User
 @error_handler
 async def send_expiry_reminders(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
     await callback.message.edit_text(
-        '📨 Отправка напоминаний...\n\nПодождите, это может занять время.', reply_markup=None
+        '📨 در حال ارسال یادآوری‌ها...\n\nلطفاً صبر کنید، ممکن است کمی طول بکشد.', reply_markup=None
     )
 
     expiring_subs = await get_expiring_subscriptions(db, 1)
@@ -360,7 +360,7 @@ async def send_expiry_reminders(callback: types.CallbackQuery, db_user: User, db
                 user = subscription.user
                 # Skip email-only users (no telegram_id)
                 if not user.telegram_id:
-                    logger.debug('Пропуск email-пользователя при отправке напоминания', user_id=user.id)
+                    logger.debug('Skipping email-only user for reminder', user_id=user.id)
                     continue
 
                 days_left = max(1, subscription.days_left)
@@ -369,25 +369,25 @@ async def send_expiry_reminders(callback: types.CallbackQuery, db_user: User, db
                 if settings.is_multi_tariff_enabled() and hasattr(subscription, 'tariff') and subscription.tariff:
                     tariff_label = f' «{subscription.tariff.name}»'
                 reminder_text = f"""
-⚠️ <b>Подписка{tariff_label} истекает!</b>
+⚠️ <b>اشتراک{tariff_label} در حال انقضاست!</b>
 
-Ваша подписка истекает через {days_left} день(а).
+اشتراک شما تا {days_left} روز دیگر منقضی می‌شود.
 
-Не забудьте продлить подписку, чтобы не потерять доступ к серверам.
+فراموش نکنید که اشتراک خود را تمدید کنید تا دسترسی به سرورها از دست نرود.
 
-💎 Продлить подписку можно в главном меню.
+💎 می‌توانید از منوی اصلی اشتراک را تمدید کنید.
 """
 
                 await callback.bot.send_message(chat_id=user.telegram_id, text=reminder_text)
                 sent_count += 1
 
             except Exception as e:
-                logger.error('Ошибка отправки напоминания пользователю', user_id=subscription.user_id, error=e)
+                logger.error('Error sending reminder to user', user_id=subscription.user_id, error=e)
 
     await callback.message.edit_text(
-        f'✅ Напоминания отправлены: {sent_count} из {len(expiring_subs)}',
+        f'✅ یادآوری‌ها ارسال شد: {sent_count} از {len(expiring_subs)}',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_subs_expiring')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_subs_expiring')]]
         ),
     )
     await callback.answer()

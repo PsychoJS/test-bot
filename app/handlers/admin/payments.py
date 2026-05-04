@@ -229,7 +229,7 @@ def _build_list_keyboard(
             ]
         )
 
-    # Кнопка "Проверить все" если есть что проверять
+    # 'Check all' button if there are checkable payments
     if has_checkable:
         buttons.append(
             [
@@ -240,7 +240,7 @@ def _build_list_keyboard(
             ]
         )
 
-    # Кнопка экспорта если есть платежи
+    # Export button if there are payments
     if records:
         buttons.append(
             [
@@ -532,7 +532,7 @@ async def show_payments_overview(
 
     lines = [header, '', description]
 
-    # Проверяем есть ли платежи для массовой проверки
+    # Check if there are payments for bulk verification
     checkable_records = [r for r in records if _is_checkable(r) and not r.is_paid]
     has_checkable = len(checkable_records) > 0
 
@@ -674,12 +674,12 @@ async def check_all_payments(
     db_user: User,
     db: AsyncSession,
 ) -> None:
-    """Массовая проверка всех ожидающих платежей."""
+    """Bulk check of all pending payments."""
     logger.info('check_all_payments called')
 
     texts = get_texts(db_user.language)
 
-    # Получаем все ожидающие платежи
+    # Get all pending payments
     records = await list_recent_pending_payments(db)
     logger.info('Found total records', records_count=len(records))
 
@@ -716,7 +716,7 @@ async def check_all_payments(
 
     logger.info('Check complete: checked confirmed failed', checked=checked, confirmed=confirmed, failed=failed)
 
-    # Показываем результат
+    # Show the result
     result_lines = [
         texts.t('ADMIN_PAYMENTS_CHECK_ALL_RESULT', '🔄 <b>نتیجه بررسی</b>'),
         '',
@@ -726,7 +726,7 @@ async def check_all_payments(
     if failed:
         result_lines.append(texts.t('ADMIN_PAYMENTS_CHECK_ALL_FAILED', '❌ خطاها: {count}').format(count=failed))
 
-    # Перезагружаем список платежей
+    # Reload the payment list
     records = await list_recent_pending_payments(db)
     total = len(records)
     total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
@@ -769,7 +769,7 @@ async def export_payments(
     db_user: User,
     db: AsyncSession,
 ) -> None:
-    """Экспорт данных платежей в JSON файл."""
+    """Export payment data to a JSON file."""
     import json
 
     from aiogram.types import BufferedInputFile
@@ -785,7 +785,7 @@ async def export_payments(
         )
         return
 
-    # Формируем данные для экспорта
+    # Prepare data for export
     export_data = []
     for record in records:
         payment = record.payment
@@ -810,7 +810,7 @@ async def export_payments(
             },
         }
 
-        # Добавляем специфичные поля в зависимости от метода
+        # Add method-specific fields
         if hasattr(payment, 'order_id'):
             payment_data['order_id'] = payment.order_id
         if hasattr(payment, 'payment_url'):
@@ -820,11 +820,11 @@ async def export_payments(
 
         export_data.append(payment_data)
 
-    # Создаём JSON файл
+    # Create the JSON file
     json_content = json.dumps(export_data, ensure_ascii=False, indent=2, default=str)
     file_bytes = json_content.encode('utf-8')
 
-    # Отправляем файл
+    # Send the file
     filename = f'payments_export_{datetime.now(UTC).strftime("%Y%m%d_%H%M%S")}.json'
 
     await callback.message.answer_document(

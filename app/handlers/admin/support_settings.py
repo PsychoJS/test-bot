@@ -394,7 +394,7 @@ async def start_edit_desc(callback: types.CallbackQuery, db_user: User, db: Asyn
             )
         ]
     )
-    # Подготовим блок контакта (отдельным инлайном)
+    # Prepare the contact block (as a separate inline item)
     from app.config import settings
 
     support_contact_display = settings.get_support_contact_display()
