@@ -12,7 +12,7 @@ async def handle_happ_download_request(callback: types.CallbackQuery, db_user: U
     texts = get_texts(db_user.language)
     prompt_text = texts.t(
         'HAPP_DOWNLOAD_PROMPT',
-        '📥 <b>Скачать Happ</b>\nВыберите ваше устройство:',
+        '📥 <b>دانلود Happ</b>\nدستگاه خود را انتخاب کنید:',
     )
 
     keyboard = get_happ_download_platform_keyboard(db_user.language)
@@ -35,7 +35,7 @@ async def handle_happ_download_platform_choice(callback: types.CallbackQuery, db
 
     if not link:
         await callback.answer(
-            texts.t('HAPP_DOWNLOAD_LINK_NOT_SET', '❌ Ссылка для этого устройства не настроена'),
+            texts.t('HAPP_DOWNLOAD_LINK_NOT_SET', '❌ لینک این دستگاه تنظیم نشده است'),
             show_alert=True,
         )
         return
@@ -49,7 +49,7 @@ async def handle_happ_download_platform_choice(callback: types.CallbackQuery, db
 
     link_text = texts.t(
         'HAPP_DOWNLOAD_LINK_MESSAGE',
-        '⬇️ Скачайте Happ для {platform}:',
+        '⬇️ Happ را برای {platform} دانلود کنید:',
     ).format(platform=platform_names.get(platform, platform.upper()))
 
     keyboard = get_happ_download_link_keyboard(db_user.language, link)
@@ -76,7 +76,7 @@ async def handle_happ_download_back(callback: types.CallbackQuery, db_user: User
     texts = get_texts(db_user.language)
     prompt_text = texts.t(
         'HAPP_DOWNLOAD_PROMPT',
-        '📥 <b>Скачать Happ</b>\nВыберите ваше устройство:',
+        '📥 <b>دانلود Happ</b>\nدستگاه خود را انتخاب کنید:',
     )
 
     keyboard = get_happ_download_platform_keyboard(db_user.language)
