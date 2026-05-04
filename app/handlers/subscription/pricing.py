@@ -141,13 +141,13 @@ async def _prepare_subscription_summary(
 
     if settings.is_traffic_fixed():
         if final_traffic_gb == 0:
-            traffic_display = 'Безлимитный'
+            traffic_display = 'نامحدود'
         else:
-            traffic_display = f'{final_traffic_gb} ГБ'
+            traffic_display = f'{final_traffic_gb} گیگابایت'
     elif summary_data.get('traffic_gb', 0) == 0:
-        traffic_display = 'Безлимитный'
+        traffic_display = 'نامحدود'
     else:
-        traffic_display = f'{summary_data.get("traffic_gb", 0)} ГБ'
+        traffic_display = f'{summary_data.get("traffic_gb", 0)} گیگابایت'
 
     # Resolve country display names (still needed for the summary text)
     countries = await _get_available_countries(db_user.promo_group_id)
@@ -161,46 +161,46 @@ async def _prepare_subscription_summary(
     # Добавляем строку базового периода только если цена не равна 0
     if base_discount_total > 0 and base_price > 0:
         base_line = (
-            f'- Базовый период: <s>{texts.format_price(base_price_original)}</s> '
+            f'- دوره پایه: <s>{texts.format_price(base_price_original)}</s> '
             f'{texts.format_price(base_price)}'
-            f' (скидка {period_discount_percent}%:'
+            f' (تخفیف {period_discount_percent}%:'
             f' -{texts.format_price(base_discount_total)})'
         )
         details_lines.append(base_line)
     elif base_price_original > 0:
-        base_line = f'- Базовый период: {texts.format_price(base_price_original)}'
+        base_line = f'- دوره پایه: {texts.format_price(base_price_original)}'
         details_lines.append(base_line)
 
     if total_traffic_price > 0:
         traffic_line = (
-            f'- Трафик: {texts.format_price(traffic_price_per_month)}/мес × {months_in_period}'
+            f'- ترافیک: {texts.format_price(traffic_price_per_month)}/ماه × {months_in_period}'
             f' = {texts.format_price(total_traffic_price)}'
         )
         if traffic_discount_total > 0:
-            traffic_line += f' (скидка {traffic_discount_percent}%: -{texts.format_price(traffic_discount_total)})'
+            traffic_line += f' (تخفیف {traffic_discount_percent}%: -{texts.format_price(traffic_discount_total)})'
         details_lines.append(traffic_line)
     if total_servers_price > 0:
         servers_line = (
-            f'- Серверы: {texts.format_price(servers_price_per_month)}/мес × {months_in_period}'
+            f'- سرورها: {texts.format_price(servers_price_per_month)}/ماه × {months_in_period}'
             f' = {texts.format_price(total_servers_price)}'
         )
         if servers_discount_total > 0:
-            servers_line += f' (скидка {servers_discount_percent}%: -{texts.format_price(servers_discount_total)})'
+            servers_line += f' (تخفیف {servers_discount_percent}%: -{texts.format_price(servers_discount_total)})'
         details_lines.append(servers_line)
     if devices_selection_enabled and total_devices_price > 0:
         devices_line = (
-            f'- Доп. устройства: {texts.format_price(devices_price_per_month)}/мес × {months_in_period}'
+            f'- دستگاه‌های اضافی: {texts.format_price(devices_price_per_month)}/ماه × {months_in_period}'
             f' = {texts.format_price(total_devices_price)}'
         )
         if devices_discount_total > 0:
-            devices_line += f' (скидка {devices_discount_percent}%: -{texts.format_price(devices_discount_total)})'
+            devices_line += f' (تخفیف {devices_discount_percent}%: -{texts.format_price(devices_discount_total)})'
         details_lines.append(devices_line)
 
     if promo_offer_discount > 0:
         details_lines.append(
             texts.t(
                 'SUBSCRIPTION_SUMMARY_PROMO_DISCOUNT',
-                '- Промо-предложение: -{amount} ({percent}% дополнительно)',
+                '- پیشنهاد پرومو: -{amount} ({percent}% اضافی)',
             ).format(
                 amount=texts.format_price(promo_offer_discount),
                 percent=offer_pct,
@@ -210,25 +210,25 @@ async def _prepare_subscription_summary(
     details_text = '\n'.join(details_lines)
 
     summary_lines = [
-        '📋 <b>Сводка заказа</b>',
+        '📋 <b>خلاصه سفارش</b>',
         '',
-        f'📅 <b>Период:</b> {period_display}',
-        f'📊 <b>Трафик:</b> {traffic_display}',
-        f'🌍 <b>Страны:</b> {", ".join(selected_countries_names)}',
+        f'📅 <b>دوره:</b> {period_display}',
+        f'📊 <b>ترافیک:</b> {traffic_display}',
+        f'🌍 <b>کشورها:</b> {", ".join(selected_countries_names)}',
     ]
 
     if devices_selection_enabled:
-        summary_lines.append(f'📱 <b>Устройства:</b> {devices_selected}')
+        summary_lines.append(f'📱 <b>دستگاه‌ها:</b> {devices_selected}')
 
     summary_lines.extend(
         [
             '',
-            '💰 <b>Детализация стоимости:</b>',
+            '💰 <b>جزئیات هزینه:</b>',
             details_text,
             '',
-            f'💎 <b>Общая стоимость:</b> {texts.format_price(total_price)}',
+            f'💎 <b>هزینه کل:</b> {texts.format_price(total_price)}',
             '',
-            'Подтверждаете покупку?',
+            'خرید را تأیید می‌کنید؟',
         ]
     )
 
@@ -293,30 +293,30 @@ async def get_subscription_info_text(subscription, texts, db_user, db: AsyncSess
     else:
         devices_used = 0
     countries_info = await _get_countries_info(subscription.connected_squads)
-    ', '.join([c['name'] for c in countries_info]) if countries_info else 'Нет'
+    ', '.join([c['name'] for c in countries_info]) if countries_info else 'هیچ'
 
-    subscription_url = getattr(subscription, 'subscription_url', None) or 'Генерируется...'
+    subscription_url = getattr(subscription, 'subscription_url', None) or 'در حال ساخت...'
 
     if subscription.is_trial:
-        status_text = '🎁 Тестовая'
-        type_text = 'Триал'
+        status_text = '🎁 آزمایشی'
+        type_text = 'آزمایشی'
     else:
         if subscription.is_active:
-            status_text = '✅ Оплачена'
+            status_text = '✅ پرداخت شده'
         else:
-            status_text = '⌛ Истекла'
-        type_text = 'Платная подписка'
+            status_text = '⌛ منقضی شده'
+        type_text = 'اشتراک پولی'
 
     traffic_limit = subscription.traffic_limit_gb or 0
     if traffic_limit == 0:
         if settings.is_traffic_fixed():
-            traffic_text = '∞ Безлимитный'
+            traffic_text = '∞ نامحدود'
         else:
-            traffic_text = '∞ Безлимитный'
+            traffic_text = '∞ نامحدود'
     elif settings.is_traffic_fixed():
-        traffic_text = f'{traffic_limit} ГБ'
+        traffic_text = f'{traffic_limit} گیگابایت'
     else:
-        traffic_text = f'{traffic_limit} ГБ'
+        traffic_text = f'{traffic_limit} گیگابایت'
 
     subscription_cost = await get_subscription_cost(subscription, db)
 
@@ -324,7 +324,7 @@ async def get_subscription_info_text(subscription, texts, db_user, db: AsyncSess
 
     if not devices_selection_enabled:
         info_template = info_template.replace(
-            '\n📱 <b>Устройства:</b> {devices_used} / {devices_limit}',
+            '\n📱 <b>دستگاه‌ها:</b> {devices_used} / {devices_limit}',
             '',
         ).replace(
             '\n📱 <b>Devices:</b> {devices_used} / {devices_limit}',
@@ -341,11 +341,11 @@ async def get_subscription_info_text(subscription, texts, db_user, db: AsyncSess
         countries_count=len(subscription.connected_squads or []),
         devices_used=devices_used,
         devices_limit=subscription.device_limit,
-        autopay_status='✅ Включен' if subscription.autopay_enabled else '⌛ Выключен',
+        autopay_status='✅ فعال' if subscription.autopay_enabled else '⌛ غیرفعال',
     )
 
     if subscription_cost > 0:
-        info_text += f'\n💰 <b>Стоимость подписки в месяц:</b> {texts.format_price(subscription_cost)}'
+        info_text += f'\n💰 <b>هزینه اشتراک در ماه:</b> {texts.format_price(subscription_cost)}'
 
     # Отображаем докупленный трафик
     if (subscription.traffic_limit_gb or 0) > 0:  # Только для лимитированных тарифов
@@ -364,7 +364,7 @@ async def get_subscription_info_text(subscription, texts, db_user, db: AsyncSess
         purchases = purchases_result.scalars().all()
 
         if purchases:
-            info_text += '\n\n📦 <b>Докупленный трафик:</b>'
+            info_text += '\n\n📦 <b>ترافیک خریداری شده:</b>'
 
             for purchase in purchases:
                 time_remaining = purchase.expires_at - now
@@ -387,18 +387,18 @@ async def get_subscription_info_text(subscription, texts, db_user, db: AsyncSess
 
                 # Формируем текст о времени
                 if days_remaining == 0:
-                    time_text = 'истекает сегодня'
+                    time_text = 'امروز منقضی می‌شود'
                 elif days_remaining == 1:
-                    time_text = 'остался 1 день'
+                    time_text = '۱ روز مانده'
                 elif days_remaining < 5:
-                    time_text = f'осталось {days_remaining} дня'
+                    time_text = f'{days_remaining} روز مانده'
                 else:
-                    time_text = f'осталось {days_remaining} дней'
+                    time_text = f'{days_remaining} روز مانده'
 
-                info_text += f'\n• {purchase.traffic_gb} ГБ — {time_text}'
-                info_text += f'\n  {bar} {progress_percent:.0f}% | до {expire_date}'
+                info_text += f'\n• {purchase.traffic_gb} گیگابایت — {time_text}'
+                info_text += f'\n  {bar} {progress_percent:.0f}% | تا {expire_date}'
 
-    if subscription_url and subscription_url != 'Генерируется...' and not settings.should_hide_subscription_link():
-        info_text += f'\n\n🔗 <b>Ваша ссылка для импорта в VPN приложениe:</b>\n<code>{subscription_url}</code>'
+    if subscription_url and subscription_url != 'در حال ساخت...' and not settings.should_hide_subscription_link():
+        info_text += f'\n\n🔗 <b>لینک شما برای وارد کردن در برنامه VPN:</b>\n<code>{subscription_url}</code>'
 
     return info_text
