@@ -48,14 +48,14 @@ MIGRATION_PAGE_SIZE = 8
 
 def _format_duration(seconds: float) -> str:
     if seconds < 1:
-        return 'менее 1с'
+        return 'کمتر از ۱ ثانیه'
 
     minutes, sec = divmod(int(seconds), 60)
     if minutes:
         if sec:
-            return f'{minutes} мин {sec} с'
-        return f'{minutes} мин'
-    return f'{sec} с'
+            return f'{minutes} دقیقه {sec} ثانیه'
+        return f'{minutes} دقیقه'
+    return f'{sec} ثانیه'
 
 
 def _format_user_stats(stats: dict[str, Any] | None) -> str:
@@ -67,7 +67,7 @@ def _format_user_stats(stats: dict[str, Any] | None) -> str:
     deleted = stats.get('deleted', stats.get('deactivated', 0))
     errors = stats.get('errors', 0)
 
-    return f'• Создано: {created}\n• Обновлено: {updated}\n• Деактивировано: {deleted}\n• Ошибок: {errors}'
+    return f'• ایجاد شده: {created}\n• به‌روز شده: {updated}\n• غیرفعال شده: {deleted}\n• خطاها: {errors}'
 
 
 def _format_server_stats(stats: dict[str, Any] | None) -> str:
@@ -79,7 +79,7 @@ def _format_server_stats(stats: dict[str, Any] | None) -> str:
     removed = stats.get('removed', 0)
     total = stats.get('total', 0)
 
-    return f'• Создано: {created}\n• Обновлено: {updated}\n• Удалено: {removed}\n• Всего в панели: {total}'
+    return f'• ایجاد شده: {created}\n• به‌روز شده: {updated}\n• حذف شده: {removed}\n• مجموع در پنل: {total}'
 
 
 def _build_auto_sync_view(status: RemnaWaveAutoSyncStatus) -> tuple[str, types.InlineKeyboardMarkup]:
@@ -92,46 +92,46 @@ def _build_auto_sync_view(status: RemnaWaveAutoSyncStatus) -> tuple[str, types.I
         duration = status.last_run_finished_at - status.last_run_started_at if status.last_run_started_at else None
         duration_text = f' ({_format_duration(duration.total_seconds())})' if duration else ''
         reason_map = {
-            'manual': 'вручную',
-            'auto': 'по расписанию',
-            'immediate': 'при включении',
+            'manual': 'دستی',
+            'auto': 'طبق برنامه',
+            'immediate': 'هنگام فعال‌سازی',
         }
         reason_text = reason_map.get(status.last_run_reason or '', '—')
         result_icon = '✅' if status.last_run_success else '❌'
-        result_label = 'успешно' if status.last_run_success else 'с ошибками'
-        error_block = f'\n⚠️ Ошибка: {status.last_run_error}' if status.last_run_error else ''
+        result_label = 'موفق' if status.last_run_success else 'با خطا'
+        error_block = f'\n⚠️ خطا: {status.last_run_error}' if status.last_run_error else ''
         last_run_text = (
             f'{result_icon} {result_label}\n'
-            f'• Старт: {started_text}\n'
-            f'• Завершено: {finished_text}{duration_text}\n'
-            f'• Причина запуска: {reason_text}{error_block}'
+            f'• شروع: {started_text}\n'
+            f'• پایان: {finished_text}{duration_text}\n'
+            f'• دلیل اجرا: {reason_text}{error_block}'
         )
     elif status.last_run_started_at:
         last_run_text = (
-            '⏳ Синхронизация началась, но еще не завершилась'
+            '⏳ همگام‌سازی شروع شده اما هنوز تمام نشده'
             if status.is_running
-            else f'ℹ️ Последний запуск: {format_datetime(status.last_run_started_at)}'
+            else f'ℹ️ آخرین اجرا: {format_datetime(status.last_run_started_at)}'
         )
     else:
         last_run_text = '—'
 
-    running_text = '⏳ Выполняется сейчас' if status.is_running else 'Ожидание'
-    toggle_text = '❌ Отключить' if status.enabled else '✅ Включить'
+    running_text = '⏳ در حال اجرا' if status.is_running else 'در انتظار'
+    toggle_text = '❌ غیرفعال کردن' if status.enabled else '✅ فعال کردن'
 
-    text = f"""🔄 <b>Автосинхронизация RemnaWave</b>
+    text = f"""🔄 <b>همگام‌سازی خودکار RemnaWave</b>
 
-⚙️ <b>Статус:</b> {'✅ Включена' if status.enabled else '❌ Отключена'}
-🕒 <b>Расписание:</b> {times_text}
-📅 <b>Следующий запуск:</b> {next_run_text if status.enabled else '—'}
-⏱️ <b>Состояние:</b> {running_text}
+⚙️ <b>وضعیت:</b> {'✅ فعال' if status.enabled else '❌ غیرفعال'}
+🕒 <b>برنامه:</b> {times_text}
+📅 <b>اجرای بعدی:</b> {next_run_text if status.enabled else '—'}
+⏱️ <b>حالت:</b> {running_text}
 
-📊 <b>Последний запуск:</b>
+📊 <b>آخرین اجرا:</b>
 {last_run_text}
 
-👥 <b>Пользователи:</b>
+👥 <b>کاربران:</b>
 {_format_user_stats(status.last_user_stats)}
 
-🌐 <b>Серверы:</b>
+🌐 <b>سرورها:</b>
 {_format_server_stats(status.last_server_stats)}
 """
 
@@ -139,7 +139,7 @@ def _build_auto_sync_view(status: RemnaWaveAutoSyncStatus) -> tuple[str, types.I
         inline_keyboard=[
             [
                 types.InlineKeyboardButton(
-                    text='🔁 Запустить сейчас',
+                    text='🔁 اجرا کنید',
                     callback_data='remnawave_auto_sync_run',
                 )
             ],
@@ -151,13 +151,13 @@ def _build_auto_sync_view(status: RemnaWaveAutoSyncStatus) -> tuple[str, types.I
             ],
             [
                 types.InlineKeyboardButton(
-                    text='🕒 Изменить расписание',
+                    text='🕒 تغییر برنامه',
                     callback_data='remnawave_auto_sync_times',
                 )
             ],
             [
                 types.InlineKeyboardButton(
-                    text='⬅️ Назад',
+                    text='⬅️ بازگشت',
                     callback_data='admin_rw_sync',
                 )
             ],
