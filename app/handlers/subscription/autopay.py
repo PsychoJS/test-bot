@@ -49,7 +49,7 @@ async def handle_autopay_menu(callback: types.CallbackQuery, db_user: User, db: 
     subscription, sub_id = await _resolve_subscription(callback, db_user, db, state)
     if not subscription:
         await callback.answer(
-            texts.t('SUBSCRIPTION_ACTIVE_REQUIRED', '⚠️ У вас нет активной подписки!'),
+            texts.t('SUBSCRIPTION_ACTIVE_REQUIRED', '⚠️ شما اشتراک فعالی ندارید!'),
             show_alert=True,
         )
         return
@@ -63,26 +63,26 @@ async def handle_autopay_menu(callback: types.CallbackQuery, db_user: User, db: 
         await callback.answer(
             texts.t(
                 'AUTOPAY_NOT_AVAILABLE_FOR_DAILY',
-                'Автоплатеж недоступен для суточных тарифов. Списание происходит автоматически раз в сутки.',
+                'پرداخت خودکار برای تعرفه‌های روزانه در دسترس نیست. کسر خودکار روزانه انجام می‌شود.',
             ),
             show_alert=True,
         )
         return
 
     status = (
-        texts.t('AUTOPAY_STATUS_ENABLED', 'включен')
+        texts.t('AUTOPAY_STATUS_ENABLED', 'فعال')
         if subscription.autopay_enabled
-        else texts.t('AUTOPAY_STATUS_DISABLED', 'выключен')
+        else texts.t('AUTOPAY_STATUS_DISABLED', 'غیرفعال')
     )
     days = subscription.autopay_days_before
 
     text = texts.t(
         'AUTOPAY_MENU_TEXT',
         (
-            '💳 <b>Автоплатеж</b>\n\n'
-            '📊 <b>Статус:</b> {status}\n'
-            '⏰ <b>Списание за:</b> {days} дн. до окончания\n\n'
-            'Выберите действие:'
+            '💳 <b>پرداخت خودکار</b>\n\n'
+            '📊 <b>وضعیت:</b> {status}\n'
+            '⏰ <b>کسر:</b> {days} روز قبل از پایان\n\n'
+            'یک عمل انتخاب کنید:'
         ),
     ).format(status=status, days=days)
 
@@ -107,7 +107,7 @@ async def toggle_autopay(callback: types.CallbackQuery, db_user: User, db: Async
             await callback.answer(
                 texts.t(
                     'AUTOPAY_NOT_AVAILABLE_TRIAL',
-                    'Автоплатеж недоступен для пробных подписок.',
+                    'پرداخت خودکار برای اشتراک‌های آزمایشی در دسترس نیست.',
                 ),
                 show_alert=True,
             )
@@ -119,7 +119,7 @@ async def toggle_autopay(callback: types.CallbackQuery, db_user: User, db: Async
             await callback.answer(
                 texts.t(
                     'AUTOPAY_NOT_AVAILABLE_CLASSIC',
-                    'Автоплатеж недоступен. Для продления необходимо выбрать тариф.',
+                    'پرداخت خودکار در دسترس نیست. برای تمدید باید تعرفه انتخاب کنید.',
                 ),
                 show_alert=True,
             )
@@ -137,7 +137,7 @@ async def toggle_autopay(callback: types.CallbackQuery, db_user: User, db: Async
             await callback.answer(
                 texts.t(
                     'AUTOPAY_NOT_AVAILABLE_FOR_DAILY',
-                    'Автоплатеж недоступен для суточных тарифов. Списание происходит автоматически раз в сутки.',
+                    'پرداخت خودکار برای تعرفه‌های روزانه در دسترس نیست. کسر خودکار روزانه انجام می‌شود.',
                 ),
                 show_alert=True,
             )
@@ -146,8 +146,8 @@ async def toggle_autopay(callback: types.CallbackQuery, db_user: User, db: Async
     await update_subscription_autopay(db, subscription, enable)
 
     texts = get_texts(db_user.language)
-    status = texts.t('AUTOPAY_STATUS_ENABLED', 'включен') if enable else texts.t('AUTOPAY_STATUS_DISABLED', 'выключен')
-    await callback.answer(texts.t('AUTOPAY_TOGGLE_SUCCESS', '✅ Автоплатеж {status}!').format(status=status))
+    status = texts.t('AUTOPAY_STATUS_ENABLED', 'فعال') if enable else texts.t('AUTOPAY_STATUS_DISABLED', 'غیرفعال')
+    await callback.answer(texts.t('AUTOPAY_TOGGLE_SUCCESS', '✅ پرداخت خودکار {status}!').format(status=status))
 
     try:
         await handle_autopay_menu(callback, db_user, db)
@@ -163,7 +163,7 @@ async def show_autopay_days(callback: types.CallbackQuery, db_user: User):
     await callback.message.edit_text(
         texts.t(
             'AUTOPAY_SELECT_DAYS_PROMPT',
-            '⏰ Выберите за сколько дней до окончания списывать средства:',
+            '⏰ چند روز قبل از پایان کسر شود:',
         ),
         reply_markup=get_autopay_days_keyboard(db_user.language),
     )
@@ -180,7 +180,7 @@ async def set_autopay_days(callback: types.CallbackQuery, db_user: User, db: Asy
     await update_subscription_autopay(db, subscription, subscription.autopay_enabled, days)
 
     texts = get_texts(db_user.language)
-    await callback.answer(texts.t('AUTOPAY_DAYS_SET', '✅ Установлено {days} дней!').format(days=days))
+    await callback.answer(texts.t('AUTOPAY_DAYS_SET', '✅ {days} روز تنظیم شد!').format(days=days))
 
     await handle_autopay_menu(callback, db_user, db)
 
@@ -193,8 +193,8 @@ async def handle_saved_cards_list(callback: types.CallbackQuery, db_user: User, 
         await callback.message.edit_text(
             texts.t(
                 'SAVED_CARDS_EMPTY',
-                '💳 <b>Привязанные карты</b>\n\nНет привязанных карт.\n'
-                'Карта привяжется автоматически при следующем пополнении баланса.',
+                '💳 <b>کارت‌های متصل</b>\n\nکارتی متصل نشده است.\n'
+                'کارت به طور خودکار در شارژ بعدی متصل می‌شود.',
             ),
             reply_markup=get_saved_cards_keyboard([], db_user.language),
             parse_mode='HTML',
@@ -203,7 +203,7 @@ async def handle_saved_cards_list(callback: types.CallbackQuery, db_user: User, 
         await callback.message.edit_text(
             texts.t(
                 'SAVED_CARDS_TITLE',
-                '💳 <b>Привязанные карты</b>\n\nВыберите карту для отвязки:',
+                '💳 <b>کارت‌های متصل</b>\n\nکارتی برای جدا کردن انتخاب کنید:',
             ),
             reply_markup=get_saved_cards_keyboard(cards, db_user.language),
             parse_mode='HTML',
@@ -224,7 +224,7 @@ async def handle_unlink_card(callback: types.CallbackQuery, db_user: User, db: A
 
     if not card:
         await callback.answer(
-            texts.t('SAVED_CARDS_UNLINK_ERROR', '❌ Не удалось отвязать карту'),
+            texts.t('SAVED_CARDS_UNLINK_ERROR', '❌ جدا کردن کارت ناموفق بود'),
             show_alert=True,
         )
         return
@@ -232,15 +232,15 @@ async def handle_unlink_card(callback: types.CallbackQuery, db_user: User, db: A
     card_label = _get_payment_method_display_name(card, db_user.language)
     text = texts.t(
         'SAVED_CARDS_CONFIRM_UNLINK',
-        'Вы уверены, что хотите отвязать карту <b>{card}</b>?\n\n'
-        'После отвязки автоплатеж не сможет использовать эту карту.',
+        'آیا مطمئن هستید که می‌خواهید کارت <b>{card}</b> را جدا کنید؟\n\n'
+        'پس از جدا شدن، پرداخت خودکار نمی‌تواند از این کارت استفاده کند.',
     ).format(card=card_label)
 
     if len(cards) == 1:
         text += texts.t(
             'SAVED_CARDS_LAST_CARD_WARNING',
-            '\n\n⚠️ <b>Внимание:</b> это ваша последняя привязанная карта. '
-            'После отвязки автоплатеж не сможет списывать средства.',
+            '\n\n⚠️ <b>توجه:</b> این آخرین کارت متصل شما است. '
+            'پس از جدا شدن، پرداخت خودکار نمی‌تواند وجه را کسر کند.',
         )
 
     await callback.message.edit_text(
@@ -263,11 +263,11 @@ async def handle_confirm_unlink(callback: types.CallbackQuery, db_user: User, db
 
     if success:
         await callback.answer(
-            texts.t('SAVED_CARDS_UNLINKED', '✅ Карта отвязана'),
+            texts.t('SAVED_CARDS_UNLINKED', '✅ کارت جدا شد'),
         )
     else:
         await callback.answer(
-            texts.t('SAVED_CARDS_UNLINK_ERROR', '❌ Не удалось отвязать карту'),
+            texts.t('SAVED_CARDS_UNLINK_ERROR', '❌ جدا کردن کارت ناموفق بود'),
             show_alert=True,
         )
         return
@@ -364,7 +364,7 @@ async def handle_subscription_cancel(callback: types.CallbackQuery, state: FSMCo
 
     await show_main_menu(callback, db_user, db)
 
-    await callback.answer('❌ Покупка отменена')
+    await callback.answer('❌ خرید لغو شد')
 
 
 async def _show_previous_configuration_step(

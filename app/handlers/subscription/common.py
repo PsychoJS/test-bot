@@ -80,7 +80,7 @@ async def resolve_subscription_from_context(
         return active_subs[0], active_subs[0].id
 
     # 4. Cannot determine
-    await callback.answer('Выберите подписку', show_alert=True)
+    await callback.answer('انتخاب اشتراک', show_alert=True)
     return None, None
 
 
@@ -162,7 +162,7 @@ def update_traffic_prices():
     from app.config import refresh_traffic_prices
 
     refresh_traffic_prices()
-    logger.info('🔄 TRAFFIC_PRICES обновлены из конфигурации')
+    logger.info('🔄 Traffic prices updated from config')
 
 
 def format_traffic_display(traffic_gb: int, is_fixed_mode: bool = None) -> str:
@@ -171,11 +171,11 @@ def format_traffic_display(traffic_gb: int, is_fixed_mode: bool = None) -> str:
 
     if traffic_gb == 0:
         if is_fixed_mode:
-            return 'Безлимитный'
-        return 'Безлимитный'
+            return 'نامحدود'
+        return 'نامحدود'
     if is_fixed_mode:
-        return f'{traffic_gb} ГБ'
-    return f'{traffic_gb} ГБ'
+        return f'{traffic_gb} گیگابایت'
+    return f'{traffic_gb} گیگابایت'
 
 
 def validate_traffic_price(gb: int) -> bool:
@@ -232,7 +232,7 @@ def render_guide_blocks(blocks: list[dict], language: str) -> str:
         )
         desc_text = html_mod.escape(get_localized_value(desc, language) if isinstance(desc, dict) else str(desc or ''))
         if title_text or desc_text:
-            step = f'<b>Шаг {step_num}'
+            step = f'<b>مرحله {step_num}'
             if title_text:
                 step += f' - {title_text}'
             step += ':</b>'
@@ -504,7 +504,7 @@ def create_deep_link(app: dict[str, Any], subscription_url: str) -> str | None:
             payload = base64.b64encode(subscription_url.encode('utf-8')).decode('utf-8')
         except Exception as exc:
             logger.warning(
-                'Не удалось закодировать ссылку подписки в base64 для приложения', app=app.get('id'), exc=exc
+                'Failed to encode subscription link to base64 for app', app=app.get('id'), exc=exc
             )
             payload = subscription_url
 
@@ -522,8 +522,8 @@ def get_reset_devices_confirm_keyboard(
     get_texts(language)
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='✅ Да, сбросить все устройства', callback_data='confirm_reset_devices')],
-            [InlineKeyboardButton(text='❌ Отмена', callback_data=back_callback)],
+            [InlineKeyboardButton(text='✅ بله، همه دستگاه‌ها را پاک کنید', callback_data='confirm_reset_devices')],
+            [InlineKeyboardButton(text='❌ لغو', callback_data=back_callback)],
         ]
     )
 
@@ -548,7 +548,7 @@ def get_traffic_switch_keyboard(
         now = datetime.now(UTC)
         days_left = max(1, math.ceil((subscription_end_date - now).total_seconds() / 86400))
         price_multiplier = days_left / 30
-        period_text = f' (за {days_left} дн.)' if days_left > 1 else ' (за 1 день)'
+        period_text = f' (برای {days_left} روز)' if days_left > 1 else ' (برای ۱ روز)'
     else:
         price_multiplier = 1
         period_text = ''
@@ -579,29 +579,29 @@ def get_traffic_switch_keyboard(
         # Сравниваем с базовым трафиком (без докупленного)
         if gb == base_traffic_gb:
             emoji = '✅'
-            action_text = ' (текущий)'
+            action_text = ' (فعلی)'
             price_text = ''
         elif total_price_diff > 0:
             emoji = '⬆️'
             action_text = ''
-            price_text = f' (+{total_price_diff // 100}₽{period_text})'
+            price_text = f' (+{total_price_diff // 100} تومان{period_text})'
             if discount_percent > 0:
                 discount_total = int((price_per_month - current_price_per_month) * price_multiplier) - total_price_diff
                 if discount_total > 0:
-                    price_text += f' (скидка {discount_percent}%: -{discount_total // 100}₽)'
+                    price_text += f' (تخفیف {discount_percent}%: -{discount_total // 100} تومان)'
         elif total_price_diff < 0:
             emoji = '⬇️'
             action_text = ''
-            price_text = ' (без возврата)'
+            price_text = ' (بدون بازپرداخت)'
         else:
             emoji = '🔄'
             action_text = ''
-            price_text = ' (бесплатно)'
+            price_text = ' (رایگان)'
 
         if gb == 0:
-            traffic_text = 'Безлимит'
+            traffic_text = 'نامحدود'
         else:
-            traffic_text = f'{gb} ГБ'
+            traffic_text = f'{gb} گیگابایت'
 
         button_text = f'{emoji} {traffic_text}{action_text}{price_text}'
 
@@ -611,7 +611,7 @@ def get_traffic_switch_keyboard(
     buttons.append(
         [
             InlineKeyboardButton(
-                text='⬅️ Назад' if language_code in {'ru', 'fa'} else '⬅️ Back',
+                text='⬅️ بازگشت' if language_code in {'ru', 'fa'} else '⬅️ Back',
                 callback_data=back_callback,
             )
         ]
@@ -627,10 +627,10 @@ def get_confirm_switch_traffic_keyboard(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text='✅ Подтвердить переключение',
+                    text='✅ تأیید تغییر',
                     callback_data=f'confirm_switch_traffic_{new_traffic_gb}_{price_difference}',
                 )
             ],
-            [InlineKeyboardButton(text='❌ Отмена', callback_data=back_callback)],
+            [InlineKeyboardButton(text='❌ لغو', callback_data=back_callback)],
         ]
     )
