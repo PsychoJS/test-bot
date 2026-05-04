@@ -37,10 +37,10 @@ def get_user_messages_keyboard(language: str = 'ru'):
 
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='📝 Добавить сообщение', callback_data='add_user_message')],
-            [InlineKeyboardButton(text='📋 Список сообщений', callback_data='list_user_messages:0')],
-            [InlineKeyboardButton(text='📊 Статистика', callback_data='user_messages_stats')],
-            [InlineKeyboardButton(text='🔙 Назад в админку', callback_data='admin_panel')],
+            [InlineKeyboardButton(text='📝 افزودن پیام', callback_data='add_user_message')],
+            [InlineKeyboardButton(text='📋 لیست پیام‌ها', callback_data='list_user_messages:0')],
+            [InlineKeyboardButton(text='📊 آمار', callback_data='user_messages_stats')],
+            [InlineKeyboardButton(text='🔙 بازگشت به پنل ادمین', callback_data='admin_panel')],
         ]
     )
 
@@ -48,14 +48,14 @@ def get_user_messages_keyboard(language: str = 'ru'):
 def get_message_actions_keyboard(message_id: int, is_active: bool, language: str = 'ru'):
     from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-    status_text = '🔴 Деактивировать' if is_active else '🟢 Активировать'
+    status_text = '🔴 غیرفعال کردن' if is_active else '🟢 فعال کردن'
 
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='✏️ Редактировать', callback_data=f'edit_user_message:{message_id}')],
+            [InlineKeyboardButton(text='✏️ ویرایش', callback_data=f'edit_user_message:{message_id}')],
             [InlineKeyboardButton(text=status_text, callback_data=f'toggle_user_message:{message_id}')],
-            [InlineKeyboardButton(text='🗑️ Удалить', callback_data=f'delete_user_message:{message_id}')],
-            [InlineKeyboardButton(text='🔙 К списку', callback_data='list_user_messages:0')],
+            [InlineKeyboardButton(text='🗑️ حذف', callback_data=f'delete_user_message:{message_id}')],
+            [InlineKeyboardButton(text='🔙 به لیست', callback_data='list_user_messages:0')],
         ]
     )
 
@@ -66,13 +66,13 @@ async def show_user_messages_panel(callback: types.CallbackQuery, db_user: User,
     get_texts(db_user.language)
 
     text = (
-        '📢 <b>Управление сообщениями в главном меню</b>\n\n'
-        'Здесь вы можете добавлять сообщения, которые будут показываться пользователям '
-        'в главном меню между информацией о подписке и кнопками действий.\n\n'
-        '• Сообщения поддерживают HTML теги\n'
-        '• Можно создать несколько сообщений\n'
-        '• Активные сообщения показываются случайно\n'
-        '• Неактивные сообщения не показываются'
+        '📢 <b>مدیریت پیام‌های منوی اصلی</b>\n\n'
+        'در اینجا می‌توانید پیام‌هایی اضافه کنید که به کاربران '
+        'در منوی اصلی بین اطلاعات اشتراک و دکمه‌های عمل نمایش داده می‌شوند.\n\n'
+        '• پیام‌ها از تگ‌های HTML پشتیبانی می‌کنند\n'
+        '• می‌توانید چندین پیام ایجاد کنید\n'
+        '• پیام‌های فعال به صورت تصادفی نمایش داده می‌شوند\n'
+        '• پیام‌های غیرفعال نمایش داده نمی‌شوند'
     )
 
     await callback.message.edit_text(text, reply_markup=get_user_messages_keyboard(db_user.language), parse_mode='HTML')
@@ -83,10 +83,10 @@ async def show_user_messages_panel(callback: types.CallbackQuery, db_user: User,
 @error_handler
 async def add_user_message_start(callback: types.CallbackQuery, state: FSMContext, db_user: User, db: AsyncSession):
     await callback.message.edit_text(
-        f'📝 <b>Добавление нового сообщения</b>\n\n'
-        f'Введите текст сообщения, которое будет показываться в главном меню.\n\n'
+        f'📝 <b>افزودن پیام جدید</b>\n\n'
+        f'متن پیامی را که در منوی اصلی نمایش داده می‌شود وارد کنید.\n\n'
         f'{get_html_help_text()}\n\n'
-        f'Отправьте /cancel для отмены.',
+        f'برای لغو /cancel ارسال کنید.',
         parse_mode='HTML',
     )
 
@@ -100,7 +100,7 @@ async def process_new_message_text(message: types.Message, state: FSMContext, db
     if message.text == '/cancel':
         await state.clear()
         await message.answer(
-            '❌ Добавление сообщения отменено.', reply_markup=get_user_messages_keyboard(db_user.language)
+            '❌ افزودن پیام لغو شد.', reply_markup=get_user_messages_keyboard(db_user.language)
         )
         return
 
@@ -108,16 +108,16 @@ async def process_new_message_text(message: types.Message, state: FSMContext, db
 
     if len(message_text) > 4000:
         await message.answer(
-            '❌ Сообщение слишком длинное. Максимум 4000 символов.\n'
-            'Попробуйте еще раз или отправьте /cancel для отмены.'
+            '❌ پیام خیلی طولانی است. حداکثر ۴۰۰۰ کاراکتر.\n'
+            'دوباره امتحان کنید یا برای لغو /cancel ارسال کنید.'
         )
         return
 
     is_valid, error_msg = validate_html_tags(message_text)
     if not is_valid:
         await message.answer(
-            f'❌ Ошибка в HTML разметке: {error_msg}\n\n'
-            f'Исправьте ошибку и попробуйте еще раз, или отправьте /cancel для отмены.',
+            f'❌ خطا در قالب‌بندی HTML: {error_msg}\n\n'
+            f'خطا را اصلاح کرده و دوباره امتحان کنید، یا برای لغو /cancel ارسال کنید.',
             parse_mode=None,
         )
         return
@@ -128,21 +128,21 @@ async def process_new_message_text(message: types.Message, state: FSMContext, db
         await state.clear()
 
         await message.answer(
-            f'✅ <b>Сообщение добавлено!</b>\n\n'
+            f'✅ <b>پیام افزوده شد!</b>\n\n'
             f'<b>ID:</b> {new_message.id}\n'
-            f'<b>Статус:</b> {"🟢 Активно" if new_message.is_active else "🔴 Неактивно"}\n'
-            f'<b>Создано:</b> {new_message.created_at.strftime("%d.%m.%Y %H:%M")}\n\n'
-            f'<b>Предварительный просмотр:</b>\n'
+            f'<b>وضعیت:</b> {"🟢 فعال" if new_message.is_active else "🔴 غیرفعال"}\n'
+            f'<b>ایجادشده:</b> {new_message.created_at.strftime("%d.%m.%Y %H:%M")}\n\n'
+            f'<b>پیش‌نمایش:</b>\n'
             f'<blockquote>{message_text}</blockquote>',
             reply_markup=get_user_messages_keyboard(db_user.language),
             parse_mode='HTML',
         )
 
     except Exception as e:
-        logger.error('Ошибка создания сообщения', error=e)
+        logger.error('Error creating message', error=e)
         await state.clear()
         await message.answer(
-            '❌ Произошла ошибка при создании сообщения. Попробуйте еще раз.',
+            '❌ خطایی در ایجاد پیام رخ داد. دوباره امتحان کنید.',
             reply_markup=get_user_messages_keyboard(db_user.language),
         )
 
@@ -164,14 +164,14 @@ async def list_user_messages(callback: types.CallbackQuery, db_user: User, db: A
 
     if not messages:
         await callback.message.edit_text(
-            '📋 <b>Список сообщений</b>\n\nСообщений пока нет. Добавьте первое сообщение!',
+            '📋 <b>لیست پیام‌ها</b>\n\nهنوز پیامی وجود ندارد. اولین پیام را اضافه کنید!',
             reply_markup=get_user_messages_keyboard(db_user.language),
             parse_mode='HTML',
         )
         await callback.answer()
         return
 
-    text = '📋 <b>Список сообщений</b>\n\n'
+    text = '📋 <b>لیست پیام‌ها</b>\n\n'
 
     for msg in messages:
         status_emoji = '🟢' if msg.is_active else '🔴'
@@ -192,17 +192,17 @@ async def list_user_messages(callback: types.CallbackQuery, db_user: User, db: A
 
     nav_buttons = []
     if page > 0:
-        nav_buttons.append(InlineKeyboardButton(text='⬅️ Назад', callback_data=f'list_user_messages:{page - 1}'))
+        nav_buttons.append(InlineKeyboardButton(text='⬅️ بازگشت', callback_data=f'list_user_messages:{page - 1}'))
 
-    nav_buttons.append(InlineKeyboardButton(text='➕ Добавить', callback_data='add_user_message'))
+    nav_buttons.append(InlineKeyboardButton(text='➕ افزودن', callback_data='add_user_message'))
 
     if len(messages) == limit:
-        nav_buttons.append(InlineKeyboardButton(text='Вперед ➡️', callback_data=f'list_user_messages:{page + 1}'))
+        nav_buttons.append(InlineKeyboardButton(text='جلو ➡️', callback_data=f'list_user_messages:{page + 1}'))
 
     if nav_buttons:
         keyboard.append(nav_buttons)
 
-    keyboard.append([InlineKeyboardButton(text='🔙 Назад', callback_data='user_messages_panel')])
+    keyboard.append([InlineKeyboardButton(text='🔙 بازگشت', callback_data='user_messages_panel')])
 
     await callback.message.edit_text(
         text, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode='HTML'
@@ -216,25 +216,25 @@ async def view_user_message(callback: types.CallbackQuery, db_user: User, db: As
     try:
         message_id = int(callback.data.split(':')[1])
     except (ValueError, IndexError):
-        await callback.answer('❌ Неверный ID сообщения', show_alert=True)
+        await callback.answer('❌ شناسه پیام نامعتبر است', show_alert=True)
         return
 
     message = await get_user_message_by_id(db, message_id)
 
     if not message:
-        await callback.answer('❌ Сообщение не найдено', show_alert=True)
+        await callback.answer('❌ پیام پیدا نشد', show_alert=True)
         return
 
     safe_content = sanitize_html(message.message_text)
 
-    status_text = '🟢 Активно' if message.is_active else '🔴 Неактивно'
+    status_text = '🟢 فعال' if message.is_active else '🔴 غیرفعال'
 
     text = (
-        f'📋 <b>Сообщение ID {message.id}</b>\n\n'
-        f'<b>Статус:</b> {status_text}\n'
-        f'<b>Создано:</b> {message.created_at.strftime("%d.%m.%Y %H:%M")}\n'
-        f'<b>Обновлено:</b> {message.updated_at.strftime("%d.%m.%Y %H:%M")}\n\n'
-        f'<b>Содержимое:</b>\n'
+        f'📋 <b>پیام ID {message.id}</b>\n\n'
+        f'<b>وضعیت:</b> {status_text}\n'
+        f'<b>ایجادشده:</b> {message.created_at.strftime("%d.%m.%Y %H:%M")}\n'
+        f'<b>به‌روزرسانی:</b> {message.updated_at.strftime("%d.%m.%Y %H:%M")}\n\n'
+        f'<b>محتوا:</b>\n'
         f'<blockquote>{safe_content}</blockquote>'
     )
 
@@ -252,17 +252,17 @@ async def toggle_message_status(callback: types.CallbackQuery, db_user: User, db
     try:
         message_id = int(callback.data.split(':')[1])
     except (ValueError, IndexError):
-        await callback.answer('❌ Неверный ID сообщения', show_alert=True)
+        await callback.answer('❌ شناسه پیام نامعتبر است', show_alert=True)
         return
 
     message = await toggle_user_message_status(db, message_id)
 
     if not message:
-        await callback.answer('❌ Сообщение не найдено', show_alert=True)
+        await callback.answer('❌ پیام پیدا نشد', show_alert=True)
         return
 
-    status_text = 'активировано' if message.is_active else 'деактивировано'
-    await callback.answer(f'✅ Сообщение {status_text}')
+    status_text = 'فعال شد' if message.is_active else 'غیرفعال شد'
+    await callback.answer(f'✅ پیام {status_text}')
 
     await view_user_message(callback, db_user, db)
 
@@ -274,13 +274,13 @@ async def delete_message_confirm(callback: types.CallbackQuery, db_user: User, d
     try:
         message_id = int(callback.data.split(':')[1])
     except (ValueError, IndexError):
-        await callback.answer('❌ Неверный ID сообщения', show_alert=True)
+        await callback.answer('❌ شناسه پیام نامعتبر است', show_alert=True)
         return
 
     success = await delete_user_message(db, message_id)
 
     if success:
-        await callback.answer('✅ Сообщение удалено')
+        await callback.answer('✅ پیام حذف شد')
         await list_user_messages(
             types.CallbackQuery(
                 id=callback.id,
@@ -293,7 +293,7 @@ async def delete_message_confirm(callback: types.CallbackQuery, db_user: User, d
             db,
         )
     else:
-        await callback.answer('❌ Ошибка удаления сообщения', show_alert=True)
+        await callback.answer('❌ خطا در حذف پیام', show_alert=True)
 
 
 @admin_required
@@ -302,18 +302,18 @@ async def show_messages_stats(callback: types.CallbackQuery, db_user: User, db: 
     stats = await get_user_messages_stats(db)
 
     text = (
-        '📊 <b>Статистика сообщений</b>\n\n'
-        f'📝 Всего сообщений: <b>{stats["total_messages"]}</b>\n'
-        f'🟢 Активных: <b>{stats["active_messages"]}</b>\n'
-        f'🔴 Неактивных: <b>{stats["inactive_messages"]}</b>\n\n'
-        'Активные сообщения показываются пользователям случайным образом '
-        'в главном меню между информацией о подписке и кнопками действий.'
+        '📊 <b>آمار پیام‌ها</b>\n\n'
+        f'📝 کل پیام‌ها: <b>{stats["total_messages"]}</b>\n'
+        f'🟢 فعال: <b>{stats["active_messages"]}</b>\n'
+        f'🔴 غیرفعال: <b>{stats["inactive_messages"]}</b>\n\n'
+        'پیام‌های فعال به صورت تصادفی به کاربران '
+        'در منوی اصلی بین اطلاعات اشتراک و دکمه‌های عمل نمایش داده می‌شوند.'
     )
 
     from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
     keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text='🔙 Назад', callback_data='user_messages_panel')]]
+        inline_keyboard=[[InlineKeyboardButton(text='🔙 بازگشت', callback_data='user_messages_panel')]]
     )
 
     await callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
@@ -326,20 +326,20 @@ async def edit_user_message_start(callback: types.CallbackQuery, state: FSMConte
     try:
         message_id = int(callback.data.split(':')[1])
     except (ValueError, IndexError):
-        await callback.answer('❌ Неверный ID сообщения', show_alert=True)
+        await callback.answer('❌ شناسه پیام نامعتبر است', show_alert=True)
         return
 
     message = await get_user_message_by_id(db, message_id)
 
     if not message:
-        await callback.answer('❌ Сообщение не найдено', show_alert=True)
+        await callback.answer('❌ پیام پیدا نشد', show_alert=True)
         return
 
     await callback.message.edit_text(
-        f'✏️ <b>Редактирование сообщения ID {message.id}</b>\n\n'
-        f'<b>Текущий текст:</b>\n'
+        f'✏️ <b>ویرایش پیام ID {message.id}</b>\n\n'
+        f'<b>متن فعلی:</b>\n'
         f'<blockquote>{sanitize_html(message.message_text)}</blockquote>\n\n'
-        f'Введите новый текст сообщения или отправьте /cancel для отмены:',
+        f'متن جدید پیام را وارد کنید یا برای لغو /cancel ارسال کنید:',
         parse_mode='HTML',
     )
 
@@ -353,7 +353,7 @@ async def edit_user_message_start(callback: types.CallbackQuery, state: FSMConte
 async def process_edit_message_text(message: types.Message, state: FSMContext, db_user: User, db: AsyncSession):
     if message.text == '/cancel':
         await state.clear()
-        await message.answer('❌ Редактирование отменено.', reply_markup=get_user_messages_keyboard(db_user.language))
+        await message.answer('❌ ویرایش لغو شد.', reply_markup=get_user_messages_keyboard(db_user.language))
         return
 
     data = await state.get_data()
@@ -361,23 +361,23 @@ async def process_edit_message_text(message: types.Message, state: FSMContext, d
 
     if not message_id:
         await state.clear()
-        await message.answer('❌ Ошибка: ID сообщения не найден')
+        await message.answer('❌ خطا: شناسه پیام پیدا نشد')
         return
 
     new_text = message.text.strip()
 
     if len(new_text) > 4000:
         await message.answer(
-            '❌ Сообщение слишком длинное. Максимум 4000 символов.\n'
-            'Попробуйте еще раз или отправьте /cancel для отмены.'
+            '❌ پیام خیلی طولانی است. حداکثر ۴۰۰۰ کاراکتر.\n'
+            'دوباره امتحان کنید یا برای لغو /cancel ارسال کنید.'
         )
         return
 
     is_valid, error_msg = validate_html_tags(new_text)
     if not is_valid:
         await message.answer(
-            f'❌ Ошибка в HTML разметке: {error_msg}\n\n'
-            f'Исправьте ошибку и попробуйте еще раз, или отправьте /cancel для отмены.',
+            f'❌ خطا در قالب‌بندی HTML: {error_msg}\n\n'
+            f'خطا را اصلاح کرده و دوباره امتحان کنید، یا برای لغو /cancel ارسال کنید.',
             parse_mode=None,
         )
         return
@@ -388,10 +388,10 @@ async def process_edit_message_text(message: types.Message, state: FSMContext, d
         if updated_message:
             await state.clear()
             await message.answer(
-                f'✅ <b>Сообщение обновлено!</b>\n\n'
+                f'✅ <b>پیام به‌روزرسانی شد!</b>\n\n'
                 f'<b>ID:</b> {updated_message.id}\n'
-                f'<b>Обновлено:</b> {updated_message.updated_at.strftime("%d.%m.%Y %H:%M")}\n\n'
-                f'<b>Новый текст:</b>\n'
+                f'<b>به‌روزرسانی‌شده:</b> {updated_message.updated_at.strftime("%d.%m.%Y %H:%M")}\n\n'
+                f'<b>متن جدید:</b>\n'
                 f'<blockquote>{sanitize_html(new_text)}</blockquote>',
                 reply_markup=get_user_messages_keyboard(db_user.language),
                 parse_mode='HTML',
@@ -399,15 +399,15 @@ async def process_edit_message_text(message: types.Message, state: FSMContext, d
         else:
             await state.clear()
             await message.answer(
-                '❌ Сообщение не найдено или ошибка обновления.',
+                '❌ پیام پیدا نشد یا خطا در به‌روزرسانی.',
                 reply_markup=get_user_messages_keyboard(db_user.language),
             )
 
     except Exception as e:
-        logger.error('Ошибка обновления сообщения', error=e)
+        logger.error('Error updating message', error=e)
         await state.clear()
         await message.answer(
-            '❌ Произошла ошибка при обновлении сообщения.', reply_markup=get_user_messages_keyboard(db_user.language)
+            '❌ خطایی در به‌روزرسانی پیام رخ داد.', reply_markup=get_user_messages_keyboard(db_user.language)
         )
 
 
