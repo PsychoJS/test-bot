@@ -51,33 +51,33 @@ async def _build_overview(
 
     description = texts.t(
         'ADMIN_FAQ_DESCRIPTION',
-        'FAQ отображается в разделе «Инфо».',
+        'FAQ در بخش «اطلاعات» نمایش داده می‌شود.',
     )
 
     if setting and not setting.is_enabled:
         status_text = texts.t(
             'ADMIN_FAQ_STATUS_DISABLED',
-            '⚠️ Показ FAQ выключен.',
+            '⚠️ نمایش FAQ غیرفعال است.',
         )
     elif active_pages:
         status_text = texts.t(
             'ADMIN_FAQ_STATUS_ENABLED',
-            '✅ FAQ включён. Активных страниц: {count}.',
+            '✅ FAQ فعال است. صفحات فعال: {count}.',
         ).format(count=active_pages)
     elif total_pages:
         status_text = texts.t(
             'ADMIN_FAQ_STATUS_ENABLED_EMPTY',
-            '⚠️ FAQ включён, но нет активных страниц.',
+            '⚠️ FAQ فعال است، اما صفحه‌ای فعال وجود ندارد.',
         )
     else:
         status_text = texts.t(
             'ADMIN_FAQ_STATUS_EMPTY',
-            '⚠️ FAQ ещё не настроен.',
+            '⚠️ FAQ هنوز تنظیم نشده است.',
         )
 
     pages_overview = texts.t(
         'ADMIN_FAQ_PAGES_EMPTY',
-        'Страницы ещё не созданы.',
+        'هنوز صفحه‌ای ایجاد نشده است.',
     )
 
     if pages:
@@ -85,18 +85,18 @@ async def _build_overview(
         for index, page in enumerate(pages, start=1):
             title = (page.title or '').strip()
             if not title:
-                title = texts.t('FAQ_PAGE_UNTITLED', 'Без названия')
+                title = texts.t('FAQ_PAGE_UNTITLED', 'بدون عنوان')
             if len(title) > 60:
                 title = f'{title[:57]}...'
 
             status_label = texts.t(
                 'ADMIN_FAQ_PAGE_STATUS_ACTIVE',
-                '✅ Активна',
+                '✅ فعال',
             )
             if not page.is_active:
                 status_label = texts.t(
                     'ADMIN_FAQ_PAGE_STATUS_INACTIVE',
-                    '🚫 Выключена',
+                    '🚫 غیرفعال',
                 )
 
             updated = _format_timestamp(getattr(page, 'updated_at', None))
@@ -105,24 +105,24 @@ async def _build_overview(
 
         pages_list_header = texts.t(
             'ADMIN_FAQ_PAGES_OVERVIEW',
-            '<b>Список страниц:</b>\n{items}',
+            '<b>لیست صفحات:</b>\n{items}',
         )
         pages_overview = pages_list_header.format(items='\n'.join(rows))
 
     language_block = texts.t(
         'ADMIN_FAQ_LANGUAGE',
-        'Язык: <code>{lang}</code>',
+        'زبان: <code>{lang}</code>',
     ).format(lang=normalized_language)
 
     stats_block = texts.t(
         'ADMIN_FAQ_PAGE_STATS',
-        'Всего страниц: {total}',
+        'تعداد کل صفحات: {total}',
     ).format(total=total_pages)
 
     header = texts.t('ADMIN_FAQ_HEADER', '❓ <b>FAQ</b>')
     actions_prompt = texts.t(
         'ADMIN_FAQ_ACTION_PROMPT',
-        'Выберите действие:',
+        'یک عمل انتخاب کنید:',
     )
 
     message_parts = [
@@ -144,7 +144,7 @@ async def _build_overview(
             types.InlineKeyboardButton(
                 text=texts.t(
                     'ADMIN_FAQ_ADD_PAGE_BUTTON',
-                    '➕ Добавить страницу',
+                    '➕ افزودن صفحه',
                 ),
                 callback_data='admin_faq_create',
             )
@@ -154,7 +154,7 @@ async def _build_overview(
     for page in pages[:25]:
         title = (page.title or '').strip()
         if not title:
-            title = texts.t('FAQ_PAGE_UNTITLED', 'Без названия')
+            title = texts.t('FAQ_PAGE_UNTITLED', 'بدون عنوان')
         if len(title) > 40:
             title = f'{title[:37]}...'
         buttons.append(
@@ -168,12 +168,12 @@ async def _build_overview(
 
     toggle_text = texts.t(
         'ADMIN_FAQ_ENABLE_BUTTON',
-        '✅ Включить показ',
+        '✅ فعال کردن نمایش',
     )
     if setting and setting.is_enabled:
         toggle_text = texts.t(
             'ADMIN_FAQ_DISABLE_BUTTON',
-            '🚫 Отключить показ',
+            '🚫 غیرفعال کردن نمایش',
         )
 
     buttons.append(
@@ -188,7 +188,7 @@ async def _build_overview(
     buttons.append(
         [
             types.InlineKeyboardButton(
-                text=texts.t('ADMIN_FAQ_HTML_HELP', 'ℹ️ HTML помощь'),
+                text=texts.t('ADMIN_FAQ_HTML_HELP', 'ℹ️ راهنمای HTML'),
                 callback_data='admin_faq_help',
             )
         ]
@@ -235,12 +235,12 @@ async def toggle_faq(
     if setting.is_enabled:
         alert_text = texts.t(
             'ADMIN_FAQ_ENABLED_ALERT',
-            '✅ FAQ включён.',
+            '✅ FAQ فعال شد.',
         )
     else:
         alert_text = texts.t(
             'ADMIN_FAQ_DISABLED_ALERT',
-            '🚫 FAQ отключён.',
+            '🚫 FAQ غیرفعال شد.',
         )
 
     overview_text, markup = await _build_overview(db_user, db)
@@ -268,7 +268,7 @@ async def start_create_faq_page(
     await callback.message.edit_text(
         texts.t(
             'ADMIN_FAQ_ENTER_TITLE',
-            'Введите заголовок для новой страницы FAQ:',
+            'عنوان صفحه جدید FAQ را وارد کنید:',
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
@@ -276,7 +276,7 @@ async def start_create_faq_page(
                     types.InlineKeyboardButton(
                         text=texts.t(
                             'ADMIN_FAQ_CANCEL_BUTTON',
-                            '⬅️ Отмена',
+                            '⬅️ لغو',
                         ),
                         callback_data='admin_faq_cancel',
                     )
@@ -314,7 +314,7 @@ async def process_new_faq_title(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_TITLE_EMPTY',
-                '❌ Заголовок не может быть пустым.',
+                '❌ عنوان نمی‌تواند خالی باشد.',
             )
         )
         return
@@ -323,7 +323,7 @@ async def process_new_faq_title(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_TITLE_TOO_LONG',
-                '❌ Заголовок слишком длинный. Максимум 255 символов.',
+                '❌ عنوان خیلی طولانی است. حداکثر ۲۵۵ کاراکتر.',
             )
         )
         return
@@ -334,7 +334,7 @@ async def process_new_faq_title(
     await message.answer(
         texts.t(
             'ADMIN_FAQ_ENTER_CONTENT',
-            'Отправьте содержимое страницы FAQ. Допускается HTML.',
+            'محتوای صفحه FAQ را ارسال کنید. HTML مجاز است.',
         )
     )
 
@@ -354,7 +354,7 @@ async def process_new_faq_content(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_CONTENT_TOO_LONG',
-                '❌ Текст слишком длинный. Максимум 6000 символов.',
+                '❌ متن خیلی طولانی است. حداکثر ۶۰۰۰ کاراکتر.',
             )
         )
         return
@@ -363,7 +363,7 @@ async def process_new_faq_content(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_CONTENT_EMPTY',
-                '❌ Текст не может быть пустым.',
+                '❌ متن نمی‌تواند خالی باشد.',
             )
         )
         return
@@ -373,13 +373,13 @@ async def process_new_faq_content(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_HTML_ERROR',
-                '❌ Ошибка в HTML: {error}',
+                '❌ خطا در HTML: {error}',
             ).format(error=error_message)
         )
         return
 
     data = await state.get_data()
-    title = data.get('faq_title') or texts.t('FAQ_PAGE_UNTITLED', 'Без названия')
+    title = data.get('faq_title') or texts.t('FAQ_PAGE_UNTITLED', 'بدون عنوان')
     language = data.get('faq_language', db_user.language)
 
     await FaqService.create_page(
@@ -389,13 +389,13 @@ async def process_new_faq_content(
         content=content,
     )
 
-    logger.info('Админ создал страницу FAQ (символов)', telegram_id=db_user.telegram_id, content_count=len(content))
+    logger.info('Admin created FAQ page (characters)', telegram_id=db_user.telegram_id, content_count=len(content))
 
     await state.clear()
 
     success_text = texts.t(
         'ADMIN_FAQ_PAGE_CREATED',
-        '✅ Страница FAQ создана.',
+        '✅ صفحه FAQ ایجاد شد.',
     )
 
     reply_markup = types.InlineKeyboardMarkup(
@@ -404,7 +404,7 @@ async def process_new_faq_content(
                 types.InlineKeyboardButton(
                     text=texts.t(
                         'ADMIN_FAQ_BACK_TO_LIST',
-                        '⬅️ К настройкам FAQ',
+                        '⬅️ بازگشت به تنظیمات FAQ',
                     ),
                     callback_data='admin_faq',
                 )
@@ -443,22 +443,22 @@ async def show_faq_page_details(
         await callback.answer(
             texts.t(
                 'ADMIN_FAQ_PAGE_NOT_FOUND',
-                '⚠️ Страница не найдена.',
+                '⚠️ صفحه یافت نشد.',
             ),
             show_alert=True,
         )
         return
 
-    header = texts.t('ADMIN_FAQ_PAGE_HEADER', '📄 <b>Страница FAQ</b>')
-    title = (page.title or '').strip() or texts.t('FAQ_PAGE_UNTITLED', 'Без названия')
+    header = texts.t('ADMIN_FAQ_PAGE_HEADER', '📄 <b>صفحه FAQ</b>')
+    title = (page.title or '').strip() or texts.t('FAQ_PAGE_UNTITLED', 'بدون عنوان')
     status_label = texts.t(
         'ADMIN_FAQ_PAGE_STATUS_ACTIVE',
-        '✅ Активна',
+        '✅ فعال',
     )
     if not page.is_active:
         status_label = texts.t(
             'ADMIN_FAQ_PAGE_STATUS_INACTIVE',
-            '🚫 Выключена',
+            '🚫 غیرفعال',
         )
 
     updated_at = _format_timestamp(getattr(page, 'updated_at', None))
@@ -466,19 +466,19 @@ async def show_faq_page_details(
     if updated_at:
         updated_block = texts.t(
             'ADMIN_FAQ_PAGE_UPDATED',
-            'Обновлено: {timestamp}',
+            'به‌روز شده: {timestamp}',
         ).format(timestamp=updated_at)
 
     preview = (page.content or '').strip()
     preview_text = texts.t(
         'ADMIN_FAQ_PAGE_PREVIEW_EMPTY',
-        'Текст ещё не задан.',
+        'متن هنوز تعیین نشده است.',
     )
     if preview:
         preview_trimmed = preview[:400]
         if len(preview) > 400:
             preview_trimmed += '...'
-        preview_text = texts.t('ADMIN_FAQ_PAGE_PREVIEW', '<b>Превью:</b>\n{content}').format(
+        preview_text = texts.t('ADMIN_FAQ_PAGE_PREVIEW', '<b>پیش‌نمایش:</b>\n{content}').format(
             content=html.escape(preview_trimmed)
         )
 
@@ -486,11 +486,11 @@ async def show_faq_page_details(
         header,
         texts.t(
             'ADMIN_FAQ_PAGE_TITLE',
-            '<b>Заголовок:</b> {title}',
+            '<b>عنوان:</b> {title}',
         ).format(title=html.escape(title)),
         texts.t(
             'ADMIN_FAQ_PAGE_STATUS',
-            'Статус: {status}',
+            'وضعیت: {status}',
         ).format(status=status_label),
         preview_text,
         updated_block,
@@ -503,7 +503,7 @@ async def show_faq_page_details(
     buttons.append(
         [
             types.InlineKeyboardButton(
-                text=texts.t('ADMIN_FAQ_EDIT_TITLE_BUTTON', '✏️ Изменить заголовок'),
+                text=texts.t('ADMIN_FAQ_EDIT_TITLE_BUTTON', '✏️ ویرایش عنوان'),
                 callback_data=f'admin_faq_edit_title:{page.id}',
             )
         ]
@@ -511,17 +511,17 @@ async def show_faq_page_details(
     buttons.append(
         [
             types.InlineKeyboardButton(
-                text=texts.t('ADMIN_FAQ_EDIT_CONTENT_BUTTON', '📝 Изменить текст'),
+                text=texts.t('ADMIN_FAQ_EDIT_CONTENT_BUTTON', '📝 ویرایش متن'),
                 callback_data=f'admin_faq_edit_content:{page.id}',
             )
         ]
     )
 
-    toggle_text = texts.t('ADMIN_FAQ_PAGE_ENABLE_BUTTON', '✅ Включить страницу')
+    toggle_text = texts.t('ADMIN_FAQ_PAGE_ENABLE_BUTTON', '✅ فعال کردن صفحه')
     if page.is_active:
         toggle_text = texts.t(
             'ADMIN_FAQ_PAGE_DISABLE_BUTTON',
-            '🚫 Выключить страницу',
+            '🚫 غیرفعال کردن صفحه',
         )
 
     buttons.append(
@@ -536,11 +536,11 @@ async def show_faq_page_details(
     buttons.append(
         [
             types.InlineKeyboardButton(
-                text=texts.t('ADMIN_FAQ_PAGE_MOVE_UP', '⬆️ Выше'),
+                text=texts.t('ADMIN_FAQ_PAGE_MOVE_UP', '⬆️ بالاتر'),
                 callback_data=f'admin_faq_move:{page.id}:up',
             ),
             types.InlineKeyboardButton(
-                text=texts.t('ADMIN_FAQ_PAGE_MOVE_DOWN', '⬇️ Ниже'),
+                text=texts.t('ADMIN_FAQ_PAGE_MOVE_DOWN', '⬇️ پایین‌تر'),
                 callback_data=f'admin_faq_move:{page.id}:down',
             ),
         ]
@@ -549,7 +549,7 @@ async def show_faq_page_details(
     buttons.append(
         [
             types.InlineKeyboardButton(
-                text=texts.t('ADMIN_FAQ_PAGE_DELETE_BUTTON', '🗑️ Удалить'),
+                text=texts.t('ADMIN_FAQ_PAGE_DELETE_BUTTON', '🗑️ حذف'),
                 callback_data=f'admin_faq_delete:{page.id}',
             )
         ]
@@ -558,7 +558,7 @@ async def show_faq_page_details(
     buttons.append(
         [
             types.InlineKeyboardButton(
-                text=texts.t('ADMIN_FAQ_BACK_TO_LIST', '⬅️ К настройкам FAQ'),
+                text=texts.t('ADMIN_FAQ_BACK_TO_LIST', '⬅️ بازگشت به تنظیمات FAQ'),
                 callback_data='admin_faq',
             )
         ]
@@ -600,7 +600,7 @@ async def start_edit_faq_title(
         await callback.answer(
             texts.t(
                 'ADMIN_FAQ_PAGE_NOT_FOUND',
-                '⚠️ Страница не найдена.',
+                '⚠️ صفحه یافت نشد.',
             ),
             show_alert=True,
         )
@@ -612,7 +612,7 @@ async def start_edit_faq_title(
     await callback.message.edit_text(
         texts.t(
             'ADMIN_FAQ_EDIT_TITLE_PROMPT',
-            'Введите новый заголовок для страницы:',
+            'عنوان جدید صفحه را وارد کنید:',
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
@@ -620,7 +620,7 @@ async def start_edit_faq_title(
                     types.InlineKeyboardButton(
                         text=texts.t(
                             'ADMIN_FAQ_CANCEL_BUTTON',
-                            '⬅️ Отмена',
+                            '⬅️ لغو',
                         ),
                         callback_data=f'admin_faq_page:{page.id}',
                     )
@@ -646,7 +646,7 @@ async def process_edit_faq_title(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_TITLE_EMPTY',
-                '❌ Заголовок не может быть пустым.',
+                '❌ عنوان نمی‌تواند خالی باشد.',
             )
         )
         return
@@ -655,7 +655,7 @@ async def process_edit_faq_title(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_TITLE_TOO_LONG',
-                '❌ Заголовок слишком длинный. Максимум 255 символов.',
+                '❌ عنوان خیلی طولانی است. حداکثر ۲۵۵ کاراکتر.',
             )
         )
         return
@@ -665,7 +665,7 @@ async def process_edit_faq_title(
 
     if not page_id:
         await state.clear()
-        await message.answer(texts.t('ADMIN_FAQ_UNEXPECTED_STATE', '⚠️ Состояние сброшено.'))
+        await message.answer(texts.t('ADMIN_FAQ_UNEXPECTED_STATE', '⚠️ وضعیت بازنشینی شد.'))
         return
 
     page = await FaqService.get_page(
@@ -678,7 +678,7 @@ async def process_edit_faq_title(
 
     if not page:
         await message.answer(
-            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ Страница не найдена.'),
+            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ صفحه یافت نشد.'),
         )
         await state.clear()
         return
@@ -687,12 +687,12 @@ async def process_edit_faq_title(
     await state.clear()
 
     await message.answer(
-        texts.t('ADMIN_FAQ_TITLE_UPDATED', '✅ Заголовок обновлён.'),
+        texts.t('ADMIN_FAQ_TITLE_UPDATED', '✅ عنوان به‌روز شد.'),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('ADMIN_FAQ_BACK_TO_LIST', '⬅️ К настройкам FAQ'),
+                        text=texts.t('ADMIN_FAQ_BACK_TO_LIST', '⬅️ بازگشت به تنظیمات FAQ'),
                         callback_data='admin_faq',
                     )
                 ]
@@ -728,7 +728,7 @@ async def start_edit_faq_content(
 
     if not page:
         await callback.answer(
-            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ Страница не найдена.'),
+            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ صفحه یافت نشد.'),
             show_alert=True,
         )
         return
@@ -739,7 +739,7 @@ async def start_edit_faq_content(
     await callback.message.edit_text(
         texts.t(
             'ADMIN_FAQ_EDIT_CONTENT_PROMPT',
-            'Отправьте новый текст для страницы FAQ.',
+            'متن جدید صفحه FAQ را ارسال کنید.',
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
@@ -747,7 +747,7 @@ async def start_edit_faq_content(
                     types.InlineKeyboardButton(
                         text=texts.t(
                             'ADMIN_FAQ_CANCEL_BUTTON',
-                            '⬅️ Отмена',
+                            '⬅️ لغو',
                         ),
                         callback_data=f'admin_faq_page:{page.id}',
                     )
@@ -773,7 +773,7 @@ async def process_edit_faq_content(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_CONTENT_TOO_LONG',
-                '❌ Текст слишком длинный. Максимум 6000 символов.',
+                '❌ متن خیلی طولانی است. حداکثر ۶۰۰۰ کاراکتر.',
             )
         )
         return
@@ -782,7 +782,7 @@ async def process_edit_faq_content(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_CONTENT_EMPTY',
-                '❌ Текст не может быть пустым.',
+                '❌ متن نمی‌تواند خالی باشد.',
             )
         )
         return
@@ -792,7 +792,7 @@ async def process_edit_faq_content(
         await message.answer(
             texts.t(
                 'ADMIN_FAQ_HTML_ERROR',
-                '❌ Ошибка в HTML: {error}',
+                '❌ خطا در HTML: {error}',
             ).format(error=error_message)
         )
         return
@@ -802,7 +802,7 @@ async def process_edit_faq_content(
 
     if not page_id:
         await state.clear()
-        await message.answer(texts.t('ADMIN_FAQ_UNEXPECTED_STATE', '⚠️ Состояние сброшено.'))
+        await message.answer(texts.t('ADMIN_FAQ_UNEXPECTED_STATE', '⚠️ وضعیت بازنشینی شد.'))
         return
 
     page = await FaqService.get_page(
@@ -815,7 +815,7 @@ async def process_edit_faq_content(
 
     if not page:
         await message.answer(
-            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ Страница не найдена.'),
+            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ صفحه یافت نشد.'),
         )
         await state.clear()
         return
@@ -824,12 +824,12 @@ async def process_edit_faq_content(
     await state.clear()
 
     await message.answer(
-        texts.t('ADMIN_FAQ_CONTENT_UPDATED', '✅ Текст страницы обновлён.'),
+        texts.t('ADMIN_FAQ_CONTENT_UPDATED', '✅ متن صفحه به‌روز شد.'),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('ADMIN_FAQ_BACK_TO_LIST', '⬅️ К настройкам FAQ'),
+                        text=texts.t('ADMIN_FAQ_BACK_TO_LIST', '⬅️ بازگشت به تنظیمات FAQ'),
                         callback_data='admin_faq',
                     )
                 ]
@@ -864,7 +864,7 @@ async def toggle_faq_page(
 
     if not page:
         await callback.answer(
-            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ Страница не найдена.'),
+            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ صفحه یافت نشد.'),
             show_alert=True,
         )
         return
@@ -873,12 +873,12 @@ async def toggle_faq_page(
 
     alert_text = texts.t(
         'ADMIN_FAQ_PAGE_ENABLED_ALERT',
-        '✅ Страница включена.',
+        '✅ صفحه فعال شد.',
     )
     if not updated_page.is_active:
         alert_text = texts.t(
             'ADMIN_FAQ_PAGE_DISABLED_ALERT',
-            '🚫 Страница выключена.',
+            '🚫 صفحه غیرفعال شد.',
         )
 
     await callback.answer(alert_text, show_alert=True)
@@ -911,7 +911,7 @@ async def delete_faq_page(
 
     if not page:
         await callback.answer(
-            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ Страница не найдена.'),
+            texts.t('ADMIN_FAQ_PAGE_NOT_FOUND', '⚠️ صفحه یافت نشد.'),
             show_alert=True,
         )
         return
@@ -933,7 +933,7 @@ async def delete_faq_page(
         await FaqService.reorder_pages(db, db_user.language, remaining_sorted)
 
     await callback.answer(
-        texts.t('ADMIN_FAQ_PAGE_DELETED', '🗑️ Страница удалена.'),
+        texts.t('ADMIN_FAQ_PAGE_DELETED', '🗑️ صفحه حذف شد.'),
         show_alert=True,
     )
 
@@ -993,7 +993,7 @@ async def move_faq_page(
     await FaqService.reorder_pages(db, db_user.language, pages_sorted)
 
     await callback.answer(
-        texts.t('ADMIN_FAQ_PAGE_REORDERED', '✅ Порядок обновлён.'),
+        texts.t('ADMIN_FAQ_PAGE_REORDERED', '✅ ترتیب به‌روز شد.'),
         show_alert=True,
     )
     await show_faq_page_details(callback, db_user, db)
@@ -1013,7 +1013,7 @@ async def show_faq_html_help(
     buttons = [
         [
             types.InlineKeyboardButton(
-                text=texts.t('ADMIN_FAQ_BACK_TO_LIST', '⬅️ К настройкам FAQ'),
+                text=texts.t('ADMIN_FAQ_BACK_TO_LIST', '⬅️ بازگشت به تنظیمات FAQ'),
                 callback_data='admin_faq',
             )
         ]

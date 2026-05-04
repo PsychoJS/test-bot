@@ -22,9 +22,9 @@ logger = structlog.get_logger(__name__)
 @error_handler
 async def show_statistics_menu(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
     text = """
-📊 <b>Статистика системы</b>
+📊 <b>آمار سیستم</b>
 
-Выберите раздел для просмотра статистики:
+بخشی را برای مشاهده آمار انتخاب کنید:
 """
 
     await callback.message.edit_text(text, reply_markup=get_admin_statistics_keyboard(db_user.language))
@@ -43,29 +43,29 @@ async def show_users_statistics(callback: types.CallbackQuery, db_user: User, db
     current_time = format_datetime(datetime.now(UTC))
 
     text = f"""
-👥 <b>Статистика пользователей</b>
+👥 <b>آمار کاربران</b>
 
-<b>Общие показатели:</b>
-- Всего зарегистрировано: {stats['total_users']}
-- Активных: {stats['active_users']} ({active_rate})
-- Заблокированных: {stats['blocked_users']}
+<b>شاخص‌های کلی:</b>
+- کل ثبت‌نام‌شدگان: {stats['total_users']}
+- فعال: {stats['active_users']} ({active_rate})
+- مسدودشده: {stats['blocked_users']}
 
-<b>Новые регистрации:</b>
-- Сегодня: {stats['new_today']}
-- За неделю: {stats['new_week']}
-- За месяц: {stats['new_month']}
+<b>ثبت‌نام‌های جدید:</b>
+- امروز: {stats['new_today']}
+- این هفته: {stats['new_week']}
+- این ماه: {stats['new_month']}
 
-<b>Активность:</b>
-- Коэффициент активности: {active_rate}
-- Рост за месяц: +{stats['new_month']} ({format_percentage(stats['new_month'] / total_users * 100 if total_users > 0 else 0)})
+<b>فعالیت:</b>
+- نرخ فعالیت: {active_rate}
+- رشد ماهانه: +{stats['new_month']} ({format_percentage(stats['new_month'] / total_users * 100 if total_users > 0 else 0)})
 
-<b>Обновлено:</b> {current_time}
+<b>به‌روزرسانی:</b> {current_time}
 """
 
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
-            [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_stats_users')],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_statistics')],
+            [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_stats_users')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_statistics')],
         ]
     )
 
@@ -73,13 +73,13 @@ async def show_users_statistics(callback: types.CallbackQuery, db_user: User, db
         await callback.message.edit_text(text, reply_markup=keyboard)
     except Exception as e:
         if 'message is not modified' in str(e):
-            await callback.answer('📊 Данные актуальны', show_alert=False)
+            await callback.answer('📊 داده‌ها به‌روز هستند', show_alert=False)
         else:
-            logger.error('Ошибка обновления статистики пользователей', error=e)
-            await callback.answer('❌ Ошибка обновления данных', show_alert=True)
+            logger.error('Error updating user statistics', error=e)
+            await callback.answer('❌ خطا در به‌روزرسانی داده‌ها', show_alert=True)
             return
 
-    await callback.answer('✅ Статистика обновлена')
+    await callback.answer('✅ آمار به‌روزرسانی شد')
 
 
 @admin_required
@@ -92,42 +92,42 @@ async def show_subscriptions_statistics(callback: types.CallbackQuery, db_user: 
     current_time = format_datetime(datetime.now(UTC))
 
     text = f"""
-📱 <b>Статистика подписок</b>
+📱 <b>آمار اشتراک‌ها</b>
 
-<b>Общие показатели:</b>
-- Всего подписок: {stats['total_subscriptions']}
-- Активных: {stats['active_subscriptions']}
-- Платных: {stats['paid_subscriptions']}
-- Триальных: {stats['trial_subscriptions']}
+<b>شاخص‌های کلی:</b>
+- کل اشتراک‌ها: {stats['total_subscriptions']}
+- فعال: {stats['active_subscriptions']}
+- پولی: {stats['paid_subscriptions']}
+- آزمایشی: {stats['trial_subscriptions']}
 
-<b>Конверсия:</b>
-- Из триала в платную: {conversion_rate}
-- Активных платных: {stats['paid_subscriptions']}
+<b>تبدیل:</b>
+- از آزمایشی به پولی: {conversion_rate}
+- اشتراک‌های پولی فعال: {stats['paid_subscriptions']}
 
-<b>Продажи:</b>
-- Сегодня: {stats['purchased_today']}
-- За неделю: {stats['purchased_week']}
-- За месяц: {stats['purchased_month']}
+<b>فروش:</b>
+- امروز: {stats['purchased_today']}
+- این هفته: {stats['purchased_week']}
+- این ماه: {stats['purchased_month']}
 
-<b>Обновлено:</b> {current_time}
+<b>به‌روزرسانی:</b> {current_time}
 """
 
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
-            [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_stats_subs')],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_statistics')],
+            [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_stats_subs')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_statistics')],
         ]
     )
 
     try:
         await callback.message.edit_text(text, reply_markup=keyboard)
-        await callback.answer('✅ Статистика обновлена')
+        await callback.answer('✅ آمار به‌روزرسانی شد')
     except Exception as e:
         if 'message is not modified' in str(e):
-            await callback.answer('📊 Данные актуальны', show_alert=False)
+            await callback.answer('📊 داده‌ها به‌روز هستند', show_alert=False)
         else:
-            logger.error('Ошибка обновления статистики подписок', error=e)
-            await callback.answer('❌ Ошибка обновления данных', show_alert=True)
+            logger.error('Error updating subscription statistics', error=e)
+            await callback.answer('❌ خطا در به‌روزرسانی داده‌ها', show_alert=True)
 
 
 @admin_required
@@ -141,48 +141,48 @@ async def show_revenue_statistics(callback: types.CallbackQuery, db_user: User, 
     current_time = format_datetime(datetime.now(UTC))
 
     text = f"""
-💰 <b>Статистика доходов</b>
+💰 <b>آمار درآمدها</b>
 
-<b>За текущий месяц:</b>
-- Доходы: {settings.format_price(month_stats['totals']['income_kopeks'])}
-- Расходы: {settings.format_price(month_stats['totals']['expenses_kopeks'])}
-- Прибыль: {settings.format_price(month_stats['totals']['profit_kopeks'])}
-- От подписок: {settings.format_price(abs(month_stats['totals']['subscription_income_kopeks']))}
+<b>ماه جاری:</b>
+- درآمد: {settings.format_price(month_stats['totals']['income_kopeks'])}
+- هزینه: {settings.format_price(month_stats['totals']['expenses_kopeks'])}
+- سود: {settings.format_price(month_stats['totals']['profit_kopeks'])}
+- از اشتراک‌ها: {settings.format_price(abs(month_stats['totals']['subscription_income_kopeks']))}
 
-<b>Сегодня:</b>
-- Транзакций: {month_stats['today']['transactions_count']}
-- Доходы: {settings.format_price(month_stats['today']['income_kopeks'])}
+<b>امروز:</b>
+- تراکنش‌ها: {month_stats['today']['transactions_count']}
+- درآمد: {settings.format_price(month_stats['today']['income_kopeks'])}
 
-<b>За все время:</b>
-- Общий доход: {settings.format_price(all_time_stats['totals']['income_kopeks'])}
-- Общая прибыль: {settings.format_price(all_time_stats['totals']['profit_kopeks'])}
+<b>همه زمان‌ها:</b>
+- کل درآمد: {settings.format_price(all_time_stats['totals']['income_kopeks'])}
+- کل سود: {settings.format_price(all_time_stats['totals']['profit_kopeks'])}
 
-<b>Способы оплаты:</b>
+<b>روش‌های پرداخت:</b>
 """
 
     for method, data in month_stats['by_payment_method'].items():
         if method and data['count'] > 0:
             text += f'• {method}: {data["count"]} ({settings.format_price(data["amount"])})\n'
 
-    text += f'\n<b>Обновлено:</b> {current_time}'
+    text += f'\n<b>به‌روزرسانی:</b> {current_time}'
 
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
             # [types.InlineKeyboardButton(text="📈 Период", callback_data="admin_revenue_period")],
-            [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_stats_revenue')],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_statistics')],
+            [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_stats_revenue')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_statistics')],
         ]
     )
 
     try:
         await callback.message.edit_text(text, reply_markup=keyboard)
-        await callback.answer('✅ Статистика обновлена')
+        await callback.answer('✅ آمار به‌روزرسانی شد')
     except Exception as e:
         if 'message is not modified' in str(e):
-            await callback.answer('📊 Данные актуальны', show_alert=False)
+            await callback.answer('📊 داده‌ها به‌روز هستند', show_alert=False)
         else:
-            logger.error('Ошибка обновления статистики доходов', error=e)
-            await callback.answer('❌ Ошибка обновления данных', show_alert=True)
+            logger.error('Error updating revenue statistics', error=e)
+            await callback.answer('❌ خطا در به‌روزرسانی داده‌ها', show_alert=True)
 
 
 @admin_required
@@ -196,22 +196,22 @@ async def show_referral_statistics(callback: types.CallbackQuery, db_user: User,
         avg_per_referrer = stats['total_paid_kopeks'] / stats['active_referrers']
 
     text = f"""
-🤝 <b>Реферальная статистика</b>
+🤝 <b>آمار ارجاع‌ها</b>
 
-<b>Общие показатели:</b>
-- Пользователей с рефералами: {stats['users_with_referrals']}
-- Активных рефереров: {stats['active_referrers']}
-- Выплачено всего: {settings.format_price(stats['total_paid_kopeks'])}
+<b>شاخص‌های کلی:</b>
+- کاربران دارای ارجاع: {stats['users_with_referrals']}
+- ارجاع‌دهندگان فعال: {stats['active_referrers']}
+- مجموع پرداخت‌شده: {settings.format_price(stats['total_paid_kopeks'])}
 
-<b>За период:</b>
-- Сегодня: {settings.format_price(stats['today_earnings_kopeks'])}
-- За неделю: {settings.format_price(stats['week_earnings_kopeks'])}
-- За месяц: {settings.format_price(stats['month_earnings_kopeks'])}
+<b>بازه زمانی:</b>
+- امروز: {settings.format_price(stats['today_earnings_kopeks'])}
+- این هفته: {settings.format_price(stats['week_earnings_kopeks'])}
+- این ماه: {settings.format_price(stats['month_earnings_kopeks'])}
 
-<b>Средние показатели:</b>
-- На одного рефререра: {settings.format_price(int(avg_per_referrer))}
+<b>میانگین:</b>
+- به ازای هر ارجاع‌دهنده: {settings.format_price(int(avg_per_referrer))}
 
-<b>Топ рефереры:</b>
+<b>برترین ارجاع‌دهندگان:</b>
 """
 
     if stats['top_referrers']:
@@ -219,28 +219,28 @@ async def show_referral_statistics(callback: types.CallbackQuery, db_user: User,
             name = referrer['display_name']
             earned = settings.format_price(referrer['total_earned_kopeks'])
             count = referrer['referrals_count']
-            text += f'{i}. {name}: {earned} ({count} реф.)\n'
+            text += f'{i}. {name}: {earned} ({count} نفر)\n'
     else:
-        text += 'Пока нет активных рефереров'
+        text += 'هنوز هیچ ارجاع‌دهنده فعالی وجود ندارد'
 
-    text += f'\n<b>Обновлено:</b> {current_time}'
+    text += f'\n<b>به‌روزرسانی:</b> {current_time}'
 
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
-            [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_stats_referrals')],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_statistics')],
+            [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_stats_referrals')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_statistics')],
         ]
     )
 
     try:
         await callback.message.edit_text(text, reply_markup=keyboard)
-        await callback.answer('✅ Статистика обновлена')
+        await callback.answer('✅ آمار به‌روزرسانی شد')
     except Exception as e:
         if 'message is not modified' in str(e):
-            await callback.answer('📊 Данные актуальны', show_alert=False)
+            await callback.answer('📊 داده‌ها به‌روز هستند', show_alert=False)
         else:
-            logger.error('Ошибка обновления реферальной статистики', error=e)
-            await callback.answer('❌ Ошибка обновления данных', show_alert=True)
+            logger.error('Error updating referral statistics', error=e)
+            await callback.answer('❌ خطا در به‌روزرسانی داده‌ها', show_alert=True)
 
 
 @admin_required
@@ -264,46 +264,46 @@ async def show_summary_statistics(callback: types.CallbackQuery, db_user: User, 
         arpu = revenue_stats['totals']['income_kopeks'] / user_stats['active_users']
 
     text = f"""
-📊 <b>Общая сводка системы</b>
+📊 <b>خلاصه کلی سیستم</b>
 
-<b>Пользователи:</b>
-- Всего: {user_stats['total_users']}
-- Активных: {user_stats['active_users']}
-- Новых за месяц: {user_stats['new_month']}
+<b>کاربران:</b>
+- کل: {user_stats['total_users']}
+- فعال: {user_stats['active_users']}
+- جدید این ماه: {user_stats['new_month']}
 
-<b>Подписки:</b>
-- Активных: {sub_stats['active_subscriptions']}
-- Платных: {sub_stats['paid_subscriptions']}
-- Конверсия: {format_percentage(conversion_rate)}
+<b>اشتراک‌ها:</b>
+- فعال: {sub_stats['active_subscriptions']}
+- پولی: {sub_stats['paid_subscriptions']}
+- تبدیل: {format_percentage(conversion_rate)}
 
-<b>Финансы (месяц):</b>
-- Доходы: {settings.format_price(revenue_stats['totals']['income_kopeks'])}
+<b>مالی (ماه):</b>
+- درآمد: {settings.format_price(revenue_stats['totals']['income_kopeks'])}
 - ARPU: {settings.format_price(int(arpu))}
-- Транзакций: {sum(data['count'] for data in revenue_stats['by_type'].values())}
+- تراکنش‌ها: {sum(data['count'] for data in revenue_stats['by_type'].values())}
 
-<b>Рост:</b>
-- Пользователи: +{user_stats['new_month']} за месяц
-- Продажи: +{sub_stats['purchased_month']} за месяц
+<b>رشد:</b>
+- کاربران: +{user_stats['new_month']} این ماه
+- فروش: +{sub_stats['purchased_month']} این ماه
 
-<b>Обновлено:</b> {current_time}
+<b>به‌روزرسانی:</b> {current_time}
 """
 
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
-            [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_stats_summary')],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_statistics')],
+            [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_stats_summary')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_statistics')],
         ]
     )
 
     try:
         await callback.message.edit_text(text, reply_markup=keyboard)
-        await callback.answer('✅ Статистика обновлена')
+        await callback.answer('✅ آمار به‌روزرسانی شد')
     except Exception as e:
         if 'message is not modified' in str(e):
-            await callback.answer('📊 Данные актуальны', show_alert=False)
+            await callback.answer('📊 داده‌ها به‌روز هستند', show_alert=False)
         else:
-            logger.error('Ошибка обновления общей статистики', error=e)
-            await callback.answer('❌ Ошибка обновления данных', show_alert=True)
+            logger.error('Error updating summary statistics', error=e)
+            await callback.answer('❌ خطا در به‌روزرسانی داده‌ها', show_alert=True)
 
 
 @admin_required
@@ -327,28 +327,28 @@ async def show_revenue_by_period(callback: types.CallbackQuery, db_user: User, d
     avg_daily = total_revenue / len(revenue_data) if revenue_data else 0
 
     text = f"""
-📈 <b>Доходы за период: {period}</b>
+📈 <b>درآمدها برای دوره: {period}</b>
 
-<b>Сводка:</b>
-- Общий доход: {settings.format_price(total_revenue)}
-- Дней с данными: {len(revenue_data)}
-- Средний доход в день: {settings.format_price(int(avg_daily))}
+<b>خلاصه:</b>
+- کل درآمد: {settings.format_price(total_revenue)}
+- روزهای دارای داده: {len(revenue_data)}
+- میانگین درآمد روزانه: {settings.format_price(int(avg_daily))}
 
-<b>По дням:</b>
+<b>به تفکیک روز:</b>
 """
 
     for revenue in revenue_data[-10:]:
         text += f'• {revenue["date"].strftime("%d.%m")}: {settings.format_price(revenue["amount_kopeks"])}\n'
 
     if len(revenue_data) > 10:
-        text += f'... и еще {len(revenue_data) - 10} дней'
+        text += f'... و {len(revenue_data) - 10} روز دیگر'
 
     await callback.message.edit_text(
         text,
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='📊 Другой период', callback_data='admin_revenue_period')],
-                [types.InlineKeyboardButton(text='⬅️ К доходам', callback_data='admin_stats_revenue')],
+                [types.InlineKeyboardButton(text='📊 دوره دیگر', callback_data='admin_revenue_period')],
+                [types.InlineKeyboardButton(text='⬅️ به درآمدها', callback_data='admin_stats_revenue')],
             ]
         ),
     )
