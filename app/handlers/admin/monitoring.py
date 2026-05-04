@@ -703,9 +703,9 @@ async def force_check_callback(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_mon_traffic_check')
 @admin_required
 async def traffic_check_callback(callback: CallbackQuery):
-    """Ручная проверка трафика — использует snapshot и дельту."""
+    """Manual traffic check — uses snapshot and delta."""
     try:
-        # Проверяем, включен ли мониторинг трафика
+        # Check whether traffic monitoring is enabled
         if not traffic_monitoring_scheduler.is_enabled():
             await callback.answer(
                 '⚠️ مانیتورینگ ترافیک در تنظیمات غیرفعال است\nلطفاً TRAFFIC_FAST_CHECK_ENABLED=true را در .env فعال کنید',
@@ -715,16 +715,16 @@ async def traffic_check_callback(callback: CallbackQuery):
 
         await callback.answer('⏳ در حال اجرای بررسی ترافیک (دلتا)...')
 
-        # Используем run_fast_check — он сравнивает с snapshot и отправляет уведомления
+        # Use run_fast_check — it compares against the snapshot and sends notifications
         from app.services.traffic_monitoring_service import traffic_monitoring_scheduler_v2
 
-        # Устанавливаем бота, если не установлен
+        # Set the bot if it is not already set
         if not traffic_monitoring_scheduler_v2.bot:
             traffic_monitoring_scheduler_v2.set_bot(callback.bot)
 
         violations = await traffic_monitoring_scheduler_v2.run_fast_check_now()
 
-        # Получаем информацию о snapshot
+        # Get snapshot information
         snapshot_age = await traffic_monitoring_scheduler_v2.service.get_snapshot_age_minutes()
         threshold_gb = traffic_monitoring_scheduler_v2.service.get_fast_check_threshold_gb()
 
@@ -908,7 +908,7 @@ async def monitoring_statistics_callback(callback: CallbackQuery):
 • پرداخت خودکار: {', '.join(map(str, settings.get_autopay_warning_days()))} روز
 """
 
-            # Добавляем информацию о чеках NaloGO
+            # Add NaloGO receipt information
             if settings.is_nalogo_enabled():
                 nalogo_status = await nalogo_queue_service.get_status()
                 queue_len = nalogo_status.get('queue_length', 0)
@@ -965,7 +965,7 @@ async def monitoring_statistics_callback(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_mon_nalogo_force_process')
 @admin_required
 async def nalogo_force_process_callback(callback: CallbackQuery):
-    """Принудительная отправка чеков из очереди."""
+    """Forced processing of receipts from the queue."""
     try:
         await callback.answer('🔄 در حال پردازش صف فاکتورها...', show_alert=False)
 
@@ -975,7 +975,7 @@ async def nalogo_force_process_callback(callback: CallbackQuery):
             await callback.answer(f'❌ {result["error"]}', show_alert=True)
             return
 
-        result.get('message', 'Готово')
+        result.get('message', 'Done')
         processed = result.get('processed', 0)
         remaining = result.get('remaining', 0)
 
@@ -990,10 +990,10 @@ async def nalogo_force_process_callback(callback: CallbackQuery):
 
         await callback.answer(text, show_alert=True)
 
-        # Обновляем страницу статистики
+        # Reload statistics page
         from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-        # Перезагружаем статистику
+        # Reload statistics
         async with AsyncSessionLocal() as db:
             from app.database.crud.subscription import get_subscriptions_statistics
 
@@ -1075,7 +1075,7 @@ async def nalogo_force_process_callback(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_mon_nalogo_pending')
 @admin_required
 async def nalogo_pending_callback(callback: CallbackQuery):
-    """Просмотр чеков ожидающих ручной проверки."""
+    """View receipts awaiting manual verification."""
     try:
         from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -1135,14 +1135,14 @@ async def nalogo_pending_callback(callback: CallbackQuery):
 @router.callback_query(F.data.startswith('admin_nalogo_verified:'))
 @admin_required
 async def nalogo_mark_verified_callback(callback: CallbackQuery):
-    """Пометить чек как созданный в налоговой."""
+    """Mark a receipt as created in the tax service."""
     try:
         from app.services.nalogo_service import NaloGoService
 
         payment_id = callback.data.split(':', 1)[1]
         nalogo_service = NaloGoService()
 
-        # Помечаем как проверенный (чек был создан)
+        # Mark as verified (receipt was created)
         removed = await nalogo_service.mark_pending_as_verified(payment_id, receipt_uuid=None, was_created=True)
 
         if removed:
@@ -1159,7 +1159,7 @@ async def nalogo_mark_verified_callback(callback: CallbackQuery):
 @router.callback_query(F.data.startswith('admin_nalogo_retry:'))
 @admin_required
 async def nalogo_retry_callback(callback: CallbackQuery):
-    """Повторно отправить чек в налоговую."""
+    """Re-submit a receipt to the tax service."""
     try:
         from app.services.nalogo_service import NaloGoService
 
@@ -1184,7 +1184,7 @@ async def nalogo_retry_callback(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_nalogo_clear_pending')
 @admin_required
 async def nalogo_clear_pending_callback(callback: CallbackQuery):
-    """Очистить всю очередь проверки."""
+    """Clear the entire verification queue."""
     try:
         from app.services.nalogo_service import NaloGoService
 
@@ -1207,15 +1207,15 @@ async def nalogo_clear_pending_callback(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_mon_receipts_missing')
 @admin_required
 async def receipts_missing_callback(callback: CallbackQuery):
-    """Сверка чеков по логам."""
-    # Напрямую вызываем сверку по логам
+    """Receipt reconciliation by logs."""
+    # Directly call the log-based reconciliation
     await _do_reconcile_logs(callback)
 
 
 @router.callback_query(F.data == 'admin_mon_receipts_link_old')
 @admin_required
 async def receipts_link_old_callback(callback: CallbackQuery):
-    """Привязать старые чеки из NaloGO к транзакциям по сумме и дате."""
+    """Link old NaloGO receipts to transactions by amount and date."""
     try:
         from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
         from sqlalchemy import and_, select
@@ -1228,7 +1228,7 @@ async def receipts_link_old_callback(callback: CallbackQuery):
         TRACKING_START_DATE = datetime(2024, 12, 29, 0, 0, 0, tzinfo=UTC)
 
         async with AsyncSessionLocal() as db:
-            # Получаем старые транзакции без чеков
+            # Get old transactions without receipts
             query = (
                 select(Transaction)
                 .where(
@@ -1250,7 +1250,7 @@ async def receipts_link_old_callback(callback: CallbackQuery):
                 await callback.answer('✅ تراکنش قدیمی برای پیوند وجود ندارد', show_alert=True)
                 return
 
-            # Получаем чеки из NaloGO за последние 60 дней
+            # Get receipts from NaloGO for the last 60 days
             nalogo_service = NaloGoService()
             to_date = date.today()
             from_date = to_date - timedelta(days=60)
@@ -1265,8 +1265,8 @@ async def receipts_link_old_callback(callback: CallbackQuery):
                 await callback.answer('❌ دریافت فاکتورها از NaloGO ممکن نشد', show_alert=True)
                 return
 
-            # Создаём словарь чеков по сумме для быстрого поиска
-            # Ключ: сумма в копейках, значение: список чеков
+            # Build a dictionary of receipts by amount for fast lookup
+            # Key: amount in kopeks, value: list of receipts
             incomes_by_amount = {}
             for income in incomes:
                 amount = float(income.get('totalAmount', income.get('amount', 0)))
@@ -1280,12 +1280,12 @@ async def receipts_link_old_callback(callback: CallbackQuery):
                 if t.amount_kopeks in incomes_by_amount:
                     matching_incomes = incomes_by_amount[t.amount_kopeks]
                     if matching_incomes:
-                        # Берём первый подходящий чек
+                        # Take the first matching receipt
                         income = matching_incomes.pop(0)
                         receipt_uuid = income.get('approvedReceiptUuid', income.get('receiptUuid'))
                         if receipt_uuid:
                             t.receipt_uuid = receipt_uuid
-                            # Парсим дату чека
+                            # Parse the receipt date
                             operation_time = income.get('operationTime')
                             if operation_time:
                                 try:
@@ -1324,17 +1324,17 @@ async def receipts_link_old_callback(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_mon_receipts_reconcile')
 @admin_required
 async def receipts_reconcile_menu_callback(callback: CallbackQuery, state: FSMContext):
-    """Меню выбора периода сверки."""
+    """Reconciliation period selection menu."""
 
-    # Очищаем состояние на случай если остался ввод даты
+    # Clear state in case a date input was left pending
     await state.clear()
 
-    # Сразу показываем сверку по логам
+    # Directly show log-based reconciliation
     await _do_reconcile_logs(callback)
 
 
 async def _do_reconcile_logs(callback: CallbackQuery):
-    """Внутренняя функция сверки по логам."""
+    """Internal log-based reconciliation function."""
     try:
         import re
         from collections import defaultdict
@@ -1344,7 +1344,7 @@ async def _do_reconcile_logs(callback: CallbackQuery):
 
         await callback.answer('🔄 در حال تجزیه لاگ‌های پرداخت...', show_alert=False)
 
-        # Путь к файлу логов платежей (logs/current/)
+        # Path to the payments log file (logs/current/)
         log_file_path = await asyncio.to_thread(Path(settings.LOG_FILE).resolve)
         log_dir = log_file_path.parent
         current_dir = log_dir / 'current'
@@ -1365,34 +1365,34 @@ async def _do_reconcile_logs(callback: CallbackQuery):
                     ),
                 )
             except TelegramBadRequest:
-                pass  # Сообщение не изменилось
+                pass  # Message unchanged
             return
 
-        # Паттерны для парсинга логов
-        # Успешный платёж: "Успешно обработан платеж YooKassa 30e3c6fc-000f-5001-9000-1a9c8b242396: пользователь 1046 пополнил баланс на 200.0₽"
+        # Patterns for parsing logs
+        # Successful payment log example: "Successfully processed YooKassa payment <uuid>: user <id> topped up balance by <amount>₽"
         payment_pattern = re.compile(
             r'(\d{4}-\d{2}-\d{2}) \d{2}:\d{2}:\d{2}.*Успешно обработан платеж YooKassa ([a-f0-9-]+).*на ([\d.]+)₽'
         )
-        # Чек создан: "Чек NaloGO создан для платежа 30e3c6fc-000f-5001-9000-1a9c8b242396: 243udsqtik"
+        # Receipt created log example: "NaloGO receipt created for payment <uuid>: <receipt_id>"
         receipt_pattern = re.compile(
             r'(\d{4}-\d{2}-\d{2}) \d{2}:\d{2}:\d{2}.*Чек NaloGO создан для платежа ([a-f0-9-]+): (\w+)'
         )
 
-        # Читаем и парсим логи
+        # Read and parse logs
         payments = {}  # payment_id -> {date, amount}
         receipts = {}  # payment_id -> {date, receipt_uuid}
 
         try:
             with open(payments_log, encoding='utf-8') as f:
                 for line in f:
-                    # Проверяем платежи
+                    # Check payments
                     match = payment_pattern.search(line)
                     if match:
                         date_str, payment_id, amount = match.groups()
                         payments[payment_id] = {'date': date_str, 'amount': float(amount)}
                         continue
 
-                    # Проверяем чеки
+                    # Check receipts
                     match = receipt_pattern.search(line)
                     if match:
                         date_str, payment_id, receipt_uuid = match.groups()
@@ -1408,7 +1408,7 @@ async def _do_reconcile_logs(callback: CallbackQuery):
             )
             return
 
-        # Находим платежи без чеков
+        # Find payments without receipts
         payments_without_receipts = []
         for payment_id, payment_data in payments.items():
             if payment_id not in receipts:
@@ -1416,12 +1416,12 @@ async def _do_reconcile_logs(callback: CallbackQuery):
                     {'payment_id': payment_id, 'date': payment_data['date'], 'amount': payment_data['amount']}
                 )
 
-        # Группируем по датам
+        # Group by dates
         by_date = defaultdict(list)
         for p in payments_without_receipts:
             by_date[p['date']].append(p)
 
-        # Формируем отчёт
+        # Build the report
         total_payments = len(payments)
         total_receipts = len(receipts)
         missing_count = len(payments_without_receipts)
@@ -1456,7 +1456,7 @@ async def _do_reconcile_logs(callback: CallbackQuery):
         try:
             await callback.message.edit_text(text, parse_mode='HTML', reply_markup=keyboard)
         except TelegramBadRequest:
-            pass  # Сообщение не изменилось
+            pass  # Message unchanged
 
     except TelegramBadRequest:
         pass
@@ -1468,14 +1468,14 @@ async def _do_reconcile_logs(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_mon_reconcile_logs')
 @admin_required
 async def receipts_reconcile_logs_refresh_callback(callback: CallbackQuery):
-    """Обновить сверку по логам."""
+    """Refresh log-based reconciliation."""
     await _do_reconcile_logs(callback)
 
 
 @router.callback_query(F.data == 'admin_mon_reconcile_logs_details')
 @admin_required
 async def receipts_reconcile_logs_details_callback(callback: CallbackQuery):
-    """Детальный список платежей без чеков."""
+    """Detailed list of payments without receipts."""
     try:
         import re
         from pathlib import Path
@@ -1484,7 +1484,7 @@ async def receipts_reconcile_logs_details_callback(callback: CallbackQuery):
 
         await callback.answer('🔄 در حال بارگذاری جزئیات...', show_alert=False)
 
-        # Путь к логам (logs/current/)
+        # Path to logs (logs/current/)
         log_file_path = await asyncio.to_thread(Path(settings.LOG_FILE).resolve)
         log_dir = log_file_path.parent
         current_dir = log_dir / 'current'
@@ -1519,13 +1519,13 @@ async def receipts_reconcile_logs_details_callback(callback: CallbackQuery):
                 if match:
                     receipts.add(match.group(1))
 
-        # Платежи без чеков
+        # Payments without receipts
         missing = []
         for payment_id, data in payments.items():
             if payment_id not in receipts:
                 missing.append({'payment_id': payment_id, **data})
 
-        # Сортируем по дате (новые сверху)
+        # Sort by date (newest first)
         missing.sort(key=lambda x: (x['date'], x['time']), reverse=True)
 
         if not missing:
@@ -1715,7 +1715,7 @@ async def process_notification_value_input(message: Message, state: FSMContext):
     await state.clear()
 
 
-# ============== Настройки мониторинга трафика ==============
+# ============== Traffic monitoring settings ==============
 
 
 def _format_traffic_toggle(enabled: bool) -> str:
@@ -1723,7 +1723,7 @@ def _format_traffic_toggle(enabled: bool) -> str:
 
 
 def _build_traffic_settings_keyboard() -> InlineKeyboardMarkup:
-    """Строит клавиатуру настроек мониторинга трафика."""
+    """Builds the traffic monitoring settings keyboard."""
     fast_enabled = settings.TRAFFIC_FAST_CHECK_ENABLED
     daily_enabled = settings.TRAFFIC_DAILY_CHECK_ENABLED
 
@@ -1774,7 +1774,7 @@ def _build_traffic_settings_keyboard() -> InlineKeyboardMarkup:
 
 
 def _build_traffic_settings_text() -> str:
-    """Строит текст настроек мониторинга трафика."""
+    """Builds the traffic monitoring settings text."""
     fast_enabled = settings.TRAFFIC_FAST_CHECK_ENABLED
     daily_enabled = settings.TRAFFIC_DAILY_CHECK_ENABLED
 
@@ -1810,7 +1810,7 @@ def _build_traffic_settings_text() -> str:
 @router.callback_query(F.data == 'admin_mon_traffic_settings')
 @admin_required
 async def admin_traffic_settings(callback: CallbackQuery):
-    """Показывает настройки мониторинга трафика."""
+    """Shows traffic monitoring settings."""
     try:
         text = _build_traffic_settings_text()
         keyboard = _build_traffic_settings_keyboard()
@@ -1823,7 +1823,7 @@ async def admin_traffic_settings(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_traffic_toggle_fast')
 @admin_required
 async def toggle_fast_check(callback: CallbackQuery):
-    """Переключает быструю проверку трафика."""
+    """Toggles the fast traffic check."""
     try:
         from app.services.system_settings_service import BotConfigurationService
 
@@ -1848,7 +1848,7 @@ async def toggle_fast_check(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_traffic_toggle_daily')
 @admin_required
 async def toggle_daily_check(callback: CallbackQuery):
-    """Переключает суточную проверку трафика."""
+    """Toggles the daily traffic check."""
     try:
         from app.services.system_settings_service import BotConfigurationService
 
@@ -1873,7 +1873,7 @@ async def toggle_daily_check(callback: CallbackQuery):
 @router.callback_query(F.data == 'admin_traffic_edit_fast_interval')
 @admin_required
 async def edit_fast_interval(callback: CallbackQuery, state: FSMContext):
-    """Начинает редактирование интервала быстрой проверки."""
+    """Begins editing the fast check interval."""
     await state.set_state(AdminStates.editing_traffic_setting)
     await state.update_data(
         traffic_setting_key='TRAFFIC_FAST_CHECK_INTERVAL_MINUTES',
@@ -1888,7 +1888,7 @@ async def edit_fast_interval(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'admin_traffic_edit_fast_threshold')
 @admin_required
 async def edit_fast_threshold(callback: CallbackQuery, state: FSMContext):
-    """Начинает редактирование порога быстрой проверки."""
+    """Begins editing the fast check threshold."""
     await state.set_state(AdminStates.editing_traffic_setting)
     await state.update_data(
         traffic_setting_key='TRAFFIC_FAST_CHECK_THRESHOLD_GB',
@@ -1903,7 +1903,7 @@ async def edit_fast_threshold(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'admin_traffic_edit_daily_time')
 @admin_required
 async def edit_daily_time(callback: CallbackQuery, state: FSMContext):
-    """Начинает редактирование времени суточной проверки."""
+    """Begins editing the daily check time."""
     await state.set_state(AdminStates.editing_traffic_setting)
     await state.update_data(
         traffic_setting_key='TRAFFIC_DAILY_CHECK_TIME',
@@ -1920,7 +1920,7 @@ async def edit_daily_time(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'admin_traffic_edit_daily_threshold')
 @admin_required
 async def edit_daily_threshold(callback: CallbackQuery, state: FSMContext):
-    """Начинает редактирование суточного порога."""
+    """Begins editing the daily threshold."""
     await state.set_state(AdminStates.editing_traffic_setting)
     await state.update_data(
         traffic_setting_key='TRAFFIC_DAILY_THRESHOLD_GB',
@@ -1935,7 +1935,7 @@ async def edit_daily_threshold(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'admin_traffic_edit_cooldown')
 @admin_required
 async def edit_cooldown(callback: CallbackQuery, state: FSMContext):
-    """Начинает редактирование кулдауна уведомлений."""
+    """Begins editing the notification cooldown."""
     await state.set_state(AdminStates.editing_traffic_setting)
     await state.update_data(
         traffic_setting_key='TRAFFIC_NOTIFICATION_COOLDOWN_MINUTES',
@@ -1949,7 +1949,7 @@ async def edit_cooldown(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminStates.editing_traffic_setting)
 async def process_traffic_setting_input(message: Message, state: FSMContext):
-    """Обрабатывает ввод настройки мониторинга трафика."""
+    """Handles traffic monitoring setting input."""
     from app.services.system_settings_service import BotConfigurationService
 
     data = await state.get_data()

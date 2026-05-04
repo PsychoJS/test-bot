@@ -1,8 +1,8 @@
 """
-Хендлеры админ-панели для управления заблокированными пользователями.
+Admin panel handlers for managing blocked users.
 
-Позволяет сканировать пользователей, выявлять тех, кто заблокировал бота,
-и выполнять очистку БД и панели Remnawave.
+Allows scanning users, identifying those who blocked the bot,
+and performing cleanup of the DB and Remnawave panel.
 """
 
 import html
@@ -31,12 +31,12 @@ logger = structlog.get_logger(__name__)
 
 
 # =============================================================================
-# Enums для текстов и callback_data
+# Enums for texts and callback_data
 # =============================================================================
 
 
 class BlockedUsersText(Enum):
-    """Тексты для сообщений модуля заблокированных пользователей."""
+    """Text messages for the blocked users module."""
 
     MENU_TITLE = '🔒 <b>بررسی کاربران مسدودشده</b>'
     MENU_DESCRIPTION = (
@@ -112,7 +112,7 @@ class BlockedUsersText(Enum):
 
 
 class BlockedUsersCallback(Enum):
-    """Callback data для кнопок модуля."""
+    """Callback data for module buttons."""
 
     MENU = 'admin_blocked_users'
     START_SCAN = 'admin_blocked_scan'
@@ -132,7 +132,7 @@ class BlockedUsersCallback(Enum):
 
 
 class BlockedUsersStates(StatesGroup):
-    """Состояния FSM для модуля заблокированных пользователей."""
+    """FSM states for the blocked users module."""
 
     scanning = State()
     viewing_results = State()
@@ -148,7 +148,7 @@ class BlockedUsersStates(StatesGroup):
 def get_blocked_users_menu_keyboard(
     scan_result: dict[str, Any] | None = None,
 ) -> InlineKeyboardMarkup:
-    """Клавиатура главного меню модуля."""
+    """Main menu keyboard for the module."""
     buttons = [
         [
             InlineKeyboardButton(
@@ -186,10 +186,10 @@ def get_blocked_list_keyboard(
     total_pages: int = 1,
     has_blocked: bool = True,
 ) -> InlineKeyboardMarkup:
-    """Клавиатура списка заблокированных пользователей."""
+    """Keyboard for the blocked users list."""
     buttons = []
 
-    # Пагинация
+    # Pagination
     if total_pages > 1:
         nav_row = []
         if page > 1:
@@ -214,7 +214,7 @@ def get_blocked_list_keyboard(
             )
         buttons.append(nav_row)
 
-    # Действия
+    # Actions
     if has_blocked:
         buttons.extend(
             [
@@ -256,7 +256,7 @@ def get_blocked_list_keyboard(
 
 
 def get_confirm_keyboard(action: BlockedUserAction) -> InlineKeyboardMarkup:
-    """Клавиатура подтверждения действия."""
+    """Confirmation keyboard for an action."""
     action_map = {
         BlockedUserAction.DELETE_FROM_DB: 'db',
         BlockedUserAction.DELETE_FROM_REMNAWAVE: 'rw',
@@ -292,7 +292,7 @@ async def show_blocked_users_menu(
     db_user: User,
     state: FSMContext,
 ) -> None:
-    """Показывает главное меню модуля заблокированных пользователей."""
+    """Shows the main menu of the blocked users module."""
     data = await state.get_data()
     scan_result = data.get('blocked_users_scan_result')
 
@@ -322,10 +322,10 @@ async def start_scan(
     state: FSMContext,
     bot: Bot,
 ) -> None:
-    """Запускает сканирование пользователей."""
+    """Starts scanning users."""
     await state.set_state(BlockedUsersStates.scanning)
 
-    # Отправляем начальное сообщение
+    # Send the initial message
     await callback.message.edit_text(
         BlockedUsersText.SCAN_STARTED.value,
         parse_mode=ParseMode.HTML,
@@ -337,7 +337,7 @@ async def start_scan(
     async def progress_callback(checked: int, total: int) -> None:
         nonlocal last_update_time
         now = datetime.now(tz=UTC)
-        # Обновляем сообщение не чаще раза в 3 секунды
+        # Update the message no more than once every 3 seconds
         if (now - last_update_time).total_seconds() >= 3:
             last_update_time = now
             percent = int(checked / total * 100) if total > 0 else 0
@@ -351,16 +351,16 @@ async def start_scan(
                     parse_mode=ParseMode.HTML,
                 )
             except Exception:
-                pass  # Игнорируем ошибки обновления сообщения
+                pass  # Ignore message update errors
 
-    # Выполняем сканирование
+    # Perform the scan
     result = await service.scan_all_users(
         db,
         only_active=True,
         progress_callback=progress_callback,
     )
 
-    # Сериализуем результат в dict для Redis и keyboard
+    # Serialize the result to a dict for Redis and the keyboard
     scan_result_dict = {
         'total_checked': result.total_checked,
         'blocked_count': result.blocked_count,
@@ -370,7 +370,7 @@ async def start_scan(
         'scan_duration_seconds': result.scan_duration_seconds,
     }
 
-    # Сохраняем результат в state
+    # Save the result to state
     await state.update_data(
         blocked_users_scan_result=scan_result_dict,
         blocked_users_list=[
@@ -387,7 +387,7 @@ async def start_scan(
 
     await state.set_state(BlockedUsersStates.viewing_results)
 
-    # Формируем итоговое сообщение
+    # Build the final message
     if result.blocked_count == 0:
         text = BlockedUsersText.SCAN_NO_BLOCKED.value
     else:
@@ -416,7 +416,7 @@ async def show_blocked_list(
     state: FSMContext,
     page: int = 1,
 ) -> None:
-    """Показывает список заблокированных пользователей."""
+    """Shows the list of blocked users."""
     data = await state.get_data()
     blocked_list: list[dict[str, Any]] = data.get('blocked_users_list', [])
 
@@ -424,7 +424,7 @@ async def show_blocked_list(
         await callback.answer('کاربر مسدودشده‌ای وجود ندارد', show_alert=True)
         return
 
-    # Пагинация
+    # Pagination
     per_page = 15
     total_pages = (len(blocked_list) + per_page - 1) // per_page
     page = max(1, min(page, total_pages))
@@ -457,7 +457,7 @@ async def handle_blocked_list_pagination(
     db_user: User,
     state: FSMContext,
 ) -> None:
-    """Обрабатывает пагинацию списка заблокированных."""
+    """Handles pagination of the blocked list."""
     try:
         page = int(callback.data.split('_')[-1])
     except (ValueError, IndexError):
@@ -474,7 +474,7 @@ async def show_action_confirm(
     state: FSMContext,
     action: BlockedUserAction,
 ) -> None:
-    """Показывает подтверждение действия."""
+    """Shows action confirmation."""
     data = await state.get_data()
     blocked_list = data.get('blocked_users_list', [])
     count = len(blocked_list)
@@ -512,7 +512,7 @@ async def handle_action_delete_db(
     db_user: User,
     state: FSMContext,
 ) -> None:
-    """Обрабатывает выбор удаления из БД."""
+    """Handles the selection to delete from DB."""
     await show_action_confirm(callback, db_user, state, BlockedUserAction.DELETE_FROM_DB)
 
 
@@ -523,7 +523,7 @@ async def handle_action_delete_remnawave(
     db_user: User,
     state: FSMContext,
 ) -> None:
-    """Обрабатывает выбор удаления из Remnawave."""
+    """Handles the selection to delete from Remnawave."""
     await show_action_confirm(callback, db_user, state, BlockedUserAction.DELETE_FROM_REMNAWAVE)
 
 
@@ -534,7 +534,7 @@ async def handle_action_delete_both(
     db_user: User,
     state: FSMContext,
 ) -> None:
-    """Обрабатывает выбор полного удаления."""
+    """Handles the selection to delete from all sources."""
     await show_action_confirm(callback, db_user, state, BlockedUserAction.DELETE_BOTH)
 
 
@@ -545,7 +545,7 @@ async def handle_action_mark(
     db_user: User,
     state: FSMContext,
 ) -> None:
-    """Обрабатывает выбор пометки как заблокированных."""
+    """Handles the selection to mark as blocked."""
     await show_action_confirm(callback, db_user, state, BlockedUserAction.MARK_AS_BLOCKED)
 
 
@@ -558,11 +558,11 @@ async def handle_confirm_action(
     state: FSMContext,
     bot: Bot,
 ) -> None:
-    """Выполняет подтвержденное действие."""
+    """Executes the confirmed action."""
     data = await state.get_data()
     blocked_list = data.get('blocked_users_list', [])
 
-    # Определяем действие из callback_data
+    # Determine the action from callback_data
     action_code = callback.data.replace(BlockedUsersCallback.CONFIRM_PREFIX.value, '')
     action_map = {
         'db': BlockedUserAction.DELETE_FROM_DB,
@@ -582,7 +582,7 @@ async def handle_confirm_action(
 
     await state.set_state(BlockedUsersStates.processing_cleanup)
 
-    # Преобразуем обратно в BlockCheckResult
+    # Convert back to BlockCheckResult
     blocked_results = [
         BlockCheckResult(
             user_id=u['user_id'],
@@ -614,7 +614,7 @@ async def handle_confirm_action(
             except Exception:
                 pass
 
-    # Выполняем очистку
+    # Perform the cleanup
     result = await service.cleanup_blocked_users(
         db,
         blocked_results,
@@ -622,7 +622,7 @@ async def handle_confirm_action(
         progress_callback=progress_callback,
     )
 
-    # Очищаем сохраненные данные
+    # Clear the saved data
     await state.update_data(
         blocked_users_scan_result=None,
         blocked_users_list=[],
@@ -630,7 +630,7 @@ async def handle_confirm_action(
     )
     await state.set_state(None)
 
-    # Показываем результат
+    # Show the result
     text = BlockedUsersText.CLEANUP_COMPLETE.value.format(
         deleted_db=result.deleted_from_db,
         deleted_remnawave=result.deleted_from_remnawave,
@@ -662,7 +662,7 @@ async def handle_cancel(
     db_user: User,
     state: FSMContext,
 ) -> None:
-    """Отменяет текущее действие и возвращает в меню."""
+    """Cancels the current action and returns to the menu."""
     await state.update_data(pending_action=None)
     await state.set_state(BlockedUsersStates.viewing_results)
     await show_blocked_users_menu(callback, db_user, state)
@@ -674,33 +674,33 @@ async def handle_cancel(
 
 
 def register_handlers(dp: Dispatcher) -> None:
-    """Регистрирует хендлеры модуля заблокированных пользователей."""
+    """Registers handlers for the blocked users module."""
 
-    # Главное меню
+    # Main menu
     dp.callback_query.register(
         show_blocked_users_menu,
         F.data == BlockedUsersCallback.MENU.value,
     )
 
-    # Сканирование
+    # Scanning
     dp.callback_query.register(
         start_scan,
         F.data == BlockedUsersCallback.START_SCAN.value,
     )
 
-    # Список заблокированных
+    # Blocked list
     dp.callback_query.register(
         show_blocked_list,
         F.data == BlockedUsersCallback.VIEW_LIST.value,
     )
 
-    # Пагинация списка
+    # List pagination
     dp.callback_query.register(
         handle_blocked_list_pagination,
         F.data.startswith(BlockedUsersCallback.VIEW_LIST_PAGE.value),
     )
 
-    # Выбор действий
+    # Action selection
     dp.callback_query.register(
         handle_action_delete_db,
         F.data == BlockedUsersCallback.ACTION_DELETE_DB.value,
@@ -718,13 +718,13 @@ def register_handlers(dp: Dispatcher) -> None:
         F.data == BlockedUsersCallback.ACTION_MARK.value,
     )
 
-    # Подтверждение действий
+    # Action confirmation
     dp.callback_query.register(
         handle_confirm_action,
         F.data.startswith(BlockedUsersCallback.CONFIRM_PREFIX.value),
     )
 
-    # Отмена
+    # Cancellation
     dp.callback_query.register(
         handle_cancel,
         F.data == BlockedUsersCallback.CANCEL.value,
