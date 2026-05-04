@@ -78,49 +78,49 @@ TRIAL_ENTRIES: tuple[SettingEntry, ...] = (
     SettingEntry(
         key='TRIAL_DURATION_DAYS',
         section='trial',
-        label_ru='⏳ Длительность (дни)',
+        label_ru='⏳ مدت زمان (روز)',
         label_en='⏳ Duration (days)',
         action='input',
     ),
     SettingEntry(
         key='TRIAL_TRAFFIC_LIMIT_GB',
         section='trial',
-        label_ru='📦 Лимит трафика (ГБ)',
+        label_ru='📦 محدودیت ترافیک (گیگابایت)',
         label_en='📦 Traffic limit (GB)',
         action='input',
     ),
     SettingEntry(
         key='TRIAL_DEVICE_LIMIT',
         section='trial',
-        label_ru='📱 Лимит устройств',
+        label_ru='📱 محدودیت دستگاه',
         label_en='📱 Device limit',
         action='input',
     ),
     SettingEntry(
         key='TRIAL_PAYMENT_ENABLED',
         section='trial',
-        label_ru='💳 Платная активация',
+        label_ru='💳 فعال‌سازی پولی',
         label_en='💳 Paid activation',
         action='toggle',
-        description_ru='Если включено — за активацию триала будет списываться указанная сумма.',
+        description_ru='اگر فعال باشد، مبلغ تعیین‌شده در هنگام فعال‌سازی آزمایشی کسر می‌شود.',
         description_en='When enabled, the configured amount is charged during trial activation.',
     ),
     SettingEntry(
         key='TRIAL_ACTIVATION_PRICE',
         section='trial',
-        label_ru='💰 Стоимость активации',
+        label_ru='💰 هزینه فعال‌سازی',
         label_en='💰 Activation price',
         action='price',
-        description_ru='Указывается в копейках. 0 — бесплатная активация.',
+        description_ru='مقدار به کوپک تعیین می‌شود. 0 — فعال‌سازی رایگان.',
         description_en='Amount in kopeks. 0 — free activation.',
     ),
     SettingEntry(
         key='TRIAL_ADD_REMAINING_DAYS_TO_PAID',
         section='trial',
-        label_ru='➕ Добавлять оставшиеся дни к платной подписке',
+        label_ru='➕ افزودن روزهای باقی‌مانده به اشتراک پولی',
         label_en='➕ Add remaining trial days to paid plan',
         action='toggle',
-        description_ru='Если включено — при покупке платной подписки оставшиеся дни триала будут добавлены к сроку.',
+        description_ru='اگر فعال باشد، روزهای باقی‌مانده آزمایشی هنگام خرید اشتراک پولی به مدت آن اضافه می‌شوند.',
         description_en='When enabled, remaining trial days are added to paid subscription duration.',
     ),
 )
@@ -130,93 +130,93 @@ CORE_PRICING_ENTRIES: tuple[SettingEntry, ...] = (
     SettingEntry(
         key='BASE_SUBSCRIPTION_PRICE',
         section='core',
-        label_ru='💳 Базовая стоимость подписки',
+        label_ru='💳 هزینه پایه اشتراک',
         label_en='💳 Base subscription price',
         action='price',
     ),
     SettingEntry(
         key='BASE_PROMO_GROUP_PERIOD_DISCOUNTS_ENABLED',
         section='core',
-        label_ru='🎟️ Базовые скидки для групп',
+        label_ru='🎟️ تخفیف‌های پایه برای گروه‌ها',
         label_en='🎟️ Base group discounts',
         action='toggle',
-        description_ru='Включает применение базовых скидок для групповых промо-периодов.',
+        description_ru='اعمال تخفیف‌های پایه برای دوره‌های تبلیغاتی گروهی را فعال می‌کند.',
         description_en='Enables base discounts for promo group periods.',
     ),
     SettingEntry(
         key='BASE_PROMO_GROUP_PERIOD_DISCOUNTS',
         section='core',
-        label_ru='🔖 Скидки по периодам',
+        label_ru='🔖 تخفیف‌های دوره‌ای',
         label_en='🔖 Period discounts',
         action='input',
-        description_ru='Формат: список пар дней и скидки через запятую (например 30:10,60:20).',
+        description_ru='فرمت: لیستی از جفت‌های روز و تخفیف با کاما (مثلاً 30:10,60:20).',
         description_en='Format: comma-separated day/discount pairs (e.g. 30:10,60:20).',
     ),
     SettingEntry(
         key='DEFAULT_DEVICE_LIMIT',
         section='core',
-        label_ru='📱 Устройств по умолчанию',
+        label_ru='📱 دستگاه‌های پیش‌فرض',
         label_en='📱 Default device limit',
         action='input',
     ),
     SettingEntry(
         key='DEFAULT_TRAFFIC_LIMIT_GB',
         section='core',
-        label_ru='📦 Трафик по умолчанию (ГБ)',
+        label_ru='📦 ترافیک پیش‌فرض (گیگابایت)',
         label_en='📦 Default traffic (GB)',
         action='input',
     ),
     SettingEntry(
         key='MAX_DEVICES_LIMIT',
         section='core',
-        label_ru='📈 Максимум устройств',
+        label_ru='📈 حداکثر دستگاه',
         label_en='📈 Maximum devices',
         action='input',
     ),
     SettingEntry(
         key='RESET_TRAFFIC_ON_PAYMENT',
         section='core',
-        label_ru='🔄 Сбрасывать трафик при оплате',
+        label_ru='🔄 بازنشانی ترافیک هنگام پرداخت',
         label_en='🔄 Reset traffic on payment',
         action='toggle',
     ),
     SettingEntry(
         key='RESET_TRAFFIC_ON_TARIFF_SWITCH',
         section='core',
-        label_ru='🔄 Сбрасывать трафик при смене тарифа',
+        label_ru='🔄 بازنشانی ترافیک هنگام تغییر تعرفه',
         label_en='🔄 Reset traffic on tariff switch',
         action='toggle',
     ),
     SettingEntry(
         key='DEFAULT_TRAFFIC_RESET_STRATEGY',
         section='core',
-        label_ru='🗓 Стратегия сброса трафика',
+        label_ru='🗓 استراتژی بازنشانی ترافیک',
         label_en='🗓 Traffic reset strategy',
         action='input',
-        description_ru='Доступные значения: DAY, WEEK, MONTH, NEVER.',
+        description_ru='مقادیر موجود: DAY, WEEK, MONTH, NEVER.',
         description_en='Available values: DAY, WEEK, MONTH, NEVER.',
     ),
     SettingEntry(
         key='TRAFFIC_SELECTION_MODE',
         section='core',
-        label_ru='⚙️ Режим выбора трафика',
+        label_ru='⚙️ حالت انتخاب ترافیک',
         label_en='⚙️ Traffic selection mode',
         action='choice',
         choices=(
-            ChoiceOption('selectable', 'Выбор пакетов', 'Selectable'),
-            ChoiceOption('fixed', 'Фиксированный лимит', 'Fixed limit'),
-            ChoiceOption('fixed_with_topup', 'Фикс. лимит + докупка', 'Fixed + topup'),
+            ChoiceOption('selectable', 'انتخاب بسته', 'Selectable'),
+            ChoiceOption('fixed', 'محدودیت ثابت', 'Fixed limit'),
+            ChoiceOption('fixed_with_topup', 'محدودیت ثابت + افزودن', 'Fixed + topup'),
         ),
-        description_ru='Определяет, выбирают ли пользователи пакеты или получают фиксированный лимит.',
+        description_ru='تعیین می‌کند آیا کاربران بسته انتخاب می‌کنند یا محدودیت ثابت دریافت می‌کنند.',
         description_en='Defines whether users pick packages or use a fixed limit.',
     ),
     SettingEntry(
         key='FIXED_TRAFFIC_LIMIT_GB',
         section='core',
-        label_ru='📏 Фиксированный лимит трафика (ГБ)',
+        label_ru='📏 محدودیت ترافیک ثابت (گیگابایت)',
         label_en='📏 Fixed traffic limit (GB)',
         action='input',
-        description_ru='Используется только в режиме фиксированного трафика. 0 = безлимит.',
+        description_ru='تنها در حالت ترافیک ثابت استفاده می‌شود. 0 = نامحدود.',
         description_en='Used only in fixed traffic mode. 0 = unlimited.',
     ),
 )
@@ -319,10 +319,10 @@ def _language_code(language: str | None) -> str:
 
 def _format_period_label(days: int, lang_code: str, short: bool = False) -> str:
     if short:
-        suffix = 'д' if lang_code == 'ru' else 'd'
+        suffix = 'ر' if lang_code == 'ru' else 'd'
         return f'{days}{suffix}'
     if lang_code == 'ru':
-        return f'{days} дней'
+        return f'{days} روز'
     if days == 1:
         return '1 day'
     return f'{days}-day plan'
@@ -330,8 +330,8 @@ def _format_period_label(days: int, lang_code: str, short: bool = False) -> str:
 
 def _format_traffic_label(gb: int, lang_code: str, short: bool = False) -> str:
     if gb == 0:
-        return '∞' if short else ('Безлимит' if lang_code == 'ru' else 'Unlimited')
-    unit = 'ГБ' if lang_code == 'ru' else 'GB'
+        return '∞' if short else ('نامحدود' if lang_code == 'ru' else 'Unlimited')
+    unit = 'گیگ' if lang_code == 'ru' else 'GB'
     if short:
         return f'{gb}{unit}' if lang_code == 'ru' else f'{gb}{unit}'
     return f'{gb} {unit}'
@@ -347,7 +347,7 @@ def _format_trial_summary(lang_code: str) -> str:
 
     traffic_label = _format_traffic_label(traffic, lang_code, short=True)
     devices_label = f'{devices}📱' if lang_code == 'ru' else f'{devices}📱'
-    days_suffix = 'д' if lang_code == 'ru' else 'd'
+    days_suffix = 'ر' if lang_code == 'ru' else 'd'
     return f'{duration}{days_suffix}, {traffic_label}, {devices_label}{price_note}'
 
 
@@ -396,7 +396,7 @@ def _get_extra_items(lang_code: str) -> list[PriceItem]:
     items: list[PriceItem] = []
 
     if hasattr(settings, 'PRICE_PER_DEVICE'):
-        label = 'Дополнительное устройство' if lang_code == 'ru' else 'Extra device'
+        label = 'دستگاه اضافی' if lang_code == 'ru' else 'Extra device'
         items.append(('PRICE_PER_DEVICE', label, settings.PRICE_PER_DEVICE))
 
     return items
@@ -411,7 +411,7 @@ def _build_period_summary(items: Iterable[PriceItem], lang_code: str, fallback: 
             days = None
 
         if days is not None:
-            suffix = 'д' if lang_code == 'ru' else 'd'
+            suffix = 'ر' if lang_code == 'ru' else 'd'
             short_label = f'{days}{suffix}'
         else:
             short_label = label
@@ -437,11 +437,11 @@ def _build_traffic_summary(lang_code: str, fallback: str) -> str:
 
 
 def _build_period_options_summary(lang_code: str) -> str:
-    suffix = 'д' if lang_code == 'ru' else 'd'
+    suffix = 'ر' if lang_code == 'ru' else 'd'
     available = ', '.join(f'{days}{suffix}' for days in settings.get_available_subscription_periods())
     renewal = ', '.join(f'{days}{suffix}' for days in settings.get_available_renewal_periods())
     if lang_code == 'ru':
-        return f'Подписки: {available or "—"} | Продления: {renewal or "—"}'
+        return f'اشتراک‌ها: {available or "—"} | تمدیدها: {renewal or "—"}'
     return f'Subscriptions: {available or "-"} | Renewals: {renewal or "-"}'
 
 
@@ -606,9 +606,7 @@ def _build_traffic_options_section(language: str) -> tuple[str, types.InlineKeyb
 def _build_period_options_section(language: str) -> tuple[str, types.InlineKeyboardMarkup]:
     texts = get_texts(language)
     lang_code = _language_code(language)
-    suffix = 'д' if lang_code == 'ru' else 'd'
-
-    # Use methods without price filtering for admin panel
+    suffix = 'ر' if lang_code == 'ru' else 'd'
     available_subscription = set(settings.get_configured_subscription_periods())
     available_renewal = set(settings.get_configured_renewal_periods())
 
@@ -901,7 +899,7 @@ def _resolve_label(section: str, key: str, language: str) -> str:
             return _format_traffic_label(gb, lang_code)
 
     if key == 'PRICE_PER_DEVICE':
-        return 'Дополнительное устройство' if lang_code == 'ru' else 'Extra device'
+        return 'دستگاه اضافی' if lang_code == 'ru' else 'Extra device'
 
     return key
 
