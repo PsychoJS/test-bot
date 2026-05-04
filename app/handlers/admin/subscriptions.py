@@ -58,7 +58,7 @@ async def get_users_by_countries(db: AsyncSession) -> dict:
 
         return stats
     except Exception as e:
-        logger.error('Ошибка получения статистики по странам', error=e)
+        logger.error('Error fetching country statistics', error=e)
         return {}
 
 
@@ -71,32 +71,32 @@ async def show_subscriptions_menu(callback: types.CallbackQuery, db_user: User, 
     stats = await get_subscriptions_statistics(db)
 
     text = f"""
-📱 <b>Управление подписками</b>
+📱 <b>مدیریت اشتراک‌ها</b>
 
-📊 <b>Статистика:</b>
-- Всего: {stats['total_subscriptions']}
-- Активных: {stats['active_subscriptions']}
-- Платных: {stats['paid_subscriptions']}
-- Триальных: {stats['trial_subscriptions']}
+📊 <b>آمار:</b>
+- مجموع: {stats['total_subscriptions']}
+- فعال: {stats['active_subscriptions']}
+- پولی: {stats['paid_subscriptions']}
+- آزمایشی: {stats['trial_subscriptions']}
 
-📈 <b>Продажи:</b>
-- Сегодня: {stats['purchased_today']}
-- За неделю: {stats['purchased_week']}
-- За месяц: {stats['purchased_month']}
+📈 <b>فروش:</b>
+- امروز: {stats['purchased_today']}
+- این هفته: {stats['purchased_week']}
+- این ماه: {stats['purchased_month']}
 
-Выберите действие:
+عملیات را انتخاب کنید:
 """
 
     keyboard = [
         [
-            types.InlineKeyboardButton(text='📋 Список подписок', callback_data='admin_subs_list'),
-            types.InlineKeyboardButton(text='⏰ Истекающие', callback_data='admin_subs_expiring'),
+            types.InlineKeyboardButton(text='📋 لیست اشتراک‌ها', callback_data='admin_subs_list'),
+            types.InlineKeyboardButton(text='⏰ در حال انقضا', callback_data='admin_subs_expiring'),
         ],
         [
-            types.InlineKeyboardButton(text='📊 Статистика', callback_data='admin_subs_stats'),
-            types.InlineKeyboardButton(text='🌍 География', callback_data='admin_subs_countries'),
+            types.InlineKeyboardButton(text='📊 آمار', callback_data='admin_subs_stats'),
+            types.InlineKeyboardButton(text='🌍 جغرافیا', callback_data='admin_subs_countries'),
         ],
-        [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_panel')],
+        [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_panel')],
     ]
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
@@ -110,24 +110,24 @@ async def show_subscriptions_list(callback: types.CallbackQuery, db_user: User, 
     total_pages = (total_count + 9) // 10
 
     if not subscriptions:
-        text = '📱 <b>Список подписок</b>\n\n❌ Подписки не найдены.'
+        text = '📱 <b>لیست اشتراک‌ها</b>\n\n❌ اشتراکی یافت نشد.'
     else:
-        text = '📱 <b>Список подписок</b>\n\n'
-        text += f'📊 Всего: {total_count} | Страница: {page}/{total_pages}\n\n'
+        text = '📱 <b>لیست اشتراک‌ها</b>\n\n'
+        text += f'📊 مجموع: {total_count} | صفحه: {page}/{total_pages}\n\n'
 
         for i, sub in enumerate(subscriptions, 1 + (page - 1) * 10):
             user_info = (
                 (f'ID{sub.user.telegram_id}' if sub.user.telegram_id else sub.user.email or f'#{sub.user.id}')
                 if sub.user
-                else 'Неизвестно'
+                else 'ناشناس'
             )
             sub_type = '🎁' if sub.is_trial else '💎'
-            status = '✅ Активна' if sub.is_active else '❌ Неактивна'
+            status = '✅ فعال' if sub.is_active else '❌ غیرفعال'
 
             text += f'{i}. {sub_type} {user_info}\n'
-            text += f'   {status} | До: {format_datetime(sub.end_date)}\n'
+            text += f'   {status} | تا: {format_datetime(sub.end_date)}\n'
             if sub.device_limit > 0:
-                text += f'   📱 Устройств: {sub.device_limit}\n'
+                text += f'   📱 دستگاه: {sub.device_limit}\n'
             text += '\n'
 
     keyboard = []
@@ -146,8 +146,8 @@ async def show_subscriptions_list(callback: types.CallbackQuery, db_user: User, 
 
     keyboard.extend(
         [
-            [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_subs_list')],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_subscriptions')],
+            [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_subs_list')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_subscriptions')],
         ]
     )
 
@@ -163,45 +163,45 @@ async def show_expiring_subscriptions(callback: types.CallbackQuery, db_user: Us
     expired = await get_expired_subscriptions(db)
 
     text = f"""
-⏰ <b>Истекающие подписки</b>
+⏰ <b>اشتراک‌های در حال انقضا</b>
 
-📊 <b>Статистика:</b>
-- Истекают через 3 дня: {len(expiring_3d)}
-- Истекают завтра: {len(expiring_1d)}
-- Уже истекли: {len(expired)}
+📊 <b>آمار:</b>
+- منقضی می‌شود در ۳ روز: {len(expiring_3d)}
+- فردا منقضی می‌شود: {len(expiring_1d)}
+- قبلاً منقضی شده: {len(expired)}
 
-<b>Истекают через 3 дня:</b>
+<b>منقضی می‌شود در ۳ روز:</b>
 """
 
     for sub in expiring_3d[:5]:
         user_info = (
             (f'ID{sub.user.telegram_id}' if sub.user.telegram_id else sub.user.email or f'#{sub.user.id}')
             if sub.user
-            else 'Неизвестно'
+            else 'ناشناس'
         )
         sub_type = '🎁' if sub.is_trial else '💎'
         text += f'{sub_type} {user_info} - {format_datetime(sub.end_date)}\n'
 
     if len(expiring_3d) > 5:
-        text += f'... и еще {len(expiring_3d) - 5}\n'
+        text += f'... و {len(expiring_3d) - 5} مورد دیگر\n'
 
-    text += '\n<b>Истекают завтра:</b>\n'
+    text += '\n<b>فردا منقضی می‌شود:</b>\n'
     for sub in expiring_1d[:5]:
         user_info = (
             (f'ID{sub.user.telegram_id}' if sub.user.telegram_id else sub.user.email or f'#{sub.user.id}')
             if sub.user
-            else 'Неизвестно'
+            else 'ناشناس'
         )
         sub_type = '🎁' if sub.is_trial else '💎'
         text += f'{sub_type} {user_info} - {format_datetime(sub.end_date)}\n'
 
     if len(expiring_1d) > 5:
-        text += f'... и еще {len(expiring_1d) - 5}\n'
+        text += f'... و {len(expiring_1d) - 5} مورد دیگر\n'
 
     keyboard = [
-        [types.InlineKeyboardButton(text='📨 Отправить напоминания', callback_data='admin_send_expiry_reminders')],
-        [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_subs_expiring')],
-        [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_subscriptions')],
+        [types.InlineKeyboardButton(text='📨 ارسال یادآوری', callback_data='admin_send_expiry_reminders')],
+        [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_subs_expiring')],
+        [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_subscriptions')],
     ]
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
