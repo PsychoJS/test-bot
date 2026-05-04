@@ -39,14 +39,14 @@ async def show_promocodes_menu(callback: types.CallbackQuery, db_user: User, db:
     active_codes = await get_promocodes_count(db, is_active=True)
 
     text = f"""
-🎫 <b>Управление промокодами</b>
+🎫 <b>مدیریت کدهای تخفیف</b>
 
-📊 <b>Статистика:</b>
-- Всего промокодов: {total_codes}
-- Активных: {active_codes}
-- Неактивных: {total_codes - active_codes}
+📊 <b>آمار:</b>
+- مجموع کدها: {total_codes}
+- فعال: {active_codes}
+- غیرفعال: {total_codes - active_codes}
 
-Выберите действие:
+یک عملیات را انتخاب کنید:
 """
 
     await callback.message.edit_text(text, reply_markup=get_admin_promocodes_keyboard(db_user.language))
@@ -65,15 +65,15 @@ async def show_promocodes_list(callback: types.CallbackQuery, db_user: User, db:
 
     if not promocodes:
         await callback.message.edit_text(
-            '🎫 Промокоды не найдены',
+            '🎫 کد تخفیفی یافت نشد',
             reply_markup=types.InlineKeyboardMarkup(
-                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_promocodes')]]
+                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_promocodes')]]
             ),
         )
         await callback.answer()
         return
 
-    text = f'🎫 <b>Список промокодов</b> (стр. {page}/{total_pages})\n\n'
+    text = f'🎫 <b>لیست کدهای تخفیف</b> (صفحه {page}/{total_pages})\n\n'
     keyboard = []
 
     for promo in promocodes:
@@ -87,24 +87,24 @@ async def show_promocodes_list(callback: types.CallbackQuery, db_user: User, db:
         }.get(promo.type, '🎫')
 
         text += f'{status_emoji} {type_emoji} <code>{promo.code}</code>\n'
-        text += f'📊 Использований: {promo.current_uses}/{promo.max_uses}\n'
+        text += f'📊 استفاده‌ها: {promo.current_uses}/{promo.max_uses}\n'
 
         if promo.type == PromoCodeType.BALANCE.value:
-            text += f'💰 Бонус: {settings.format_price(promo.balance_bonus_kopeks)}\n'
+            text += f'💰 پاداش: {settings.format_price(promo.balance_bonus_kopeks)}\n'
         elif promo.type == PromoCodeType.SUBSCRIPTION_DAYS.value:
-            text += f'📅 Дней: {promo.subscription_days}\n'
+            text += f'📅 روزها: {promo.subscription_days}\n'
         elif promo.type == PromoCodeType.PROMO_GROUP.value:
             if promo.promo_group:
-                text += f'🏷️ Промогруппа: {html.escape(promo.promo_group.name)}\n'
+                text += f'🏷️ گروه تبلیغاتی: {html.escape(promo.promo_group.name)}\n'
         elif promo.type == PromoCodeType.DISCOUNT.value:
             discount_hours = promo.subscription_days
             if discount_hours > 0:
-                text += f'💸 Скидка: {promo.balance_bonus_kopeks}% ({discount_hours} ч.)\n'
+                text += f'💸 تخفیف: {promo.balance_bonus_kopeks}% ({discount_hours} ساعت)\n'
             else:
-                text += f'💸 Скидка: {promo.balance_bonus_kopeks}% (до покупки)\n'
+                text += f'💸 تخفیف: {promo.balance_bonus_kopeks}% (تا خرید)\n'
 
         if promo.valid_until:
-            text += f'⏰ До: {format_datetime(promo.valid_until)}\n'
+            text += f'⏰ تا: {format_datetime(promo.valid_until)}\n'
 
         keyboard.append([types.InlineKeyboardButton(text=f'🎫 {promo.code}', callback_data=f'promo_manage_{promo.id}')])
 
@@ -118,8 +118,8 @@ async def show_promocodes_list(callback: types.CallbackQuery, db_user: User, db:
 
     keyboard.extend(
         [
-            [types.InlineKeyboardButton(text='➕ Создать', callback_data='admin_promo_create')],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_promocodes')],
+            [types.InlineKeyboardButton(text='➕ ایجاد', callback_data='admin_promo_create')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_promocodes')],
         ]
     )
 
@@ -145,7 +145,7 @@ async def show_promocode_management(callback: types.CallbackQuery, db_user: User
 
     promo = await get_promocode_by_id(db, promo_id)
     if not promo:
-        await callback.answer('❌ Промокод не найден', show_alert=True)
+        await callback.answer('❌ کد تخفیف یافت نشد', show_alert=True)
         return
 
     status_emoji = '✅' if promo.is_active else '❌'
@@ -158,51 +158,51 @@ async def show_promocode_management(callback: types.CallbackQuery, db_user: User
     }.get(promo.type, '🎫')
 
     text = f"""
-🎫 <b>Управление промокодом</b>
+🎫 <b>مدیریت کد تخفیف</b>
 
-{type_emoji} <b>Код:</b> <code>{promo.code}</code>
-{status_emoji} <b>Статус:</b> {'Активен' if promo.is_active else 'Неактивен'}
-📊 <b>Использований:</b> {promo.current_uses}/{promo.max_uses}
+{type_emoji} <b>کد:</b> <code>{promo.code}</code>
+{status_emoji} <b>وضعیت:</b> {'فعال' if promo.is_active else 'غیرفعال'}
+📊 <b>استفاده‌ها:</b> {promo.current_uses}/{promo.max_uses}
 """
 
     if promo.type == PromoCodeType.BALANCE.value:
-        text += f'💰 <b>Бонус:</b> {settings.format_price(promo.balance_bonus_kopeks)}\n'
+        text += f'💰 <b>پاداش:</b> {settings.format_price(promo.balance_bonus_kopeks)}\n'
     elif promo.type == PromoCodeType.SUBSCRIPTION_DAYS.value:
-        text += f'📅 <b>Дней:</b> {promo.subscription_days}\n'
+        text += f'📅 <b>روزها:</b> {promo.subscription_days}\n'
     elif promo.type == PromoCodeType.PROMO_GROUP.value:
         if promo.promo_group:
-            text += f'🏷️ <b>Промогруппа:</b> {html.escape(promo.promo_group.name)} (приоритет: {promo.promo_group.priority})\n'
+            text += f'🏷️ <b>گروه تبلیغاتی:</b> {html.escape(promo.promo_group.name)} (اولویت: {promo.promo_group.priority})\n'
         elif promo.promo_group_id:
-            text += f'🏷️ <b>Промогруппа ID:</b> {promo.promo_group_id} (не найдена)\n'
+            text += f'🏷️ <b>شناسه گروه تبلیغاتی:</b> {promo.promo_group_id} (یافت نشد)\n'
     elif promo.type == PromoCodeType.DISCOUNT.value:
         discount_hours = promo.subscription_days
         if discount_hours > 0:
-            text += f'💸 <b>Скидка:</b> {promo.balance_bonus_kopeks}% (срок: {discount_hours} ч.)\n'
+            text += f'💸 <b>تخفیف:</b> {promo.balance_bonus_kopeks}% (مدت: {discount_hours} ساعت)\n'
         else:
-            text += f'💸 <b>Скидка:</b> {promo.balance_bonus_kopeks}% (до первой покупки)\n'
+            text += f'💸 <b>تخفیف:</b> {promo.balance_bonus_kopeks}% (تا اولین خرید)\n'
 
     if promo.valid_until:
-        text += f'⏰ <b>Действует до:</b> {format_datetime(promo.valid_until)}\n'
+        text += f'⏰ <b>معتبر تا:</b> {format_datetime(promo.valid_until)}\n'
 
     first_purchase_only = getattr(promo, 'first_purchase_only', False)
     first_purchase_emoji = '✅' if first_purchase_only else '❌'
-    text += f'🆕 <b>Только первая покупка:</b> {first_purchase_emoji}\n'
+    text += f'🆕 <b>فقط اولین خرید:</b> {first_purchase_emoji}\n'
 
-    text += f'📅 <b>Создан:</b> {format_datetime(promo.created_at)}\n'
+    text += f'📅 <b>ایجاد شده:</b> {format_datetime(promo.created_at)}\n'
 
-    first_purchase_btn_text = '🆕 Первая покупка: ✅' if first_purchase_only else '🆕 Первая покупка: ❌'
+    first_purchase_btn_text = '🆕 اولین خرید: ✅' if first_purchase_only else '🆕 اولین خرید: ❌'
 
     keyboard = [
         [
-            types.InlineKeyboardButton(text='✏️ Редактировать', callback_data=f'promo_edit_{promo.id}'),
-            types.InlineKeyboardButton(text='🔄 Переключить статус', callback_data=f'promo_toggle_{promo.id}'),
+            types.InlineKeyboardButton(text='✏️ ویرایش', callback_data=f'promo_edit_{promo.id}'),
+            types.InlineKeyboardButton(text='🔄 تغییر وضعیت', callback_data=f'promo_toggle_{promo.id}'),
         ],
         [types.InlineKeyboardButton(text=first_purchase_btn_text, callback_data=f'promo_toggle_first_{promo.id}')],
         [
-            types.InlineKeyboardButton(text='📊 Статистика', callback_data=f'promo_stats_{promo.id}'),
-            types.InlineKeyboardButton(text='🗑️ Удалить', callback_data=f'promo_delete_{promo.id}'),
+            types.InlineKeyboardButton(text='📊 آمار', callback_data=f'promo_stats_{promo.id}'),
+            types.InlineKeyboardButton(text='🗑️ حذف', callback_data=f'promo_delete_{promo.id}'),
         ],
-        [types.InlineKeyboardButton(text='⬅️ К списку', callback_data='admin_promo_list')],
+        [types.InlineKeyboardButton(text='⬅️ به لیست', callback_data='admin_promo_list')],
     ]
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
@@ -215,49 +215,49 @@ async def show_promocode_edit_menu(callback: types.CallbackQuery, db_user: User,
     try:
         promo_id = int(callback.data.split('_')[-1])
     except (ValueError, IndexError):
-        await callback.answer('❌ Ошибка получения ID промокода', show_alert=True)
+        await callback.answer('❌ خطا در دریافت شناسه کد تخفیف', show_alert=True)
         return
 
     promo = await get_promocode_by_id(db, promo_id)
     if not promo:
-        await callback.answer('❌ Промокод не найден', show_alert=True)
+        await callback.answer('❌ کد تخفیف یافت نشد', show_alert=True)
         return
 
     text = f"""
-✏️ <b>Редактирование промокода</b> <code>{promo.code}</code>
+✏️ <b>ویرایش کد تخفیف</b> <code>{promo.code}</code>
 
-💰 <b>Текущие параметры:</b>
+💰 <b>پارامترهای فعلی:</b>
 """
 
     if promo.type == PromoCodeType.BALANCE.value:
-        text += f'• Бонус: {settings.format_price(promo.balance_bonus_kopeks)}\n'
+        text += f'• پاداش: {settings.format_price(promo.balance_bonus_kopeks)}\n'
     elif promo.type in [PromoCodeType.SUBSCRIPTION_DAYS.value, PromoCodeType.TRIAL_SUBSCRIPTION.value]:
-        text += f'• Дней: {promo.subscription_days}\n'
+        text += f'• روزها: {promo.subscription_days}\n'
 
-    text += f'• Использований: {promo.current_uses}/{promo.max_uses}\n'
+    text += f'• استفاده‌ها: {promo.current_uses}/{promo.max_uses}\n'
 
     if promo.valid_until:
-        text += f'• До: {format_datetime(promo.valid_until)}\n'
+        text += f'• تا: {format_datetime(promo.valid_until)}\n'
     else:
-        text += '• Срок: бессрочно\n'
+        text += '• مدت: نامحدود\n'
 
-    text += '\nВыберите параметр для изменения:'
+    text += '\nپارامتری را برای تغییر انتخاب کنید:'
 
     keyboard = [
-        [types.InlineKeyboardButton(text='📅 Дата окончания', callback_data=f'promo_edit_date_{promo.id}')],
-        [types.InlineKeyboardButton(text='📊 Количество использований', callback_data=f'promo_edit_uses_{promo.id}')],
+        [types.InlineKeyboardButton(text='📅 تاریخ انقضا', callback_data=f'promo_edit_date_{promo.id}')],
+        [types.InlineKeyboardButton(text='📊 تعداد استفاده‌ها', callback_data=f'promo_edit_uses_{promo.id}')],
     ]
 
     if promo.type == PromoCodeType.BALANCE.value:
         keyboard.insert(
-            1, [types.InlineKeyboardButton(text='💰 Сумма бонуса', callback_data=f'promo_edit_amount_{promo.id}')]
+            1, [types.InlineKeyboardButton(text='💰 مقدار پاداش', callback_data=f'promo_edit_amount_{promo.id}')]
         )
     elif promo.type in [PromoCodeType.SUBSCRIPTION_DAYS.value, PromoCodeType.TRIAL_SUBSCRIPTION.value]:
         keyboard.insert(
-            1, [types.InlineKeyboardButton(text='📅 Количество дней', callback_data=f'promo_edit_days_{promo.id}')]
+            1, [types.InlineKeyboardButton(text='📅 تعداد روزها', callback_data=f'promo_edit_days_{promo.id}')]
         )
 
-    keyboard.extend([[types.InlineKeyboardButton(text='⬅️ Назад', callback_data=f'promo_manage_{promo.id}')]])
+    keyboard.extend([[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data=f'promo_manage_{promo.id}')]])
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
     await callback.answer()

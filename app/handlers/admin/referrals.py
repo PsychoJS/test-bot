@@ -38,22 +38,22 @@ async def show_referral_statistics(callback: types.CallbackQuery, db_user: User,
         current_time = datetime.now(UTC).strftime('%H:%M:%S')
 
         text = f"""
-🤝 <b>Реферальная статистика</b>
+🤝 <b>آمار ارجاعات</b>
 
-<b>Общие показатели:</b>
-- Пользователей с рефералами: {stats.get('users_with_referrals', 0)}
-- Активных рефереров: {stats.get('active_referrers', 0)}
-- Выплачено всего: {settings.format_price(stats.get('total_paid_kopeks', 0))}
+<b>شاخص‌های کلی:</b>
+- کاربران با معرفی: {stats.get('users_with_referrals', 0)}
+- معرفان فعال: {stats.get('active_referrers', 0)}
+- مجموع پرداخت‌شده: {settings.format_price(stats.get('total_paid_kopeks', 0))}
 
-<b>За период:</b>
-- Сегодня: {settings.format_price(stats.get('today_earnings_kopeks', 0))}
-- За неделю: {settings.format_price(stats.get('week_earnings_kopeks', 0))}
-- За месяц: {settings.format_price(stats.get('month_earnings_kopeks', 0))}
+<b>بر اساس دوره:</b>
+- امروز: {settings.format_price(stats.get('today_earnings_kopeks', 0))}
+- هفت روز گذشته: {settings.format_price(stats.get('week_earnings_kopeks', 0))}
+- ماه گذشته: {settings.format_price(stats.get('month_earnings_kopeks', 0))}
 
-<b>Средние показатели:</b>
-- На одного реферера: {settings.format_price(int(avg_per_referrer))}
+<b>میانگین شاخص‌ها:</b>
+- به ازای هر معرف: {settings.format_price(int(avg_per_referrer))}
 
-<b>Топ-5 рефереров:</b>
+<b>۵ معرف برتر:</b>
 """
 
         top_referrers = stats.get('top_referrers', [])

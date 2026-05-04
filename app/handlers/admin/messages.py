@@ -177,7 +177,7 @@ async def _persist_broadcast_result(
                 broadcast_history = await session.get(BroadcastHistory, broadcast_id)
                 if not broadcast_history:
                     logger.critical(
-                        'Не удалось найти запись BroadcastHistory # для записи результатов', broadcast_id=broadcast_id
+                        'Failed to find BroadcastHistory record # to save results', broadcast_id=broadcast_id
                     )
                     return
 
@@ -189,7 +189,7 @@ async def _persist_broadcast_result(
                 await session.commit()
 
                 logger.info(
-                    'Результаты рассылки сохранены (id sent failed blocked status=)',
+                    'Broadcast results saved (id sent failed blocked status=)',
                     broadcast_id=broadcast_id,
                     sent_count=sent_count,
                     failed_count=failed_count,
@@ -200,7 +200,7 @@ async def _persist_broadcast_result(
 
         except InterfaceError as error:
             logger.warning(
-                'Ошибка соединения при сохранении результатов рассылки (попытка /)',
+                'Connection error while saving broadcast results (attempt /)',
                 attempt=attempt,
                 max_retries=max_retries,
                 error=error,
@@ -210,14 +210,14 @@ async def _persist_broadcast_result(
                 retry_delay *= 2
             else:
                 logger.critical(
-                    'Не удалось сохранить результаты рассылки после попыток (id=)',
+                    'Failed to save broadcast results after retries (id=)',
                     max_retries=max_retries,
                     broadcast_id=broadcast_id,
                 )
 
         except Exception as error:
             logger.critical(
-                'Неожиданная ошибка при сохранении результатов рассылки (id=)',
+                'Unexpected error while saving broadcast results (id=)',
                 broadcast_id=broadcast_id,
                 exc_info=error,
             )
@@ -228,16 +228,16 @@ async def _persist_broadcast_result(
 @error_handler
 async def show_messages_menu(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
     text = """
-📨 <b>Управление рассылками</b>
+📨 <b>مدیریت پیام‌های گروهی</b>
 
-Выберите тип рассылки:
+نوع ارسال را انتخاب کنید:
 
-- <b>Всем пользователям</b> - рассылка всем активным пользователям
-- <b>По подпискам</b> - фильтрация по типу подписки
-- <b>По критериям</b> - настраиваемые фильтры
-- <b>История</b> - просмотр предыдущих рассылок
+- <b>به همه کاربران</b> - ارسال به همه کاربران فعال
+- <b>بر اساس اشتراک</b> - فیلتر بر اساس نوع اشتراک
+- <b>بر اساس معیار</b> - فیلترهای سفارشی
+- <b>تاریخچه</b> - مشاهده ارسال‌های قبلی
 
-⚠️ Будьте осторожны с массовыми рассылками!
+⚠️ در ارسال‌های گروهی احتیاط کنید!
 """
 
     await safe_edit_or_send_text(
@@ -263,25 +263,25 @@ async def show_pinned_message_menu(
         timestamp_text = last_updated.strftime('%d.%m.%Y %H:%M') if last_updated else '—'
         media_line = ''
         if pinned_message.media_type:
-            media_label = 'Фото' if pinned_message.media_type == 'photo' else 'Видео'
-            media_line = f'📎 Медиа: {media_label}\n'
-        position_line = '⬆️ Отправлять перед меню' if pinned_message.send_before_menu else '⬇️ Отправлять после меню'
+            media_label = 'عکس' if pinned_message.media_type == 'photo' else 'ویدیو'
+            media_line = f'📎 رسانه: {media_label}\n'
+        position_line = '⬆️ ارسال قبل از منو' if pinned_message.send_before_menu else '⬇️ ارسال بعد از منو'
         start_mode_line = (
-            '🔁 При каждом /start' if pinned_message.send_on_every_start else '🚫 Только один раз и при обновлении'
+            '🔁 در هر /start' if pinned_message.send_on_every_start else '🚫 فقط یک بار و هنگام به‌روزرسانی'
         )
         body = (
-            '📌 <b>Закрепленное сообщение</b>\n\n'
-            '📝 Текущий текст:\n'
+            '📌 <b>پیام سنجاق‌شده</b>\n\n'
+            '📝 متن فعلی:\n'
             f'<code>{content_preview}</code>\n\n'
             f'{media_line}'
             f'{position_line}\n'
             f'{start_mode_line}\n'
-            f'🕒 Обновлено: {timestamp_text}'
+            f'🕒 به‌روزرسانی: {timestamp_text}'
         )
     else:
         body = (
-            '📌 <b>Закрепленное сообщение</b>\n\n'
-            'Сообщение не задано. Отправьте новый текст, чтобы разослать и закрепить его у пользователей.'
+            '📌 <b>پیام سنجاق‌شده</b>\n\n'
+            'پیامی تنظیم نشده است. متن جدیدی ارسال کنید تا برای کاربران ارسال و سنجاق شود.'
         )
 
     await callback.message.edit_text(
@@ -305,11 +305,11 @@ async def prompt_pinned_message_update(
 ):
     await state.set_state(AdminStates.editing_pinned_message)
     await callback.message.edit_text(
-        '✏️ <b>Новое закрепленное сообщение</b>\n\n'
-        'Пришлите текст, фото или видео, которое нужно закрепить.\n'
-        'Бот отправит его всем активным пользователям, открепит старое и закрепит новое без уведомлений.',
+        '✏️ <b>پیام سنجاق‌شده جدید</b>\n\n'
+        'متن، عکس یا ویدیویی که باید سنجاق شود را ارسال کنید.\n'
+        'ربات آن را برای همه کاربران فعال ارسال می‌کند، پیام قبلی را از سنجاق خارج و پیام جدید را بدون اعلان سنجاق می‌کند.',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_pinned_message')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_pinned_message')]]
         ),
         parse_mode='HTML',
     )
@@ -326,7 +326,7 @@ async def toggle_pinned_message_position(
 ):
     pinned_message = await get_active_pinned_message(db)
     if not pinned_message:
-        await callback.answer('Сначала задайте закрепленное сообщение', show_alert=True)
+        await callback.answer('ابتدا پیام سنجاق‌شده را تنظیم کنید', show_alert=True)
         return
 
     pinned_message.send_before_menu = not pinned_message.send_before_menu
@@ -346,7 +346,7 @@ async def toggle_pinned_message_start_mode(
 ):
     pinned_message = await get_active_pinned_message(db)
     if not pinned_message:
-        await callback.answer('Сначала задайте закрепленное сообщение', show_alert=True)
+        await callback.answer('ابتدا پیام سنجاق‌شده را تنظیم کنید', show_alert=True)
         return
 
     pinned_message.send_on_every_start = not pinned_message.send_on_every_start
@@ -366,11 +366,11 @@ async def delete_pinned_message(
 ):
     pinned_message = await get_active_pinned_message(db)
     if not pinned_message:
-        await callback.answer('Закрепленное сообщение уже отсутствует', show_alert=True)
+        await callback.answer('پیام سنجاق‌شده از قبل موجود نیست', show_alert=True)
         return
 
     await callback.message.edit_text(
-        '🗑️ <b>Удаление закрепленного сообщения</b>\n\nПодождите, пока бот открепит сообщение у пользователей...',
+        '🗑️ <b>حذف پیام سنجاق‌شده</b>\n\nصبر کنید تا ربات پیام را از کاربران خارج کند...',
         parse_mode='HTML',
     )
 
@@ -381,7 +381,7 @@ async def delete_pinned_message(
 
     if not deleted:
         await callback.message.edit_text(
-            '❌ Не удалось найти активное закрепленное сообщение для удаления',
+            '❌ پیام سنجاق‌شده فعالی برای حذف پیدا نشد',
             reply_markup=get_admin_messages_keyboard(db_user.language),
             parse_mode='HTML',
         )
@@ -390,11 +390,11 @@ async def delete_pinned_message(
 
     total = unpinned_count + failed_count
     await callback.message.edit_text(
-        '✅ <b>Закрепленное сообщение удалено</b>\n\n'
-        f'👥 Чатов обработано: {total}\n'
-        f'✅ Откреплено: {unpinned_count}\n'
-        f'⚠️ Ошибок: {failed_count}\n\n'
-        'Новое сообщение можно задать кнопкой "Обновить".',
+        '✅ <b>پیام سنجاق‌شده حذف شد</b>\n\n'
+        f'👥 چت‌های پردازش‌شده: {total}\n'
+        f'✅ از سنجاق خارج‌شده: {unpinned_count}\n'
+        f'⚠️ خطاها: {failed_count}\n\n'
+        'پیام جدید را می‌توانید با دکمه «به‌روزرسانی» تنظیم کنید.',
         reply_markup=get_admin_messages_keyboard(db_user.language),
         parse_mode='HTML',
     )
@@ -424,7 +424,7 @@ async def process_pinned_message_update(
 
     if not pinned_text and not media_file_id:
         await message.answer(
-            texts.t('ADMIN_PINNED_NO_CONTENT', '❌ Не удалось прочитать текст или медиа в сообщении, попробуйте снова.')
+            texts.t('ADMIN_PINNED_NO_CONTENT', '❌ خواندن متن یا رسانه پیام ممکن نشد، دوباره تلاش کنید.')
         )
         return
 
@@ -447,10 +447,10 @@ async def process_pinned_message_update(
     await message.answer(
         texts.t(
             'ADMIN_PINNED_SAVED_ASK_BROADCAST',
-            '📌 <b>Сообщение сохранено!</b>\n\n'
-            'Выберите, как доставить сообщение пользователям:\n\n'
-            '• <b>Разослать сейчас</b> — отправит и закрепит у всех активных пользователей\n'
-            '• <b>Только при /start</b> — пользователи увидят при следующем запуске бота',
+            '📌 <b>پیام ذخیره شد!</b>\n\n'
+            'نحوه تحویل پیام به کاربران را انتخاب کنید:\n\n'
+            '• <b>همین الان ارسال</b> — برای همه کاربران فعال ارسال و سنجاق می‌شود\n'
+            '• <b>فقط در /start</b> — کاربران در اجرای بعدی ربات آن را خواهند دید',
         ),
         reply_markup=get_pinned_broadcast_confirm_keyboard(db_user.language, pinned_message.id),
         parse_mode='HTML',
@@ -481,12 +481,12 @@ async def handle_pinned_broadcast_now(
     pinned_message = result.scalar_one_or_none()
 
     if not pinned_message:
-        await callback.answer('❌ Сообщение не найдено', show_alert=True)
+        await callback.answer('❌ پیام پیدا نشد', show_alert=True)
         await state.clear()
         return
 
     await callback.message.edit_text(
-        texts.t('ADMIN_PINNED_SAVING', '📌 Сообщение сохранено. Начинаю отправку и закрепление у пользователей...'),
+        texts.t('ADMIN_PINNED_SAVING', '📌 پیام ذخیره شد. شروع به ارسال و سنجاق‌کردن برای کاربران...'),
         parse_mode='HTML',
     )
 
@@ -500,10 +500,10 @@ async def handle_pinned_broadcast_now(
     await callback.message.edit_text(
         texts.t(
             'ADMIN_PINNED_UPDATED',
-            '✅ <b>Закрепленное сообщение обновлено</b>\n\n'
-            '👥 Получателей: {total}\n'
-            '✅ Отправлено: {sent}\n'
-            '⚠️ Ошибок: {failed}',
+            '✅ <b>پیام سنجاق‌شده به‌روزرسانی شد</b>\n\n'
+            '👥 دریافت‌کنندگان: {total}\n'
+            '✅ ارسال‌شده: {sent}\n'
+            '⚠️ خطاها: {failed}',
         ).format(total=total, sent=sent_count, failed=failed_count),
         reply_markup=get_admin_messages_keyboard(db_user.language),
         parse_mode='HTML',
@@ -525,8 +525,8 @@ async def handle_pinned_broadcast_skip(
     await callback.message.edit_text(
         texts.t(
             'ADMIN_PINNED_SAVED_NO_BROADCAST',
-            '✅ <b>Закрепленное сообщение сохранено</b>\n\n'
-            'Рассылка не выполнена. Пользователи увидят сообщение при следующем вводе /start.',
+            '✅ <b>پیام سنجاق‌شده ذخیره شد</b>\n\n'
+            'ارسال انجام نشد. کاربران پیام را در اجرای بعدی /start خواهند دید.',
         ),
         reply_markup=get_admin_messages_keyboard(db_user.language),
         parse_mode='HTML',
@@ -538,7 +538,7 @@ async def handle_pinned_broadcast_skip(
 @error_handler
 async def show_broadcast_targets(callback: types.CallbackQuery, db_user: User, state: FSMContext):
     await callback.message.edit_text(
-        '🎯 <b>Выбор целевой аудитории</b>\n\nВыберите категорию пользователей для рассылки:',
+        '🎯 <b>انتخاب مخاطبان هدف</b>\n\nدسته کاربران برای ارسال را انتخاب کنید:',
         reply_markup=get_broadcast_target_keyboard(db_user.language),
         parse_mode='HTML',
     )
@@ -553,9 +553,9 @@ async def show_tariff_filter(callback: types.CallbackQuery, db_user: User, db: A
 
     if not tariffs:
         await callback.message.edit_text(
-            '❌ <b>Нет доступных тарифов</b>\n\nСоздайте тарифы в разделе управления тарифами.',
+            '❌ <b>تعرفه‌ای موجود نیست</b>\n\nدر بخش مدیریت تعرفه‌ها، تعرفه بسازید.',
             reply_markup=types.InlineKeyboardMarkup(
-                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_msg_by_sub')]]
+                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_msg_by_sub')]]
             ),
             parse_mode='HTML',
         )
@@ -578,15 +578,15 @@ async def show_tariff_filter(callback: types.CallbackQuery, db_user: User, db: A
         buttons.append(
             [
                 types.InlineKeyboardButton(
-                    text=f'{tariff.name} ({count} чел.)', callback_data=f'broadcast_tariff_{tariff.id}'
+                    text=f'{tariff.name} ({count} نفر)', callback_data=f'broadcast_tariff_{tariff.id}'
                 )
             ]
         )
 
-    buttons.append([types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_msg_by_sub')])
+    buttons.append([types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_msg_by_sub')])
 
     await callback.message.edit_text(
-        '📦 <b>Рассылка по тарифу</b>\n\nВыберите тариф для рассылки пользователям с активной подпиской на этот тариф:',
+        '📦 <b>ارسال بر اساس تعرفه</b>\n\nتعرفه‌ای برای ارسال به کاربران دارای اشتراک فعال در آن تعرفه انتخاب کنید:',
         reply_markup=types.InlineKeyboardMarkup(inline_keyboard=buttons),
         parse_mode='HTML',
     )
@@ -614,14 +614,14 @@ async def show_messages_history(callback: types.CallbackQuery, db_user: User, db
 
     if not broadcasts:
         text = """
-📋 <b>История рассылок</b>
+📋 <b>تاریخچه ارسال‌ها</b>
 
-❌ История рассылок пуста.
-Отправьте первую рассылку, чтобы увидеть её здесь.
+❌ تاریخچه ارسال خالی است.
+اولین ارسال را انجام دهید تا اینجا نمایش داده شود.
 """
-        keyboard = [[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_messages')]]
+        keyboard = [[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_messages')]]
     else:
-        text = f'📋 <b>История рассылок</b> (страница {page}/{total_pages})\n\n'
+        text = f'📋 <b>تاریخچه ارسال‌ها</b> (صفحه {page}/{total_pages})\n\n'
 
         for broadcast in broadcasts:
             status_emoji = '✅' if broadcast.status == 'completed' else '❌' if broadcast.status == 'failed' else '⏳'
@@ -632,7 +632,7 @@ async def show_messages_history(callback: types.CallbackQuery, db_user: User, db
             message_preview = (
                 broadcast.message_text[:100] + '...'
                 if broadcast.message_text and len(broadcast.message_text) > 100
-                else (broadcast.message_text or '📊 Опрос')
+                else (broadcast.message_text or '📊 نظرسنجی')
             )
 
             import html
@@ -641,10 +641,10 @@ async def show_messages_history(callback: types.CallbackQuery, db_user: User, db
 
             text += f"""
 {status_emoji} <b>{broadcast.created_at.strftime('%d.%m.%Y %H:%M')}</b>
-📊 Отправлено: {broadcast.sent_count}/{broadcast.total_count} ({success_rate}%)
-🎯 Аудитория: {get_target_name(broadcast.target_type)}
-👤 Админ: {html.escape(broadcast.admin_name or '')}
-📝 Сообщение: {message_preview}
+📊 ارسال‌شده: {broadcast.sent_count}/{broadcast.total_count} ({success_rate}%)
+🎯 مخاطبان: {get_target_name(broadcast.target_type)}
+👤 ادمین: {html.escape(broadcast.admin_name or '')}
+📝 پیام: {message_preview}
 ━━━━━━━━━━━━━━━━━━━━━━━
 """
 
@@ -662,25 +662,25 @@ async def show_custom_broadcast(callback: types.CallbackQuery, db_user: User, st
     stats = await get_users_statistics(db)
 
     text = f"""
-📝 <b>Рассылка по критериям</b>
+📝 <b>ارسال بر اساس معیار</b>
 
-📊 <b>Доступные фильтры:</b>
+📊 <b>فیلترهای موجود:</b>
 
-👥 <b>По регистрации:</b>
-• Сегодня: {stats['today']} чел.
-• За неделю: {stats['week']} чел.
-• За месяц: {stats['month']} чел.
+👥 <b>بر اساس ثبت‌نام:</b>
+• امروز: {stats['today']} نفر
+• هفته گذشته: {stats['week']} نفر
+• ماه گذشته: {stats['month']} نفر
 
-💼 <b>По активности:</b>
-• Активные сегодня: {stats['active_today']} чел.
-• Неактивные 7+ дней: {stats['inactive_week']} чел.
-• Неактивные 30+ дней: {stats['inactive_month']} чел.
+💼 <b>بر اساس فعالیت:</b>
+• فعال امروز: {stats['active_today']} نفر
+• غیرفعال ۷+ روز: {stats['inactive_week']} نفر
+• غیرفعال ۳۰+ روز: {stats['inactive_month']} نفر
 
-🔗 <b>По источнику:</b>
-• Через рефералов: {stats['referrals']} чел.
-• Прямая регистрация: {stats['direct']} чел.
+🔗 <b>بر اساس منبع:</b>
+• از طریق ارجاع: {stats['referrals']} نفر
+• ثبت‌نام مستقیم: {stats['direct']} نفر
 
-Выберите критерий для фильтрации:
+معیار فیلتر را انتخاب کنید:
 """
 
     await callback.message.edit_text(
@@ -695,14 +695,14 @@ async def select_custom_criteria(callback: types.CallbackQuery, db_user: User, s
     criteria = callback.data.replace('criteria_', '')
 
     criteria_names = {
-        'today': 'Зарегистрированные сегодня',
-        'week': 'Зарегистрированные за неделю',
-        'month': 'Зарегистрированные за месяц',
-        'active_today': 'Активные сегодня',
-        'inactive_week': 'Неактивные 7+ дней',
-        'inactive_month': 'Неактивные 30+ дней',
-        'referrals': 'Пришедшие через рефералов',
-        'direct': 'Прямая регистрация',
+        'today': 'ثبت‌نام‌شده‌های امروز',
+        'week': 'ثبت‌نام‌شده‌های هفته گذشته',
+        'month': 'ثبت‌نام‌شده‌های ماه گذشته',
+        'active_today': 'فعال امروز',
+        'inactive_week': 'غیرفعال ۷+ روز',
+        'inactive_month': 'غیرفعال ۳۰+ روز',
+        'referrals': 'آمده از طریق ارجاع',
+        'direct': 'ثبت‌نام مستقیم',
     }
 
     user_count = await get_custom_users_count(db, criteria)
@@ -710,13 +710,13 @@ async def select_custom_criteria(callback: types.CallbackQuery, db_user: User, s
     await state.update_data(broadcast_target=f'custom_{criteria}')
 
     await callback.message.edit_text(
-        f'📨 <b>Создание рассылки</b>\n\n'
-        f'🎯 <b>Критерий:</b> {criteria_names.get(criteria, criteria)}\n'
-        f'👥 <b>Получателей:</b> {user_count}\n\n'
-        f'Введите текст сообщения для рассылки:\n\n'
-        f'<i>Поддерживается HTML разметка</i>',
+        f'📨 <b>ایجاد ارسال</b>\n\n'
+        f'🎯 <b>معیار:</b> {criteria_names.get(criteria, criteria)}\n'
+        f'👥 <b>دریافت‌کنندگان:</b> {user_count}\n\n'
+        f'متن پیام ارسال را وارد کنید:\n\n'
+        f'<i>نشانه‌گذاری HTML پشتیبانی می‌شود</i>',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_messages')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_messages')]]
         ),
         parse_mode='HTML',
     )
@@ -735,14 +735,14 @@ async def select_broadcast_target(callback: types.CallbackQuery, db_user: User, 
     target = target_aliases.get(raw_target, raw_target)
 
     target_names = {
-        'all': 'Всем пользователям',
-        'active': 'С активной подпиской',
-        'trial': 'С триальной подпиской',
-        'no': 'Без подписки',
-        'expiring': 'С истекающей подпиской',
-        'expired': 'С истекшей подпиской',
-        'active_zero': 'Активная подписка, трафик 0 ГБ',
-        'trial_zero': 'Триальная подписка, трафик 0 ГБ',
+        'all': 'به همه کاربران',
+        'active': 'دارای اشتراک فعال',
+        'trial': 'دارای اشتراک آزمایشی',
+        'no': 'بدون اشتراک',
+        'expiring': 'دارای اشتراک رو به انقضا',
+        'expired': 'دارای اشتراک منقضی‌شده',
+        'active_zero': 'اشتراک فعال، ترافیک ۰ گیگابایت',
+        'trial_zero': 'اشتراک آزمایشی، ترافیک ۰ گیگابایت',
     }
 
     # Обработка фильтра по тарифу
@@ -753,22 +753,22 @@ async def select_broadcast_target(callback: types.CallbackQuery, db_user: User, 
 
         tariff = await get_tariff_by_id(db, tariff_id)
         if tariff:
-            target_name = f'Тариф «{tariff.name}»'
+            target_name = f'تعرفه «{tariff.name}»'
         else:
-            target_name = f'Тариф #{tariff_id}'
+            target_name = f'تعرفه #{tariff_id}'
 
     user_count = await get_target_users_count(db, target)
 
     await state.update_data(broadcast_target=target)
 
     await callback.message.edit_text(
-        f'📨 <b>Создание рассылки</b>\n\n'
-        f'🎯 <b>Аудитория:</b> {target_name}\n'
-        f'👥 <b>Получателей:</b> {user_count}\n\n'
-        f'Введите текст сообщения для рассылки:\n\n'
-        f'<i>Поддерживается HTML разметка</i>',
+        f'📨 <b>ایجاد ارسال</b>\n\n'
+        f'🎯 <b>مخاطبان:</b> {target_name}\n'
+        f'👥 <b>دریافت‌کنندگان:</b> {user_count}\n\n'
+        f'متن پیام ارسال را وارد کنید:\n\n'
+        f'<i>نشانه‌گذاری HTML پشتیبانی می‌شود</i>',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_messages')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_messages')]]
         ),
         parse_mode='HTML',
     )
@@ -783,16 +783,16 @@ async def process_broadcast_message(message: types.Message, db_user: User, state
     broadcast_text = message.text
 
     if len(broadcast_text) > 4000:
-        await message.answer('❌ Сообщение слишком длинное (максимум 4000 символов)')
+        await message.answer('❌ پیام خیلی طولانی است (حداکثر ۴۰۰۰ کاراکتر)')
         return
 
     await state.update_data(broadcast_message=broadcast_text)
 
     await message.answer(
-        '🖼️ <b>Добавление медиафайла</b>\n\n'
-        'Вы можете добавить к сообщению фото, видео или документ.\n'
-        'Или пропустить этот шаг.\n\n'
-        'Выберите тип медиа:',
+        '🖼️ <b>افزودن رسانه</b>\n\n'
+        'می‌توانید عکس، ویدیو یا سندی به پیام اضافه کنید.\n'
+        'یا این مرحله را رد کنید.\n\n'
+        'نوع رسانه را انتخاب کنید:',
         reply_markup=get_broadcast_media_keyboard(db_user.language),
         parse_mode='HTML',
     )
@@ -809,18 +809,18 @@ async def handle_media_selection(callback: types.CallbackQuery, db_user: User, s
     media_type = callback.data.replace('add_media_', '')
 
     media_instructions = {
-        'photo': '📷 Отправьте фотографию для рассылки:',
-        'video': '🎥 Отправьте видео для рассылки:',
-        'document': '📄 Отправьте документ для рассылки:',
+        'photo': '📷 عکس مورد نظر برای ارسال را بفرستید:',
+        'video': '🎥 ویدیوی مورد نظر برای ارسال را بفرستید:',
+        'document': '📄 سند مورد نظر برای ارسال را بفرستید:',
     }
 
     await state.update_data(media_type=media_type, waiting_for_media=True)
 
     instruction_text = (
-        f'{media_instructions.get(media_type, "Отправьте медиафайл:")}\n\n<i>Размер файла не должен превышать 50 МБ</i>'
+        f'{media_instructions.get(media_type, "فایل رسانه را بفرستید:")}\n\n<i>حجم فایل نباید از ۵۰ مگابایت بیشتر باشد</i>'
     )
     instruction_keyboard = types.InlineKeyboardMarkup(
-        inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_messages')]]
+        inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_messages')]]
     )
 
     # Проверяем, является ли текущее сообщение медиа-сообщением
@@ -866,7 +866,7 @@ async def process_broadcast_media(message: types.Message, db_user: User, state: 
         media_file_id = message.document.file_id
         media_type = 'document'
     else:
-        await message.answer(f'❌ Пожалуйста, отправьте {expected_type} как указано в инструкции.')
+        await message.answer(f'❌ لطفاً {expected_type} را مطابق دستورالعمل ارسال کنید.')
         return
 
     await state.update_data(
@@ -882,10 +882,10 @@ async def show_media_preview(message: types.Message, db_user: User, state: FSMCo
     media_file_id = data.get('media_file_id')
 
     preview_text = (
-        f'🖼️ <b>Медиафайл добавлен</b>\n\n'
-        f'📎 <b>Тип:</b> {media_type}\n'
-        f'✅ Файл сохранен и готов к отправке\n\n'
-        f'Что делать дальше?'
+        f'🖼️ <b>رسانه اضافه شد</b>\n\n'
+        f'📎 <b>نوع:</b> {media_type}\n'
+        f'✅ فایل ذخیره شد و آماده ارسال است\n\n'
+        f'مرحله بعد چیست؟'
     )
 
     # Для предпросмотра рассылки используем оригинальный метод без патчинга логотипа
@@ -929,7 +929,7 @@ async def handle_media_confirmation(callback: types.CallbackQuery, db_user: User
 async def handle_change_media(callback: types.CallbackQuery, db_user: User, state: FSMContext):
     await safe_edit_or_send_text(
         callback,
-        '🖼️ <b>Изменение медиафайла</b>\n\nВыберите новый тип медиа:',
+        '🖼️ <b>تغییر رسانه</b>\n\nنوع رسانه جدید را انتخاب کنید:',
         reply_markup=get_broadcast_media_keyboard(db_user.language),
         parse_mode='HTML',
     )
@@ -949,24 +949,24 @@ async def show_button_selector_callback(callback: types.CallbackQuery, db_user: 
 
     media_info = ''
     if has_media:
-        media_type = data.get('media_type', 'файл')
-        media_info = f'\n🖼️ <b>Медиафайл:</b> {media_type} добавлен'
+        media_type = data.get('media_type', 'فایل')
+        media_info = f'\n🖼️ <b>رسانه:</b> {media_type} اضافه شد'
 
     text = f"""
-📘 <b>Выбор дополнительных кнопок</b>
+📘 <b>انتخاب دکمه‌های اضافی</b>
 
-Выберите кнопки, которые будут добавлены к сообщению рассылки:
+دکمه‌هایی را که به پیام ارسال اضافه می‌شوند انتخاب کنید:
 
-💰 <b>Пополнить баланс</b> — откроет методы пополнения
-🤝 <b>Партнерка</b> — откроет реферальную программу
-🎫 <b>Промокод</b> — откроет форму ввода промокода
-🔗 <b>Подключиться</b> — поможет подключить приложение
-📱 <b>Подписка</b> — покажет состояние подписки
-🛠️ <b>Техподдержка</b> — свяжет с поддержкой
+💰 <b>افزایش موجودی</b> — روش‌های افزایش موجودی را باز می‌کند
+🤝 <b>شراکت</b> — برنامه ارجاع را باز می‌کند
+🎫 <b>کد تخفیف</b> — فرم وارد کردن کد تخفیف را باز می‌کند
+🔗 <b>اتصال</b> — به اتصال برنامه کمک می‌کند
+📱 <b>اشتراک</b> — وضعیت اشتراک را نشان می‌دهد
+🛠️ <b>پشتیبانی</b> — با پشتیبانی ارتباط برقرار می‌کند
 
-🏠 <b>Кнопка "На главную"</b> включена по умолчанию, но вы можете отключить её при необходимости.{media_info}
+🏠 <b>دکمه "صفحه اصلی"</b> به‌طور پیش‌فرض فعال است، اما در صورت نیاز می‌توانید آن را غیرفعال کنید.{media_info}
 
-Выберите нужные кнопки и нажмите "Продолжить":
+دکمه‌های مورد نظر را انتخاب کنید و «ادامه» را بزنید:
 """
 
     keyboard = get_updated_message_buttons_selector_keyboard_with_media(selected_buttons, has_media, db_user.language)
@@ -1006,20 +1006,20 @@ async def show_button_selector(message: types.Message, db_user: User, state: FSM
     has_media = data.get('has_media', False)
 
     text = """
-📘 <b>Выбор дополнительных кнопок</b>
+📘 <b>انتخاب دکمه‌های اضافی</b>
 
-Выберите кнопки, которые будут добавлены к сообщению рассылки:
+دکمه‌هایی را که به پیام ارسال اضافه می‌شوند انتخاب کنید:
 
-💰 <b>Пополнить баланс</b> — откроет методы пополнения
-🤝 <b>Партнерка</b> — откроет реферальную программу
-🎫 <b>Промокод</b> — откроет форму ввода промокода
-🔗 <b>Подключиться</b> — поможет подключить приложение
-📱 <b>Подписка</b> — покажет состояние подписки
-🛠️ <b>Техподдержка</b> — свяжет с поддержкой
+💰 <b>افزایش موجودی</b> — روش‌های افزایش موجودی را باز می‌کند
+🤝 <b>شراکت</b> — برنامه ارجاع را باز می‌کند
+🎫 <b>کد تخفیف</b> — فرم وارد کردن کد تخفیف را باز می‌کند
+🔗 <b>اتصال</b> — به اتصال برنامه کمک می‌کند
+📱 <b>اشتراک</b> — وضعیت اشتراک را نشان می‌دهد
+🛠️ <b>پشتیبانی</b> — با پشتیبانی ارتباط برقرار می‌کند
 
-🏠 <b>Кнопка "На главную"</b> включена по умолчанию, но вы можете отключить её при необходимости.
+🏠 <b>دکمه "صفحه اصلی"</b> به‌طور پیش‌فرض فعال است، اما در صورت نیاز می‌توانید آن را غیرفعال کنید.
 
-Выберите нужные кнопки и нажмите "Продолжить":
+دکمه‌های مورد نظر را انتخاب کنید و «ادامه» را بزنید:
 """
 
     keyboard = get_updated_message_buttons_selector_keyboard_with_media(selected_buttons, has_media, db_user.language)
@@ -1074,42 +1074,42 @@ async def confirm_button_selection(callback: types.CallbackQuery, db_user: User,
 
     media_info = ''
     if has_media:
-        media_type_names = {'photo': 'Фотография', 'video': 'Видео', 'document': 'Документ'}
-        media_info = f'\n🖼️ <b>Медиафайл:</b> {media_type_names.get(media_type, media_type)}'
+        media_type_names = {'photo': 'عکس', 'video': 'ویدیو', 'document': 'سند'}
+        media_info = f'\n🖼️ <b>رسانه:</b> {media_type_names.get(media_type, media_type)}'
 
     ordered_keys = [button_key for row in BUTTON_ROWS for button_key in row]
     button_labels = get_broadcast_button_labels(db_user.language)
     selected_names = [button_labels[key] for key in ordered_keys if key in selected_buttons]
     if selected_names:
-        buttons_info = f'\n📘 <b>Кнопки:</b> {", ".join(selected_names)}'
+        buttons_info = f'\n📘 <b>دکمه‌ها:</b> {", ".join(selected_names)}'
     else:
-        buttons_info = '\n📘 <b>Кнопки:</b> отсутствуют'
+        buttons_info = '\n📘 <b>دکمه‌ها:</b> موجود نیست'
 
     preview_text = f"""
-📨 <b>Предварительный просмотр рассылки</b>
+📨 <b>پیش‌نمایش ارسال</b>
 
-🎯 <b>Аудитория:</b> {target_display}
-👥 <b>Получателей:</b> {user_count}
+🎯 <b>مخاطبان:</b> {target_display}
+👥 <b>دریافت‌کنندگان:</b> {user_count}
 
-📝 <b>Сообщение:</b>
+📝 <b>پیام:</b>
 {message_text}{media_info}
 
 {buttons_info}
 
-Подтвердить отправку?
+تأیید ارسال؟
 """
 
     keyboard = [
         [
-            types.InlineKeyboardButton(text='✅ Отправить', callback_data='admin_confirm_broadcast'),
-            types.InlineKeyboardButton(text='📘 Изменить кнопки', callback_data='edit_buttons'),
+            types.InlineKeyboardButton(text='✅ ارسال', callback_data='admin_confirm_broadcast'),
+            types.InlineKeyboardButton(text='📘 ویرایش دکمه‌ها', callback_data='edit_buttons'),
         ]
     ]
 
     if has_media:
-        keyboard.append([types.InlineKeyboardButton(text='🖼️ Изменить медиа', callback_data='change_media')])
+        keyboard.append([types.InlineKeyboardButton(text='🖼️ تغییر رسانه', callback_data='change_media')])
 
-    keyboard.append([types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_messages')])
+    keyboard.append([types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_messages')])
 
     # Если есть медиа, показываем его с загруженным фото, иначе обычное текстовое сообщение
     if has_media and media_type == 'photo':
@@ -1186,7 +1186,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
 
     await safe_edit_or_send_text(
         callback,
-        '📨 <b>Подготовка рассылки...</b>\n\n⏳ Загружаю список получателей...',
+        '📨 <b>آماده‌سازی ارسال...</b>\n\n⏳ در حال بارگذاری لیست دریافت‌کنندگان...',
         reply_markup=None,
         parse_mode='HTML',
     )
@@ -1318,7 +1318,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                 wait_seconds = e.retry_after + 1
                 flood_wait_until = asyncio.get_event_loop().time() + wait_seconds
                 logger.warning(
-                    'FloodWait: Telegram просит подождать сек (пользователь , попытка /)',
+                    'FloodWait: Telegram requests to wait sec (user, attempt /)',
                     retry_after=e.retry_after,
                     telegram_id=telegram_id,
                     attempt=attempt + 1,
@@ -1333,12 +1333,12 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                 err = str(e).lower()
                 if 'bot was blocked' in err or 'user is deactivated' in err or 'chat not found' in err:
                     return 'blocked'
-                logger.debug('BadRequest при рассылке пользователю', telegram_id=telegram_id, e=e)
+                logger.debug('BadRequest while broadcasting to user', telegram_id=telegram_id, e=e)
                 return 'failed'
 
             except Exception as e:
                 logger.error(
-                    'Ошибка отправки пользователю (попытка /)',
+                    'Error sending to user (attempt /)',
                     telegram_id=telegram_id,
                     attempt=attempt + 1,
                     MAX_SEND_RETRIES=_MAX_SEND_RETRIES,
@@ -1371,16 +1371,16 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
         bar = '█' * filled + '░' * (bar_length - filled)
 
         if phase == 'sending':
-            blocked_line = f'• Заблокировали бота: {current_blocked}\n' if current_blocked else ''
+            blocked_line = f'• ربات را بلاک کرده‌اند: {current_blocked}\n' if current_blocked else ''
             return (
-                f'📨 <b>Рассылка в процессе...</b>\n\n'
+                f'📨 <b>ارسال در حال انجام...</b>\n\n'
                 f'[{bar}] {percent}%\n\n'
-                f'📊 <b>Прогресс:</b>\n'
-                f'• Отправлено: {current_sent}\n'
+                f'📊 <b>پیشرفت:</b>\n'
+                f'• ارسال‌شده: {current_sent}\n'
                 f'{blocked_line}'
-                f'• Ошибок: {current_failed}\n'
-                f'• Обработано: {processed}/{total}\n\n'
-                f'⏳ Не закрывайте диалог — рассылка продолжается...'
+                f'• خطاها: {current_failed}\n'
+                f'• پردازش‌شده: {processed}/{total}\n\n'
+                f'⏳ گفتگو را نبندید — ارسال ادامه دارد...'
             )
         return ''
 
@@ -1397,7 +1397,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
             await progress_message.edit_text(text, parse_mode='HTML')
         except TelegramRetryAfter as e:
             # Не паникуем — пропускаем обновление прогресса
-            logger.debug('FloodWait при обновлении прогресса, пропускаем: сек', retry_after=e.retry_after)
+            logger.debug('FloodWait while updating progress, skipping: sec', retry_after=e.retry_after)
         except TelegramBadRequest:
             # Сообщение удалено или контент не изменился — отправляем новое
             try:
@@ -1440,7 +1440,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                     failed_count += 1
             elif isinstance(result, Exception):
                 failed_count += 1
-                logger.error('Необработанное исключение в рассылке', result=result)
+                logger.error('Unhandled exception in broadcast', result=result)
 
         # Обновляем прогресс каждые _PROGRESS_UPDATE_INTERVAL батчей
         if batch_idx % _PROGRESS_UPDATE_INTERVAL == 0:
@@ -1452,7 +1452,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
     # Учитываем пропущенных email-only пользователей
     skipped_email_users = total_users_count - total_recipients
     if skipped_email_users > 0:
-        logger.info('Пропущено email-only пользователей при рассылке', skipped_email_users=skipped_email_users)
+        logger.info('Skipped email-only users during broadcast', skipped_email_users=skipped_email_users)
 
     status = 'completed' if failed_count == 0 and blocked_count == 0 else 'partial'
 
@@ -1466,22 +1466,22 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
     )
 
     success_rate = round(sent_count / total_users_count * 100, 1) if total_users_count else 0
-    media_info = f'\n🖼️ <b>Медиафайл:</b> {media_type}' if has_media else ''
-    blocked_line = f'• Заблокировали бота: {blocked_count}\n' if blocked_count else ''
+    media_info = f'\n🖼️ <b>رسانه:</b> {media_type}' if has_media else ''
+    blocked_line = f'• ربات را بلاک کرده‌اند: {blocked_count}\n' if blocked_count else ''
 
     result_text = (
-        f'✅ <b>Рассылка завершена!</b>\n\n'
-        f'📊 <b>Результат:</b>\n'
-        f'• Отправлено: {sent_count}\n'
+        f'✅ <b>ارسال تمام شد!</b>\n\n'
+        f'📊 <b>نتیجه:</b>\n'
+        f'• ارسال‌شده: {sent_count}\n'
         f'{blocked_line}'
-        f'• Не доставлено: {failed_count}\n'
-        f'• Всего пользователей: {total_users_count}\n'
-        f'• Успешность: {success_rate}%{media_info}\n\n'
-        f'<b>Администратор:</b> {html.escape(admin_name)}'
+        f'• تحویل‌نشده: {failed_count}\n'
+        f'• مجموع کاربران: {total_users_count}\n'
+        f'• موفقیت: {success_rate}%{media_info}\n\n'
+        f'<b>ادمین:</b> {html.escape(admin_name)}'
     )
 
     back_keyboard = types.InlineKeyboardMarkup(
-        inline_keyboard=[[types.InlineKeyboardButton(text='📨 К рассылкам', callback_data='admin_messages')]]
+        inline_keyboard=[[types.InlineKeyboardButton(text='📨 بازگشت به ارسال‌ها', callback_data='admin_messages')]]
     )
 
     try:
@@ -1504,7 +1504,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
 
     await state.clear()
     logger.info(
-        'Рассылка завершена админом : sent failed total= (медиа:)',
+        'Broadcast completed by admin: sent failed total= (media:)',
         admin_telegram_id=admin_telegram_id,
         sent_count=sent_count,
         failed_count=failed_count,
@@ -1999,29 +1999,29 @@ async def get_users_statistics(db: AsyncSession) -> dict:
 
 def get_target_name(target_type: str) -> str:
     names = {
-        'all': 'Всем пользователям',
-        'active': 'С активной подпиской',
-        'trial': 'С триальной подпиской',
-        'no': 'Без подписки',
-        'sub': 'Без подписки',
-        'expiring': 'С истекающей подпиской',
-        'expired': 'С истекшей подпиской',
-        'active_zero': 'Активная подписка, трафик 0 ГБ',
-        'trial_zero': 'Триальная подписка, трафик 0 ГБ',
-        'zero': 'Подписка, трафик 0 ГБ',
-        'custom_today': 'Зарегистрированные сегодня',
-        'custom_week': 'Зарегистрированные за неделю',
-        'custom_month': 'Зарегистрированные за месяц',
-        'custom_active_today': 'Активные сегодня',
-        'custom_inactive_week': 'Неактивные 7+ дней',
-        'custom_inactive_month': 'Неактивные 30+ дней',
-        'custom_referrals': 'Через рефералов',
-        'custom_direct': 'Прямая регистрация',
+        'all': 'به همه کاربران',
+        'active': 'دارای اشتراک فعال',
+        'trial': 'دارای اشتراک آزمایشی',
+        'no': 'بدون اشتراک',
+        'sub': 'بدون اشتراک',
+        'expiring': 'دارای اشتراک رو به انقضا',
+        'expired': 'دارای اشتراک منقضی‌شده',
+        'active_zero': 'اشتراک فعال، ترافیک ۰ گیگابایت',
+        'trial_zero': 'اشتراک آزمایشی، ترافیک ۰ گیگابایت',
+        'zero': 'اشتراک، ترافیک ۰ گیگابایت',
+        'custom_today': 'ثبت‌نام‌شده‌های امروز',
+        'custom_week': 'ثبت‌نام‌شده‌های هفته گذشته',
+        'custom_month': 'ثبت‌نام‌شده‌های ماه گذشته',
+        'custom_active_today': 'فعال امروز',
+        'custom_inactive_week': 'غیرفعال ۷+ روز',
+        'custom_inactive_month': 'غیرفعال ۳۰+ روز',
+        'custom_referrals': 'از طریق ارجاع',
+        'custom_direct': 'ثبت‌نام مستقیم',
     }
     # Обработка фильтра по тарифу
     if target_type.startswith('tariff_'):
         tariff_id = target_type.split('_')[1]
-        return f'По тарифу #{tariff_id}'
+        return f'تعرفه #{tariff_id}'
     return names.get(target_type, target_type)
 
 
