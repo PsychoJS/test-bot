@@ -38,77 +38,77 @@ logger = structlog.get_logger(__name__)
 class BlockedUsersText(Enum):
     """Тексты для сообщений модуля заблокированных пользователей."""
 
-    MENU_TITLE = '🔒 <b>Проверка заблокированных пользователей</b>'
+    MENU_TITLE = '🔒 <b>بررسی کاربران مسدودشده</b>'
     MENU_DESCRIPTION = (
-        '\n\nЗдесь вы можете проверить, какие пользователи заблокировали бота, '
-        'и очистить их из базы данных и панели Remnawave.\n\n'
-        '<b>Как это работает:</b>\n'
-        '1. Сканирование отправляет тестовый запрос каждому пользователю\n'
-        '2. Если пользователь заблокировал бота - получаем ошибку\n'
-        '3. Можно удалить таких пользователей из БД и/или Remnawave'
+        '\n\nاینجا می‌توانید بررسی کنید کدام کاربران ربات را مسدود کرده‌اند، '
+        'و آن‌ها را از پایگاه داده و پنل Remnawave حذف کنید.\n\n'
+        '<b>نحوه عملکرد:</b>\n'
+        '1. اسکن یک درخواست آزمایشی برای هر کاربر ارسال می‌کند\n'
+        '2. اگر کاربر ربات را مسدود کرده باشد - خطا دریافت می‌کنیم\n'
+        '3. می‌توان چنین کاربرانی را از دیتابیس و/یا Remnawave حذف کرد'
     )
 
-    SCAN_STARTED = '🔄 <b>Сканирование запущено...</b>\n\nЭто может занять несколько минут.'
-    SCAN_PROGRESS = '🔄 <b>Сканирование:</b> {checked}/{total} ({percent}%)'
+    SCAN_STARTED = '🔄 <b>اسکن شروع شد...</b>\n\nاین ممکن است چند دقیقه طول بکشد.'
+    SCAN_PROGRESS = '🔄 <b>اسکن:</b> {checked}/{total} ({percent}%)'
     SCAN_COMPLETE = (
-        '✅ <b>Сканирование завершено</b>\n\n'
-        '📊 <b>Результаты:</b>\n'
-        '• Проверено: {total_checked}\n'
-        '• Заблокировали бота: {blocked_count}\n'
-        '• Активных: {active_users}\n'
-        '• Ошибок: {errors}\n'
-        '• Без Telegram ID: {skipped}\n\n'
-        '⏱ Время сканирования: {duration:.1f}с'
+        '✅ <b>اسکن کامل شد</b>\n\n'
+        '📊 <b>نتایج:</b>\n'
+        '• بررسی‌شده: {total_checked}\n'
+        '• ربات را مسدود کرده‌اند: {blocked_count}\n'
+        '• فعال: {active_users}\n'
+        '• خطاها: {errors}\n'
+        '• بدون شناسه تلگرام: {skipped}\n\n'
+        '⏱ زمان اسکن: {duration:.1f}s'
     )
-    SCAN_NO_BLOCKED = '✅ <b>Отлично!</b>\n\nНе найдено пользователей, заблокировавших бота.'
+    SCAN_NO_BLOCKED = '✅ <b>عالی!</b>\n\nهیچ کاربری که ربات را مسدود کرده باشد پیدا نشد.'
 
-    BLOCKED_LIST_TITLE = '🔒 <b>Заблокированные пользователи</b> ({count})\n\n'
+    BLOCKED_LIST_TITLE = '🔒 <b>کاربران مسدودشده</b> ({count})\n\n'
     BLOCKED_USER_ROW = '• {name} (ID: <code>{telegram_id}</code>)\n'
 
-    CLEANUP_CONFIRM_TITLE = '⚠️ <b>Подтверждение действия</b>\n\n'
+    CLEANUP_CONFIRM_TITLE = '⚠️ <b>تأیید عملیات</b>\n\n'
     CLEANUP_CONFIRM_DELETE_DB = (
-        'Вы собираетесь <b>удалить из БД</b> {count} пользователей.\n'
-        'Это действие необратимо!\n\n'
-        'Будут удалены:\n'
-        '• Профили пользователей\n'
-        '• Подписки\n'
-        '• Транзакции\n'
-        '• Реферальные данные'
+        'می‌خواهید <b>از دیتابیس حذف کنید</b> {count} کاربر را.\n'
+        'این عملیات غیرقابل بازگشت است!\n\n'
+        'موارد حذف‌شده:\n'
+        '• پروفایل کاربران\n'
+        '• اشتراک‌ها\n'
+        '• تراکنش‌ها\n'
+        '• داده‌های معرف'
     )
     CLEANUP_CONFIRM_DELETE_REMNAWAVE = (
-        'Вы собираетесь <b>удалить из Remnawave</b> {count} пользователей.\nИх VPN доступ будет полностью отключен.'
+        'می‌خواهید <b>از Remnawave حذف کنید</b> {count} کاربر را.\nدسترسی VPN آن‌ها کاملاً غیرفعال خواهد شد.'
     )
     CLEANUP_CONFIRM_DELETE_BOTH = (
-        'Вы собираетесь <b>полностью удалить</b> {count} пользователей:\n'
-        '• Из базы данных бота\n'
-        '• Из панели Remnawave\n\n'
-        'Это действие необратимо!'
+        'می‌خواهید <b>به‌طور کامل حذف کنید</b> {count} کاربر را:\n'
+        '• از پایگاه داده ربات\n'
+        '• از پنل Remnawave\n\n'
+        'این عملیات غیرقابل بازگشت است!'
     )
     CLEANUP_CONFIRM_MARK = (
-        'Вы собираетесь <b>пометить как заблокированных</b> {count} пользователей.\n'
-        'Они останутся в БД, но будут помечены статусом "blocked".'
+        'می‌خواهید <b>به‌عنوان مسدودشده علامت‌گذاری کنید</b> {count} کاربر را.\n'
+        'آن‌ها در دیتابیس باقی می‌مانند، اما با وضعیت "blocked" علامت‌گذاری می‌شوند.'
     )
 
-    CLEANUP_PROGRESS = '🗑 <b>Очистка:</b> {processed}/{total}'
+    CLEANUP_PROGRESS = '🗑 <b>پاکسازی:</b> {processed}/{total}'
     CLEANUP_COMPLETE = (
-        '✅ <b>Очистка завершена</b>\n\n'
-        '📊 <b>Результаты:</b>\n'
-        '• Удалено из БД: {deleted_db}\n'
-        '• Удалено из Remnawave: {deleted_remnawave}\n'
-        '• Помечено как заблокированные: {marked}\n'
-        '• Ошибок: {errors}'
+        '✅ <b>پاکسازی کامل شد</b>\n\n'
+        '📊 <b>نتایج:</b>\n'
+        '• حذف‌شده از دیتابیس: {deleted_db}\n'
+        '• حذف‌شده از Remnawave: {deleted_remnawave}\n'
+        '• علامت‌گذاری‌شده به‌عنوان مسدود: {marked}\n'
+        '• خطاها: {errors}'
     )
 
-    BUTTON_START_SCAN = '🔍 Начать сканирование'
-    BUTTON_VIEW_BLOCKED = '👥 Список заблокированных ({count})'
-    BUTTON_DELETE_DB = '🗑 Удалить из БД'
-    BUTTON_DELETE_REMNAWAVE = '🌐 Удалить из Remnawave'
-    BUTTON_DELETE_BOTH = '💀 Удалить везде'
-    BUTTON_MARK_BLOCKED = '🚫 Пометить как заблокированных'
-    BUTTON_CONFIRM = '✅ Подтвердить'
-    BUTTON_CANCEL = '❌ Отмена'
-    BUTTON_BACK = '⬅️ Назад'
-    BUTTON_BACK_TO_USERS = '⬅️ К пользователям'
+    BUTTON_START_SCAN = '🔍 شروع اسکن'
+    BUTTON_VIEW_BLOCKED = '👥 لیست مسدودشدگان ({count})'
+    BUTTON_DELETE_DB = '🗑 حذف از دیتابیس'
+    BUTTON_DELETE_REMNAWAVE = '🌐 حذف از Remnawave'
+    BUTTON_DELETE_BOTH = '💀 حذف از همه‌جا'
+    BUTTON_MARK_BLOCKED = '🚫 علامت‌گذاری به‌عنوان مسدود'
+    BUTTON_CONFIRM = '✅ تأیید'
+    BUTTON_CANCEL = '❌ لغو'
+    BUTTON_BACK = '⬅️ بازگشت'
+    BUTTON_BACK_TO_USERS = '⬅️ بازگشت به کاربران'
 
 
 class BlockedUsersCallback(Enum):
@@ -300,9 +300,9 @@ async def show_blocked_users_menu(
 
     if scan_result:
         text += (
-            f'\n\n📊 <b>Последнее сканирование:</b>\n'
-            f'• Заблокированных: {scan_result.get("blocked_count", 0)}\n'
-            f'• Активных: {scan_result.get("active_users", 0)}'
+            f'\n\n📊 <b>آخرین اسکن:</b>\n'
+            f'• مسدودشده: {scan_result.get("blocked_count", 0)}\n'
+            f'• فعال: {scan_result.get("active_users", 0)}'
         )
 
     await callback.message.edit_text(
@@ -421,7 +421,7 @@ async def show_blocked_list(
     blocked_list: list[dict[str, Any]] = data.get('blocked_users_list', [])
 
     if not blocked_list:
-        await callback.answer('Нет заблокированных пользователей', show_alert=True)
+        await callback.answer('کاربر مسدودشده‌ای وجود ندارد', show_alert=True)
         return
 
     # Пагинация
@@ -435,7 +435,7 @@ async def show_blocked_list(
     text = BlockedUsersText.BLOCKED_LIST_TITLE.value.format(count=len(blocked_list))
 
     for user_data in page_users:
-        name = user_data.get('full_name') or user_data.get('username') or 'Без имени'
+        name = user_data.get('full_name') or user_data.get('username') or 'بدون نام'
         telegram_id = user_data.get('telegram_id', '?')
         text += BlockedUsersText.BLOCKED_USER_ROW.value.format(
             name=html.escape(name),
@@ -480,7 +480,7 @@ async def show_action_confirm(
     count = len(blocked_list)
 
     if count == 0:
-        await callback.answer('Нет пользователей для обработки', show_alert=True)
+        await callback.answer('کاربری برای پردازش وجود ندارد', show_alert=True)
         return
 
     await state.set_state(BlockedUsersStates.confirming_action)
@@ -573,11 +573,11 @@ async def handle_confirm_action(
     action = action_map.get(action_code)
 
     if not action:
-        await callback.answer('Неизвестное действие', show_alert=True)
+        await callback.answer('عملیات ناشناخته', show_alert=True)
         return
 
     if not blocked_list:
-        await callback.answer('Нет пользователей для обработки', show_alert=True)
+        await callback.answer('کاربری برای پردازش وجود ندارد', show_alert=True)
         return
 
     await state.set_state(BlockedUsersStates.processing_cleanup)
@@ -645,7 +645,7 @@ async def handle_confirm_action(
     )
 
     logger.info(
-        'Очистка заблокированных пользователей завершена: DB=, RW=, marked=, errors',
+        'Blocked users cleanup completed: DB=, RW=, marked=, errors',
         deleted_from_db=result.deleted_from_db,
         deleted_from_remnawave=result.deleted_from_remnawave,
         marked_as_blocked=result.marked_as_blocked,
