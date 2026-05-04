@@ -234,7 +234,7 @@ def _build_list_keyboard(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text=texts.t('ADMIN_PAYMENTS_CHECK_ALL', '🔄 Проверить все'),
+                    text=texts.t('ADMIN_PAYMENTS_CHECK_ALL', '🔄 بررسی همه'),
                     callback_data='admin_payments_check_all',
                 )
             ]
@@ -245,7 +245,7 @@ def _build_list_keyboard(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text=texts.t('ADMIN_PAYMENTS_EXPORT', '📥 Выгрузить в файл'),
+                    text=texts.t('ADMIN_PAYMENTS_EXPORT', '📥 خروجی به فایل'),
                     callback_data='admin_payments_export',
                 )
             ]
@@ -544,7 +544,7 @@ async def show_payments_overview(
         if has_checkable:
             lines.append('')
             lines.append(
-                texts.t('ADMIN_PAYMENTS_CHECKABLE_COUNT', '🔄 Доступно для проверки: {count}').format(
+                texts.t('ADMIN_PAYMENTS_CHECKABLE_COUNT', '🔄 در دسترس برای بررسی: {count}').format(
                     count=len(checkable_records)
                 )
             )
@@ -595,7 +595,7 @@ async def show_payment_details(
     method, payment_id = parsed
     record = await get_payment_record(db, method, payment_id)
     if not record:
-        await callback.answer('❌ Платеж не найден', show_alert=True)
+        await callback.answer('❌ پرداخت یافت نشد', show_alert=True)
         return
 
     await _render_payment_details(callback, db_user, record)
@@ -688,13 +688,13 @@ async def check_all_payments(
 
     if not checkable_records:
         await callback.answer(
-            texts.t('ADMIN_PAYMENTS_NO_CHECKABLE', 'Нет платежей для проверки'),
+            texts.t('ADMIN_PAYMENTS_NO_CHECKABLE', 'هیچ پرداختی برای بررسی وجود ندارد'),
             show_alert=True,
         )
         return
 
     await callback.answer(
-        texts.t('ADMIN_PAYMENTS_CHECKING_ALL', '🔄 Проверяю {count} платежей...').format(count=len(checkable_records)),
+        texts.t('ADMIN_PAYMENTS_CHECKING_ALL', '🔄 در حال بررسی {count} پرداخت...').format(count=len(checkable_records)),
     )
 
     payment_service = PaymentService(callback.bot)
@@ -718,13 +718,13 @@ async def check_all_payments(
 
     # Показываем результат
     result_lines = [
-        texts.t('ADMIN_PAYMENTS_CHECK_ALL_RESULT', '🔄 <b>Результат проверки</b>'),
+        texts.t('ADMIN_PAYMENTS_CHECK_ALL_RESULT', '🔄 <b>نتیجه بررسی</b>'),
         '',
-        texts.t('ADMIN_PAYMENTS_CHECK_ALL_CHECKED', '✅ Проверено: {count}').format(count=checked),
-        texts.t('ADMIN_PAYMENTS_CHECK_ALL_CONFIRMED', '💰 Подтверждено: {count}').format(count=confirmed),
+        texts.t('ADMIN_PAYMENTS_CHECK_ALL_CHECKED', '✅ بررسی شده: {count}').format(count=checked),
+        texts.t('ADMIN_PAYMENTS_CHECK_ALL_CONFIRMED', '💰 تأیید شده: {count}').format(count=confirmed),
     ]
     if failed:
-        result_lines.append(texts.t('ADMIN_PAYMENTS_CHECK_ALL_FAILED', '❌ Ошибок: {count}').format(count=failed))
+        result_lines.append(texts.t('ADMIN_PAYMENTS_CHECK_ALL_FAILED', '❌ خطاها: {count}').format(count=failed))
 
     # Перезагружаем список платежей
     records = await list_recent_pending_payments(db)
@@ -780,7 +780,7 @@ async def export_payments(
 
     if not records:
         await callback.answer(
-            texts.t('ADMIN_PAYMENTS_EXPORT_EMPTY', 'Нет платежей для экспорта'),
+            texts.t('ADMIN_PAYMENTS_EXPORT_EMPTY', 'هیچ پرداختی برای صدور وجود ندارد'),
             show_alert=True,
         )
         return
@@ -831,7 +831,7 @@ async def export_payments(
         document=BufferedInputFile(file_bytes, filename=filename),
         caption=texts.t(
             'ADMIN_PAYMENTS_EXPORT_CAPTION',
-            '📥 Экспорт платежей\n\n📊 Всего записей: {count}\n💰 Оплачено: {paid}\n⏳ Ожидают: {pending}',
+            '📥 صدور پرداخت‌ها\n\n📊 تعداد کل: {count}\n💰 پرداخت شده: {paid}\n⏳ در انتظار: {pending}',
         ).format(
             count=len(export_data),
             paid=sum(1 for r in export_data if r['is_paid']),
@@ -839,7 +839,7 @@ async def export_payments(
         ),
     )
 
-    await callback.answer(texts.t('ADMIN_PAYMENTS_EXPORT_SUCCESS', '✅ Файл отправлен'))
+    await callback.answer(texts.t('ADMIN_PAYMENTS_EXPORT_SUCCESS', '✅ فایل ارسال شد'))
 
 
 def register_handlers(dp: Dispatcher) -> None:
