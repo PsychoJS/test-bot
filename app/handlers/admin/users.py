@@ -59,12 +59,12 @@ logger = structlog.get_logger(__name__)
 
 
 # =============================================================================
-# Конфигурация фильтров пользователей
+# User filter configuration
 # =============================================================================
 
 
 class UserFilterType(Enum):
-    """Типы фильтрации пользователей."""
+    """User filter types."""
 
     BALANCE = 'balance'
     CAMPAIGN = 'campaign'
@@ -73,43 +73,43 @@ class UserFilterType(Enum):
 
 @dataclass
 class UserFilterConfig:
-    """Конфигурация для типа фильтра."""
+    """Configuration for a filter type."""
 
-    fsm_state: Any  # State из AdminStates
+    fsm_state: Any  # State from AdminStates
     title: str
     empty_message: str
     pagination_prefix: str
-    order_param: str  # параметр для get_users_page
+    order_param: str  # parameter for get_users_page
 
 
-# Конфигурация для каждого типа фильтра
+# Configuration for each filter type
 USER_FILTER_CONFIGS: dict[UserFilterType, UserFilterConfig] = {
     UserFilterType.BALANCE: UserFilterConfig(
         fsm_state=AdminStates.viewing_user_from_balance_list,
-        title='👥 <b>Список пользователей по балансу</b>',
-        empty_message='👥 Пользователи не найдены',
+        title='👥 <b>فهرست کاربران بر اساس موجودی</b>',
+        empty_message='👥 کاربری پیدا نشد',
         pagination_prefix='admin_users_balance_list',
         order_param='order_by_balance',
     ),
     UserFilterType.CAMPAIGN: UserFilterConfig(
         fsm_state=AdminStates.viewing_user_from_campaign_list,
-        title='👥 <b>Пользователи по кампании регистрации</b>',
-        empty_message='📢 Пользователи с кампанией не найдены',
+        title='👥 <b>کاربران بر اساس کمپین ثبت‌نام</b>',
+        empty_message='📢 کاربری با کمپین پیدا نشد',
         pagination_prefix='admin_users_campaign_list',
-        order_param='',  # использует специальный метод
+        order_param='',  # uses a special method
     ),
     UserFilterType.POTENTIAL_CUSTOMERS: UserFilterConfig(
         fsm_state=AdminStates.viewing_user_from_potential_customers_list,
-        title='👥 <b>Потенциальные клиенты</b>',
-        empty_message='💰 Потенциальные клиенты не найдены',
+        title='👥 <b>مشتریان بالقوه</b>',
+        empty_message='💰 مشتری بالقوه‌ای پیدا نشد',
         pagination_prefix='admin_users_potential_customers_list',
-        order_param='',  # использует специальный метод
+        order_param='',  # uses a special method
     ),
 }
 
 
 def _get_user_status_emoji(user: User) -> str:
-    """Возвращает эмодзи статуса пользователя."""
+    """Returns user status emoji."""
     if user.status == UserStatus.ACTIVE.value:
         return '✅'
     if user.status == UserStatus.BLOCKED.value:
@@ -118,7 +118,7 @@ def _get_user_status_emoji(user: User) -> str:
 
 
 def _get_subscription_emoji(user: User) -> str:
-    """Возвращает эмодзи подписки пользователя."""
+    """Returns user subscription emoji."""
     subscriptions = getattr(user, 'subscriptions', None) or []
     if not subscriptions:
         return '❌'
@@ -136,13 +136,13 @@ def _build_user_button_text(
     user: User, filter_type: UserFilterType, extra_data: dict[str, Any] | None = None, language: str = 'ru'
 ) -> str:
     """
-    Формирует текст кнопки пользователя в зависимости от типа фильтра.
+    Builds user button text based on filter type.
 
     Args:
-        user: Пользователь
-        filter_type: Тип фильтра
-        extra_data: Дополнительные данные (spending_map, campaign_map и т.д.)
-        language: Язык пользователя
+        user: User
+        filter_type: Filter type
+        extra_data: Extra data (spending_map, campaign_map, etc.)
+        language: User language
     """
     status_emoji = _get_user_status_emoji(user)
     sub_emoji = _get_subscription_emoji(user)
@@ -155,22 +155,22 @@ def _build_user_button_text(
         first_sub = next((s for s in (getattr(user, 'subscriptions', None) or []) if s.is_active), None)
         if first_sub and first_sub.end_date:
             days_left = (first_sub.end_date - datetime.now(UTC)).days
-            button_text += f' | 📅 {days_left}д'
+            button_text += f' | 📅 {days_left}d'
 
     elif filter_type == UserFilterType.CAMPAIGN:
         info = extra_data.get(user.id, {}) if extra_data else {}
-        campaign_name = info.get('campaign_name') or 'Без кампании'
+        campaign_name = info.get('campaign_name') or 'بدون کمپین'
         registered_at = info.get('registered_at')
-        registered_display = format_datetime(registered_at) if registered_at else 'неизвестно'
+        registered_display = format_datetime(registered_at) if registered_at else 'نامشخص'
         button_text = f'{status_emoji} {user.full_name} | 📢 {campaign_name} | 📅 {registered_display}'
 
     else:
         button_text = f'{status_emoji} {sub_emoji} {user.full_name}'
 
-    # Обрезка длинных имён
+    # Trim long names
     if len(button_text) > 60:
         short_name = user.full_name[:17] + '...' if len(user.full_name) > 20 else user.full_name
-        # Пересобираем с коротким именем
+        # Rebuild with short name
         if filter_type == UserFilterType.BALANCE:
             button_text = f'{status_emoji} {sub_emoji} {short_name}'
             if user.balance_kopeks > 0:
@@ -190,25 +190,25 @@ async def _show_users_list_filtered(
     page: int = 1,
 ) -> None:
     """
-    Универсальная функция отображения отфильтрованного списка пользователей.
+    Generic function for displaying a filtered user list.
 
     Args:
         callback: Callback query
-        db_user: Текущий администратор
-        db: Сессия БД
-        state: FSM состояние
-        filter_type: Тип фильтра
-        page: Номер страницы
+        db_user: Current admin
+        db: DB session
+        state: FSM state
+        filter_type: Filter type
+        page: Page number
     """
     config = USER_FILTER_CONFIGS[filter_type]
 
-    # Устанавливаем FSM состояние
+    # Set FSM state
     await state.set_state(config.fsm_state)
 
     user_service = UserService()
     extra_data: dict[str, Any] | None = None
 
-    # Получаем данные в зависимости от типа фильтра
+    # Fetch data based on filter type
     if filter_type == UserFilterType.CAMPAIGN:
         users_data = await user_service.get_users_by_campaign_page(db, page=page, limit=10)
         extra_data = users_data.get('campaigns', {})
@@ -218,23 +218,23 @@ async def _show_users_list_filtered(
 
     users = users_data.get('users', [])
 
-    # Если нет пользователей
+    # If no users
     if not users:
         await callback.message.edit_text(config.empty_message, reply_markup=get_admin_users_keyboard(db_user.language))
         await callback.answer()
         return
 
-    # Формируем текст заголовка
+    # Build header text
     text = f'{config.title} (стр. {page}/{users_data["total_pages"]})\n\n'
-    text += 'Нажмите на пользователя для управления:'
+    text += 'برای مدیریت روی کاربر کلیک کنید:'
 
-    # Формируем клавиатуру
+    # Build keyboard
     keyboard = []
     for user in users:
         button_text = _build_user_button_text(user, filter_type, extra_data, db_user.language)
         keyboard.append([types.InlineKeyboardButton(text=button_text, callback_data=f'admin_user_manage_{user.id}')])
 
-    # Пагинация
+    # Pagination
     if users_data['total_pages'] > 1:
         pagination_row = get_admin_pagination_keyboard(
             users_data['current_page'],
@@ -245,14 +245,14 @@ async def _show_users_list_filtered(
         ).inline_keyboard[0]
         keyboard.append(pagination_row)
 
-    # Дополнительные кнопки
+    # Additional buttons
     keyboard.extend(
         [
             [
-                types.InlineKeyboardButton(text='🔍 Поиск', callback_data='admin_users_search'),
-                types.InlineKeyboardButton(text='📊 Статистика', callback_data='admin_users_stats'),
+                types.InlineKeyboardButton(text='🔍 جستجو', callback_data='admin_users_search'),
+                types.InlineKeyboardButton(text='📊 آمار', callback_data='admin_users_stats'),
             ],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_users')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_users')],
         ]
     )
 
@@ -314,7 +314,7 @@ async def show_users_list(
         return
 
     text = f'👥 <b>Список пользователей</b> (стр. {page}/{users_data["total_pages"]})\n\n'
-    text += 'Нажмите на пользователя для управления:'
+    text += 'برای مدیریت روی کاربر کلیک کنید:'
 
     keyboard = []
 
@@ -366,10 +366,10 @@ async def show_users_list(
     keyboard.extend(
         [
             [
-                types.InlineKeyboardButton(text='🔍 Поиск', callback_data='admin_users_search'),
-                types.InlineKeyboardButton(text='📊 Статистика', callback_data='admin_users_stats'),
+                types.InlineKeyboardButton(text='🔍 جستجو', callback_data='admin_users_search'),
+                types.InlineKeyboardButton(text='📊 آمار', callback_data='admin_users_stats'),
             ],
-            [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_users')],
+            [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_users')],
         ]
     )
 
@@ -432,7 +432,7 @@ async def show_users_ready_to_renew(
         return
 
     text = f'{header}\n\n{description}\n\n'
-    text += 'Нажмите на пользователя для управления:'
+    text += 'برای مدیریت روی کاربر کلیک کنید:'
 
     keyboard = []
     current_time = datetime.now(UTC)
@@ -560,7 +560,7 @@ async def show_potential_customers(
         return
 
     text = f'{header}\n\n{description}\n\n'
-    text += 'Нажмите на пользователя для управления:'
+    text += 'برای مدیریت روی کاربر کلیک کنید:'
 
     keyboard = []
 
@@ -813,7 +813,7 @@ async def show_users_statistics(callback: types.CallbackQuery, db_user: User, db
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_users_stats')],
-                [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_users')],
+                [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_users')],
             ]
         ),
     )
@@ -1162,7 +1162,7 @@ async def process_user_search(message: types.Message, db_user: User, state: FSMC
         await message.answer(
             f"🔍 По запросу '<b>{html.escape(query)}</b>' ничего не найдено",
             reply_markup=types.InlineKeyboardMarkup(
-                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_users')]]
+                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_users')]]
             ),
         )
         await state.clear()
@@ -1210,7 +1210,7 @@ async def process_user_search(message: types.Message, db_user: User, state: FSMC
 
         keyboard.append([types.InlineKeyboardButton(text=button_text, callback_data=f'admin_user_manage_{user.id}')])
 
-    keyboard.append([types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_users')])
+    keyboard.append([types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_users')])
 
     await message.answer(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
     await state.clear()
@@ -2691,7 +2691,7 @@ async def show_inactive_users(callback: types.CallbackQuery, db_user: User, db: 
         await callback.message.edit_text(
             f'✅ Неактивных пользователей (более {settings.INACTIVE_USER_DELETE_MONTHS} месяцев) не найдено',
             reply_markup=types.InlineKeyboardMarkup(
-                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_users')]]
+                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_users')]]
             ),
         )
         await callback.answer()
@@ -2726,7 +2726,7 @@ async def show_inactive_users(callback: types.CallbackQuery, db_user: User, db: 
 
     keyboard = [
         [types.InlineKeyboardButton(text='🗑️ Очистить всех', callback_data='admin_cleanup_inactive')],
-        [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_users')],
+        [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_users')],
     ]
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
@@ -4592,7 +4592,7 @@ async def cleanup_inactive_users(callback: types.CallbackQuery, db_user: User, d
     await callback.message.edit_text(
         text,
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_users')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_users')]]
         ),
     )
     await callback.answer()
