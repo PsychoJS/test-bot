@@ -42,35 +42,35 @@ _CAMPAIGNS_PAGE_SIZE = 5
 
 
 def _format_campaign_summary(campaign, texts) -> str:
-    status = '🟢 Активна' if campaign.is_active else '⚪️ Выключена'
+    status = '🟢 فعال' if campaign.is_active else '⚪️ غیرفعال'
 
     if campaign.is_balance_bonus:
         bonus_text = texts.format_price(campaign.balance_bonus_kopeks)
-        bonus_info = f'💰 Бонус на баланс: <b>{bonus_text}</b>'
+        bonus_info = f'💰 پاداش به موجودی: <b>{bonus_text}</b>'
     elif campaign.is_subscription_bonus:
         traffic_text = texts.format_traffic(campaign.subscription_traffic_gb or 0)
         device_limit = campaign.subscription_device_limit
         if device_limit is None:
             device_limit = settings.DEFAULT_DEVICE_LIMIT
         bonus_info = (
-            f'📱 Пробная подписка: <b>{campaign.subscription_duration_days or 0} д.</b>\n'
-            f'🌐 Трафик: <b>{traffic_text}</b>\n'
-            f'📱 Устройства: <b>{device_limit}</b>'
+            f'📱 اشتراک آزمایشی: <b>{campaign.subscription_duration_days or 0} روز</b>\n'
+            f'🌐 ترافیک: <b>{traffic_text}</b>\n'
+            f'📱 دستگاه‌ها: <b>{device_limit}</b>'
         )
     elif campaign.is_tariff_bonus:
-        tariff_name = 'Не выбран'
+        tariff_name = 'انتخاب نشده'
         if hasattr(campaign, 'tariff') and campaign.tariff:
             tariff_name = campaign.tariff.name
-        bonus_info = f'🎁 Тариф: <b>{tariff_name}</b>\n📅 Длительность: <b>{campaign.tariff_duration_days or 0} д.</b>'
+        bonus_info = f'🎁 تعرفه: <b>{tariff_name}</b>\n📅 مدت: <b>{campaign.tariff_duration_days or 0} روز</b>'
     elif campaign.is_none_bonus:
-        bonus_info = '🔗 Только ссылка (без награды)'
+        bonus_info = '🔗 فقط لینک (بدون پاداش)'
     else:
-        bonus_info = '❓ Неизвестный тип бонуса'
+        bonus_info = '❓ نوع پاداش ناشناخته'
 
     return (
         f'<b>{html.escape(campaign.name)}</b>\n'
-        f'Стартовый параметр: <code>{html.escape(campaign.start_parameter)}</code>\n'
-        f'Статус: {status}\n'
+        f'پارامتر شروع: <code>{html.escape(campaign.start_parameter)}</code>\n'
+        f'وضعیت: {status}\n'
         f'{bonus_info}\n'
     )
 
@@ -103,8 +103,8 @@ def _build_campaign_servers_keyboard(
 
     keyboard.append(
         [
-            types.InlineKeyboardButton(text='✅ Сохранить', callback_data=save_callback),
-            types.InlineKeyboardButton(text='⬅️ Назад', callback_data=back_callback),
+            types.InlineKeyboardButton(text='✅ ذخیره', callback_data=save_callback),
+            types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data=back_callback),
         ]
     )
 
@@ -121,7 +121,7 @@ async def _render_campaign_edit_menu(
     use_caption: bool = False,
 ):
     texts = get_texts(language)
-    text = f'✏️ <b>Редактирование кампании</b>\n\n{_format_campaign_summary(campaign, texts)}\nВыберите, что изменить:'
+    text = f'✏️ <b>ویرایش کمپین</b>\n\n{_format_campaign_summary(campaign, texts)}\nانتخاب کنید چه چیزی را تغییر دهید:'
 
     edit_kwargs = dict(
         chat_id=chat_id,
@@ -157,12 +157,12 @@ async def show_campaigns_menu(
     overview = await get_campaigns_overview(db)
 
     text = (
-        '📣 <b>Рекламные кампании</b>\n\n'
-        f'Всего кампаний: <b>{overview["total"]}</b>\n'
-        f'Активных: <b>{overview["active"]}</b> | Выключены: <b>{overview["inactive"]}</b>\n'
-        f'Регистраций: <b>{overview["registrations"]}</b>\n'
-        f'Выдано баланса: <b>{texts.format_price(overview["balance_total"])}</b>\n'
-        f'Выдано подписок: <b>{overview["subscription_total"]}</b>'
+        '📣 <b>کمپین‌های تبلیغاتی</b>\n\n'
+        f'کل کمپین‌ها: <b>{overview["total"]}</b>\n'
+        f'فعال: <b>{overview["active"]}</b> | غیرفعال: <b>{overview["inactive"]}</b>\n'
+        f'ثبت‌نام‌ها: <b>{overview["registrations"]}</b>\n'
+        f'موجودی پرداخت‌شده: <b>{texts.format_price(overview["balance_total"])}</b>\n'
+        f'اشتراک‌های اعطاشده: <b>{overview["subscription_total"]}</b>'
     )
 
     await callback.message.edit_text(
@@ -182,17 +182,17 @@ async def show_campaigns_overall_stats(
     texts = get_texts(db_user.language)
     overview = await get_campaigns_overview(db)
 
-    text = ['📊 <b>Общая статистика кампаний</b>\n']
-    text.append(f'Всего кампаний: <b>{overview["total"]}</b>')
-    text.append(f'Активны: <b>{overview["active"]}</b>, выключены: <b>{overview["inactive"]}</b>')
-    text.append(f'Всего регистраций: <b>{overview["registrations"]}</b>')
-    text.append(f'Суммарно выдано баланса: <b>{texts.format_price(overview["balance_total"])}</b>')
-    text.append(f'Выдано подписок: <b>{overview["subscription_total"]}</b>')
+    text = ['📊 <b>آمار کلی کمپین‌ها</b>\n']
+    text.append(f'کل کمپین‌ها: <b>{overview["total"]}</b>')
+    text.append(f'فعال: <b>{overview["active"]}</b>، غیرفعال: <b>{overview["inactive"]}</b>')
+    text.append(f'کل ثبت‌نام‌ها: <b>{overview["registrations"]}</b>')
+    text.append(f'مجموع موجودی پرداخت‌شده: <b>{texts.format_price(overview["balance_total"])}</b>')
+    text.append(f'اشتراک‌های اعطاشده: <b>{overview["subscription_total"]}</b>')
 
     await callback.message.edit_text(
         '\n'.join(text),
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_campaigns')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_campaigns')]]
         ),
     )
     await callback.answer()
@@ -225,18 +225,18 @@ async def show_campaigns_list(
 
     if not campaigns:
         await callback.message.edit_text(
-            '❌ Рекламные кампании не найдены.',
+            '❌ کمپین‌های تبلیغاتی پیدا نشدند.',
             reply_markup=types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='➕ Создать', callback_data='admin_campaigns_create')],
-                    [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_campaigns')],
+                    [types.InlineKeyboardButton(text='➕ ایجاد', callback_data='admin_campaigns_create')],
+                    [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_campaigns')],
                 ]
             ),
         )
         await callback.answer()
         return
 
-    text_lines = ['📋 <b>Список кампаний</b>\n']
+    text_lines = ['📋 <b>لیست کمپین‌ها</b>\n']
 
     for campaign in campaigns:
         # Access from instance dict to avoid MissingGreenlet on lazy load
@@ -246,12 +246,12 @@ async def show_campaigns_list(
         status = '🟢' if campaign.is_active else '⚪'
         line = (
             f'{status} <b>{html.escape(campaign.name)}</b> — <code>{html.escape(campaign.start_parameter)}</code>\n'
-            f'   Регистраций: {registrations}, баланс: {texts.format_price(total_balance)}'
+            f'   ثبت‌نام‌ها: {registrations}، موجودی: {texts.format_price(total_balance)}'
         )
         if campaign.is_subscription_bonus:
-            line += f', подписка: {campaign.subscription_duration_days or 0} д.'
+            line += f'، اشتراک: {campaign.subscription_duration_days or 0} روز'
         else:
-            line += ', бонус: баланс'
+            line += '، پاداش: موجودی'
         text_lines.append(line)
 
     keyboard_rows = [
@@ -292,33 +292,33 @@ async def show_campaign_detail(
     campaign = await get_campaign_by_id(db, campaign_id)
 
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     texts = get_texts(db_user.language)
     stats = await get_campaign_statistics(db, campaign_id)
     deep_link = await _get_bot_deep_link(callback, campaign.start_parameter)
 
-    text = ['📣 <b>Управление кампанией</b>\n']
+    text = ['📣 <b>مدیریت کمپین</b>\n']
     text.append(_format_campaign_summary(campaign, texts))
-    text.append(f'🔗 Ссылка: <code>{deep_link}</code>')
-    text.append('\n📊 <b>Статистика</b>')
-    text.append(f'• Регистраций: <b>{stats["registrations"]}</b>')
-    text.append(f'• Выдано баланса: <b>{texts.format_price(stats["balance_issued"])}</b>')
-    text.append(f'• Выдано подписок: <b>{stats["subscription_issued"]}</b>')
-    text.append(f'• Доход: <b>{texts.format_price(stats["total_revenue_kopeks"])}</b>')
-    text.append(f'• Получили триал: <b>{stats["trial_users_count"]}</b> (активно: {stats["active_trials_count"]})')
+    text.append(f'🔗 لینک: <code>{deep_link}</code>')
+    text.append('\n📊 <b>آمار</b>')
+    text.append(f'• ثبت‌نام‌ها: <b>{stats["registrations"]}</b>')
+    text.append(f'• موجودی پرداخت‌شده: <b>{texts.format_price(stats["balance_issued"])}</b>')
+    text.append(f'• اشتراک‌های اعطاشده: <b>{stats["subscription_issued"]}</b>')
+    text.append(f'• درآمد: <b>{texts.format_price(stats["total_revenue_kopeks"])}</b>')
+    text.append(f'• دریافت‌کنندگان آزمایشی: <b>{stats["trial_users_count"]}</b> (فعال: {stats["active_trials_count"]})')
     text.append(
-        '• Конверсий в оплату: '
+        '• تبدیل به پرداخت: '
         f'<b>{stats["conversion_count"]}</b>'
-        f' / пользователей с оплатой: {stats["paid_users_count"]}'
+        f' / کاربران با پرداخت: {stats["paid_users_count"]}'
     )
-    text.append(f'• Конверсия в оплату: <b>{stats["conversion_rate"]:.1f}%</b>')
-    text.append(f'• Конверсия триала: <b>{stats["trial_conversion_rate"]:.1f}%</b>')
-    text.append(f'• Средний доход на пользователя: <b>{texts.format_price(stats["avg_revenue_per_user_kopeks"])}</b>')
-    text.append(f'• Средний первый платеж: <b>{texts.format_price(stats["avg_first_payment_kopeks"])}</b>')
+    text.append(f'• نرخ تبدیل به پرداخت: <b>{stats["conversion_rate"]:.1f}%</b>')
+    text.append(f'• نرخ تبدیل آزمایشی: <b>{stats["trial_conversion_rate"]:.1f}%</b>')
+    text.append(f'• میانگین درآمد به ازای کاربر: <b>{texts.format_price(stats["avg_revenue_per_user_kopeks"])}</b>')
+    text.append(f'• میانگین اولین پرداخت: <b>{texts.format_price(stats["avg_first_payment_kopeks"])}</b>')
     if stats['last_registration']:
-        text.append(f'• Последняя: {stats["last_registration"].strftime("%d.%m.%Y %H:%M")}')
+        text.append(f'• آخرین: {stats["last_registration"].strftime("%d.%m.%Y %H:%M")}')
 
     await callback.message.edit_text(
         '\n'.join(text),
@@ -340,7 +340,7 @@ async def show_campaign_edit_menu(
 
     if not campaign:
         await state.clear()
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     await state.clear()
@@ -369,7 +369,7 @@ async def start_edit_campaign_name(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     await state.clear()
@@ -383,15 +383,15 @@ async def start_edit_campaign_name(
 
     await callback.message.edit_text(
         (
-            '✏️ <b>Изменение названия кампании</b>\n\n'
-            f'Текущее название: <b>{html.escape(campaign.name)}</b>\n'
-            'Введите новое название (3-100 символов):'
+            '✏️ <b>تغییر نام کمپین</b>\n\n'
+            f'نام فعلی: <b>{html.escape(campaign.name)}</b>\n'
+            'نام جدید را وارد کنید (3-100 کاراکتر):'
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='❌ Отмена',
+                        text='❌ لغو',
                         callback_data=f'admin_campaign_edit_{campaign_id}',
                     )
                 ]
@@ -412,25 +412,25 @@ async def process_edit_campaign_name(
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await message.answer('❌ Сессия редактирования устарела. Попробуйте снова.')
+        await message.answer('❌ جلسه ویرایش منقضی شده. دوباره تلاش کنید.')
         await state.clear()
         return
 
     new_name = message.text.strip()
     if len(new_name) < 3 or len(new_name) > 100:
-        await message.answer('❌ Название должно содержать от 3 до 100 символов. Попробуйте снова.')
+        await message.answer('❌ نام باید بین 3 تا 100 کاراکتر باشد. دوباره تلاش کنید.')
         return
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await message.answer('❌ Кампания не найдена')
+        await message.answer('❌ کمپین پیدا نشد')
         await state.clear()
         return
 
     await update_campaign(db, campaign, name=new_name)
     await state.clear()
 
-    await message.answer('✅ Название обновлено.')
+    await message.answer('✅ نام به‌روزرسانی شد.')
 
     edit_message_id = data.get('campaign_edit_message_id')
     edit_message_is_caption = data.get('campaign_edit_message_is_caption', False)
@@ -456,7 +456,7 @@ async def start_edit_campaign_start_parameter(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     await state.clear()
@@ -470,15 +470,15 @@ async def start_edit_campaign_start_parameter(
 
     await callback.message.edit_text(
         (
-            '🔗 <b>Изменение стартового параметра</b>\n\n'
-            f'Текущий параметр: <code>{campaign.start_parameter}</code>\n'
-            'Введите новый параметр (латинские буквы, цифры, - или _, 3-32 символа):'
+            '🔗 <b>تغییر پارامتر شروع</b>\n\n'
+            f'پارامتر فعلی: <code>{campaign.start_parameter}</code>\n'
+            'پارامتر جدید را وارد کنید (حروف لاتین، ارقام، - یا _، 3-32 کاراکتر):'
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='❌ Отмена',
+                        text='❌ لغو',
                         callback_data=f'admin_campaign_edit_{campaign_id}',
                     )
                 ]
@@ -499,30 +499,30 @@ async def process_edit_campaign_start_parameter(
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await message.answer('❌ Сессия редактирования устарела. Попробуйте снова.')
+        await message.answer('❌ جلسه ویرایش منقضی شده. دوباره تلاش کنید.')
         await state.clear()
         return
 
     new_param = message.text.strip()
     if not _CAMPAIGN_PARAM_REGEX.match(new_param):
-        await message.answer('❌ Разрешены только латинские буквы, цифры, символы - и _. Длина 3-32 символа.')
+        await message.answer('❌ فقط حروف لاتین، ارقام، نمادهای - و _ مجاز هستند. طول 3-32 کاراکتر.')
         return
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await message.answer('❌ Кампания не найдена')
+        await message.answer('❌ کمپین پیدا نشد')
         await state.clear()
         return
 
     existing = await get_campaign_by_start_parameter(db, new_param)
     if existing and existing.id != campaign_id:
-        await message.answer('❌ Такой параметр уже используется. Введите другой вариант.')
+        await message.answer('❌ این پارامتر قبلاً استفاده شده. یک گزینه دیگر وارد کنید.')
         return
 
     await update_campaign(db, campaign, start_parameter=new_param)
     await state.clear()
 
-    await message.answer('✅ Стартовый параметр обновлен.')
+    await message.answer('✅ پارامتر شروع به‌روزرسانی شد.')
 
     edit_message_id = data.get('campaign_edit_message_id')
     edit_message_is_caption = data.get('campaign_edit_message_is_caption', False)
@@ -548,11 +548,11 @@ async def start_edit_campaign_balance_bonus(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     if not campaign.is_balance_bonus:
-        await callback.answer('❌ У кампании другой тип бонуса', show_alert=True)
+        await callback.answer('❌ این کمپین نوع پاداش متفاوتی دارد', show_alert=True)
         return
 
     await state.clear()
@@ -566,15 +566,15 @@ async def start_edit_campaign_balance_bonus(
 
     await callback.message.edit_text(
         (
-            '💰 <b>Изменение бонуса на баланс</b>\n\n'
-            f'Текущий бонус: <b>{get_texts(db_user.language).format_price(campaign.balance_bonus_kopeks)}</b>\n'
-            'Введите новую сумму в рублях (например, 100 или 99.5):'
+            '💰 <b>تغییر پاداش موجودی</b>\n\n'
+            f'پاداش فعلی: <b>{get_texts(db_user.language).format_price(campaign.balance_bonus_kopeks)}</b>\n'
+            'مبلغ جدید را وارد کنید (مثلاً 100 یا 99.5):'
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='❌ Отмена',
+                        text='❌ لغو',
                         callback_data=f'admin_campaign_edit_{campaign_id}',
                     )
                 ]
@@ -595,37 +595,37 @@ async def process_edit_campaign_balance_bonus(
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await message.answer('❌ Сессия редактирования устарела. Попробуйте снова.')
+        await message.answer('❌ جلسه ویرایش منقضی شده. دوباره تلاش کنید.')
         await state.clear()
         return
 
     try:
         amount_rubles = float(message.text.replace(',', '.'))
     except ValueError:
-        await message.answer('❌ Введите корректную сумму (например, 100 или 99.5)')
+        await message.answer('❌ مبلغ معتبری وارد کنید (مثلاً 100 یا 99.5)')
         return
 
     if amount_rubles <= 0:
-        await message.answer('❌ Сумма должна быть больше нуля')
+        await message.answer('❌ مبلغ باید بیشتر از صفر باشد')
         return
 
     amount_kopeks = int(round(amount_rubles * 100))
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await message.answer('❌ Кампания не найдена')
+        await message.answer('❌ کمپین پیدا نشد')
         await state.clear()
         return
 
     if not campaign.is_balance_bonus:
-        await message.answer('❌ У кампании другой тип бонуса')
+        await message.answer('❌ این کمپین نوع پاداش متفاوتی دارد')
         await state.clear()
         return
 
     await update_campaign(db, campaign, balance_bonus_kopeks=amount_kopeks)
     await state.clear()
 
-    await message.answer('✅ Бонус обновлен.')
+    await message.answer('✅ پاداش به‌روزرسانی شد.')
 
     edit_message_id = data.get('campaign_edit_message_id')
     edit_message_is_caption = data.get('campaign_edit_message_is_caption', False)
@@ -644,11 +644,11 @@ async def _ensure_subscription_campaign(message_or_callback, campaign) -> bool:
     if campaign.is_balance_bonus:
         if isinstance(message_or_callback, types.CallbackQuery):
             await message_or_callback.answer(
-                '❌ Для этой кампании доступен только бонус на баланс',
+                '❌ برای این کمپین فقط پاداش موجودی در دسترس است',
                 show_alert=True,
             )
         else:
-            await message_or_callback.answer('❌ Для этой кампании нельзя изменить параметры подписки')
+            await message_or_callback.answer('❌ پارامترهای اشتراک این کمپین قابل تغییر نیست')
         return False
     return True
 
@@ -664,7 +664,7 @@ async def start_edit_campaign_subscription_days(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     if not await _ensure_subscription_campaign(callback, campaign):
@@ -681,15 +681,15 @@ async def start_edit_campaign_subscription_days(
 
     await callback.message.edit_text(
         (
-            '📅 <b>Изменение длительности подписки</b>\n\n'
-            f'Текущее значение: <b>{campaign.subscription_duration_days or 0} д.</b>\n'
-            'Введите новое количество дней (1-730):'
+            '📅 <b>تغییر مدت اشتراک</b>\n\n'
+            f'مقدار فعلی: <b>{campaign.subscription_duration_days or 0} روز</b>\n'
+            'تعداد روزهای جدید را وارد کنید (1-730):'
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='❌ Отмена',
+                        text='❌ لغو',
                         callback_data=f'admin_campaign_edit_{campaign_id}',
                     )
                 ]
@@ -710,23 +710,23 @@ async def process_edit_campaign_subscription_days(
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await message.answer('❌ Сессия редактирования устарела. Попробуйте снова.')
+        await message.answer('❌ جلسه ویرایش منقضی شده. دوباره تلاش کنید.')
         await state.clear()
         return
 
     try:
         days = int(message.text.strip())
     except ValueError:
-        await message.answer('❌ Введите число дней (1-730)')
+        await message.answer('❌ تعداد روز را وارد کنید (1-730)')
         return
 
     if days <= 0 or days > 730:
-        await message.answer('❌ Длительность должна быть от 1 до 730 дней')
+        await message.answer('❌ مدت باید بین 1 تا 730 روز باشد')
         return
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await message.answer('❌ Кампания не найдена')
+        await message.answer('❌ کمپین پیدا نشد')
         await state.clear()
         return
 
@@ -737,7 +737,7 @@ async def process_edit_campaign_subscription_days(
     await update_campaign(db, campaign, subscription_duration_days=days)
     await state.clear()
 
-    await message.answer('✅ Длительность подписки обновлена.')
+    await message.answer('✅ مدت اشتراک به‌روزرسانی شد.')
 
     edit_message_id = data.get('campaign_edit_message_id')
     edit_message_is_caption = data.get('campaign_edit_message_is_caption', False)
@@ -763,7 +763,7 @@ async def start_edit_campaign_subscription_traffic(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     if not await _ensure_subscription_campaign(callback, campaign):
@@ -779,19 +779,19 @@ async def start_edit_campaign_subscription_traffic(
     )
 
     current_traffic = campaign.subscription_traffic_gb or 0
-    traffic_text = 'безлимит' if current_traffic == 0 else f'{current_traffic} ГБ'
+    traffic_text = 'نامحدود' if current_traffic == 0 else f'{current_traffic} گیگابایت'
 
     await callback.message.edit_text(
         (
-            '🌐 <b>Изменение лимита трафика</b>\n\n'
-            f'Текущее значение: <b>{traffic_text}</b>\n'
-            'Введите новый лимит в ГБ (0 = безлимит, максимум 10000):'
+            '🌐 <b>تغییر محدودیت ترافیک</b>\n\n'
+            f'مقدار فعلی: <b>{traffic_text}</b>\n'
+            'محدودیت جدید را به گیگابایت وارد کنید (0 = نامحدود، حداکثر 10000):'
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='❌ Отмена',
+                        text='❌ لغو',
                         callback_data=f'admin_campaign_edit_{campaign_id}',
                     )
                 ]
@@ -812,23 +812,23 @@ async def process_edit_campaign_subscription_traffic(
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await message.answer('❌ Сессия редактирования устарела. Попробуйте снова.')
+        await message.answer('❌ جلسه ویرایش منقضی شده. دوباره تلاش کنید.')
         await state.clear()
         return
 
     try:
         traffic = int(message.text.strip())
     except ValueError:
-        await message.answer('❌ Введите целое число (0 или больше)')
+        await message.answer('❌ یک عدد صحیح وارد کنید (0 یا بیشتر)')
         return
 
     if traffic < 0 or traffic > 10000:
-        await message.answer('❌ Лимит трафика должен быть от 0 до 10000 ГБ')
+        await message.answer('❌ محدودیت ترافیک باید بین 0 تا 10000 گیگابایت باشد')
         return
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await message.answer('❌ Кампания не найдена')
+        await message.answer('❌ کمپین پیدا نشد')
         await state.clear()
         return
 
@@ -839,7 +839,7 @@ async def process_edit_campaign_subscription_traffic(
     await update_campaign(db, campaign, subscription_traffic_gb=traffic)
     await state.clear()
 
-    await message.answer('✅ Лимит трафика обновлен.')
+    await message.answer('✅ محدودیت ترافیک به‌روزرسانی شد.')
 
     edit_message_id = data.get('campaign_edit_message_id')
     edit_message_is_caption = data.get('campaign_edit_message_is_caption', False)
@@ -865,7 +865,7 @@ async def start_edit_campaign_subscription_devices(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     if not await _ensure_subscription_campaign(callback, campaign):
@@ -886,15 +886,15 @@ async def start_edit_campaign_subscription_devices(
 
     await callback.message.edit_text(
         (
-            '📱 <b>Изменение лимита устройств</b>\n\n'
-            f'Текущее значение: <b>{current_devices}</b>\n'
-            f'Введите новое количество (1-{settings.MAX_DEVICES_LIMIT}):'
+            '📱 <b>تغییر محدودیت دستگاه‌ها</b>\n\n'
+            f'مقدار فعلی: <b>{current_devices}</b>\n'
+            f'تعداد جدید را وارد کنید (1-{settings.MAX_DEVICES_LIMIT}):'
         ),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='❌ Отмена',
+                        text='❌ لغو',
                         callback_data=f'admin_campaign_edit_{campaign_id}',
                     )
                 ]
@@ -915,23 +915,23 @@ async def process_edit_campaign_subscription_devices(
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await message.answer('❌ Сессия редактирования устарела. Попробуйте снова.')
+        await message.answer('❌ جلسه ویرایش منقضی شده. دوباره تلاش کنید.')
         await state.clear()
         return
 
     try:
         devices = int(message.text.strip())
     except ValueError:
-        await message.answer('❌ Введите целое число устройств')
+        await message.answer('❌ یک عدد صحیح برای دستگاه‌ها وارد کنید')
         return
 
     if devices < 1 or devices > settings.MAX_DEVICES_LIMIT:
-        await message.answer(f'❌ Количество устройств должно быть от 1 до {settings.MAX_DEVICES_LIMIT}')
+        await message.answer(f'❌ تعداد دستگاه‌ها باید بین 1 تا {settings.MAX_DEVICES_LIMIT} باشد')
         return
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await message.answer('❌ Кампания не найдена')
+        await message.answer('❌ کمپین پیدا نشد')
         await state.clear()
         return
 
@@ -942,7 +942,7 @@ async def process_edit_campaign_subscription_devices(
     await update_campaign(db, campaign, subscription_device_limit=devices)
     await state.clear()
 
-    await message.answer('✅ Лимит устройств обновлен.')
+    await message.answer('✅ محدودیت دستگاه‌ها به‌روزرسانی شد.')
 
     edit_message_id = data.get('campaign_edit_message_id')
     edit_message_is_caption = data.get('campaign_edit_message_is_caption', False)
@@ -968,7 +968,7 @@ async def start_edit_campaign_subscription_servers(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     if not await _ensure_subscription_campaign(callback, campaign):
@@ -977,7 +977,7 @@ async def start_edit_campaign_subscription_servers(
     servers, _ = await get_all_server_squads(db, available_only=False)
     if not servers:
         await callback.answer(
-            '❌ Не найдены доступные серверы. Добавьте серверы перед изменением.',
+            '❌ سرورهای موجود پیدا نشدند. قبل از تغییر سرورها اضافه کنید.',
             show_alert=True,
         )
         return
@@ -1004,9 +1004,9 @@ async def start_edit_campaign_subscription_servers(
 
     await callback.message.edit_text(
         (
-            '🌍 <b>Редактирование доступных серверов</b>\n\n'
-            'Нажмите на сервер, чтобы добавить или убрать его из кампании.\n'
-            'После выбора нажмите "✅ Сохранить".'
+            '🌍 <b>ویرایش سرورهای موجود</b>\n\n'
+            'روی سرور کلیک کنید تا آن را به کمپین اضافه کنید یا حذف کنید.\n'
+            'پس از انتخاب روی "✅ ذخیره" کلیک کنید.'
         ),
         reply_markup=keyboard,
     )
@@ -1025,19 +1025,19 @@ async def toggle_edit_campaign_server(
     try:
         server_id = int(parts[-1])
     except (ValueError, IndexError):
-        await callback.answer('❌ Не удалось определить сервер', show_alert=True)
+        await callback.answer('❌ تعیین سرور امکان‌پذیر نبود', show_alert=True)
         return
 
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await callback.answer('❌ Сессия редактирования устарела', show_alert=True)
+        await callback.answer('❌ جلسه ویرایش منقضی شده', show_alert=True)
         await state.clear()
         return
 
     server = await get_server_squad_by_id(db, server_id)
     if not server:
-        await callback.answer('❌ Сервер не найден', show_alert=True)
+        await callback.answer('❌ سرور پیدا نشد', show_alert=True)
         return
 
     selected = list(data.get('campaign_subscription_squads', []))
@@ -1073,19 +1073,19 @@ async def save_edit_campaign_subscription_servers(
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await callback.answer('❌ Сессия редактирования устарела', show_alert=True)
+        await callback.answer('❌ جلسه ویرایش منقضی شده', show_alert=True)
         await state.clear()
         return
 
     selected = list(data.get('campaign_subscription_squads', []))
     if not selected:
-        await callback.answer('❗ Выберите хотя бы один сервер', show_alert=True)
+        await callback.answer('❗ حداقل یک سرور انتخاب کنید', show_alert=True)
         return
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
         await state.clear()
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     if not await _ensure_subscription_campaign(callback, campaign):
@@ -1105,7 +1105,7 @@ async def save_edit_campaign_subscription_servers(
         db_user.language,
         use_caption=use_caption,
     )
-    await callback.answer('✅ Сохранено')
+    await callback.answer('✅ ذخیره شد')
 
 
 @admin_required
@@ -1118,13 +1118,13 @@ async def toggle_campaign_status(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     new_status = not campaign.is_active
     await update_campaign(db, campaign, is_active=new_status)
-    status_text = 'включена' if new_status else 'выключена'
-    logger.info('🔄 Кампания переключена', campaign_id=campaign_id, status_text=status_text)
+    status_text = 'enabled' if new_status else 'disabled'
+    logger.info('🔄 Campaign toggled', campaign_id=campaign_id, status_text=status_text)
 
     await show_campaign_detail(callback, db_user, db)
 
@@ -1139,19 +1139,19 @@ async def show_campaign_stats(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     texts = get_texts(db_user.language)
     stats = await get_campaign_statistics(db, campaign_id)
 
-    text = ['📊 <b>Статистика кампании</b>\n']
+    text = ['📊 <b>آمار کمپین</b>\n']
     text.append(_format_campaign_summary(campaign, texts))
-    text.append(f'Регистраций: <b>{stats["registrations"]}</b>')
-    text.append(f'Выдано баланса: <b>{texts.format_price(stats["balance_issued"])}</b>')
-    text.append(f'Выдано подписок: <b>{stats["subscription_issued"]}</b>')
+    text.append(f'ثبت‌نام‌ها: <b>{stats["registrations"]}</b>')
+    text.append(f'موجودی پرداخت‌شده: <b>{texts.format_price(stats["balance_issued"])}</b>')
+    text.append(f'اشتراک‌های اعطاشده: <b>{stats["subscription_issued"]}</b>')
     if stats['last_registration']:
-        text.append(f'Последняя регистрация: {stats["last_registration"].strftime("%d.%m.%Y %H:%M")}')
+        text.append(f'آخرین ثبت‌نام: {stats["last_registration"].strftime("%d.%m.%Y %H:%M")}')
 
     await callback.message.edit_text(
         '\n'.join(text),
@@ -1159,7 +1159,7 @@ async def show_campaign_stats(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='⬅️ Назад',
+                        text='⬅️ بازگشت',
                         callback_data=f'admin_campaign_manage_{campaign_id}',
                     )
                 ]
@@ -1179,14 +1179,14 @@ async def confirm_delete_campaign(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     text = (
-        '🗑️ <b>Удаление кампании</b>\n\n'
-        f'Название: <b>{html.escape(campaign.name)}</b>\n'
-        f'Параметр: <code>{html.escape(campaign.start_parameter)}</code>\n\n'
-        'Вы уверены, что хотите удалить кампанию?'
+        '🗑️ <b>حذف کمپین</b>\n\n'
+        f'نام: <b>{html.escape(campaign.name)}</b>\n'
+        f'پارامتر: <code>{html.escape(campaign.start_parameter)}</code>\n\n'
+        'آیا مطمئن هستید که می‌خواهید کمپین را حذف کنید؟'
     )
 
     await callback.message.edit_text(
@@ -1209,15 +1209,15 @@ async def delete_campaign_confirmed(
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     await delete_campaign(db, campaign)
     await callback.message.edit_text(
-        '✅ Кампания удалена.',
+        '✅ کمپین حذف شد.',
         reply_markup=get_admin_campaigns_keyboard(db_user.language),
     )
-    await callback.answer('Удалено')
+    await callback.answer('حذف شد')
 
 
 @admin_required
@@ -1230,9 +1230,9 @@ async def start_campaign_creation(
 ):
     await state.clear()
     await callback.message.edit_text(
-        '🆕 <b>Создание рекламной кампании</b>\n\nВведите название кампании:',
+        '🆕 <b>ایجاد کمپین تبلیغاتی</b>\n\nنام کمپین را وارد کنید:',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_campaigns')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_campaigns')]]
         ),
     )
     await state.set_state(AdminStates.creating_campaign_name)
@@ -1249,13 +1249,13 @@ async def process_campaign_name(
 ):
     name = message.text.strip()
     if len(name) < 3 or len(name) > 100:
-        await message.answer('❌ Название должно содержать от 3 до 100 символов. Попробуйте снова.')
+        await message.answer('❌ نام باید بین 3 تا 100 کاراکتر باشد. دوباره تلاش کنید.')
         return
 
     await state.update_data(campaign_name=name)
     await state.set_state(AdminStates.creating_campaign_start)
     await message.answer(
-        '🔗 Теперь введите параметр старта (латинские буквы, цифры, - или _):',
+        '🔗 حالا پارامتر شروع را وارد کنید (حروف لاتین، ارقام، - یا _):',
     )
 
 
@@ -1269,18 +1269,18 @@ async def process_campaign_start_parameter(
 ):
     start_param = message.text.strip()
     if not _CAMPAIGN_PARAM_REGEX.match(start_param):
-        await message.answer('❌ Разрешены только латинские буквы, цифры, символы - и _. Длина 3-32 символа.')
+        await message.answer('❌ فقط حروف لاتین، ارقام، نمادهای - و _ مجاز هستند. طول 3-32 کاراکتر.')
         return
 
     existing = await get_campaign_by_start_parameter(db, start_param)
     if existing:
-        await message.answer('❌ Кампания с таким параметром уже существует. Введите другой параметр.')
+        await message.answer('❌ کمپین با این پارامتر قبلاً وجود دارد. پارامتر دیگری وارد کنید.')
         return
 
     await state.update_data(campaign_start_parameter=start_param)
     await state.set_state(AdminStates.creating_campaign_bonus)
     await message.answer(
-        '🎯 Выберите тип бонуса для кампании:',
+        '🎯 نوع پاداش را برای کمپین انتخاب کنید:',
         reply_markup=get_campaign_bonus_type_keyboard(db_user.language),
     )
 
@@ -1293,7 +1293,7 @@ async def select_campaign_bonus_type(
     state: FSMContext,
     db: AsyncSession,
 ):
-    # Определяем тип бонуса из callback_data
+    # Determine bonus type from callback_data
     if callback.data.endswith('balance'):
         bonus_type = 'balance'
     elif callback.data.endswith('subscription'):
@@ -1310,31 +1310,31 @@ async def select_campaign_bonus_type(
     if bonus_type == 'balance':
         await state.set_state(AdminStates.creating_campaign_balance)
         await callback.message.edit_text(
-            '💰 Введите сумму бонуса на баланс (в рублях):',
+            '💰 مبلغ پاداش موجودی را وارد کنید:',
             reply_markup=types.InlineKeyboardMarkup(
-                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_campaigns')]]
+                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_campaigns')]]
             ),
         )
     elif bonus_type == 'subscription':
         await state.set_state(AdminStates.creating_campaign_subscription_days)
         await callback.message.edit_text(
-            '📅 Введите длительность пробной подписки в днях (1-730):',
+            '📅 مدت اشتراک آزمایشی را به روز وارد کنید (1-730):',
             reply_markup=types.InlineKeyboardMarkup(
-                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_campaigns')]]
+                inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_campaigns')]]
             ),
         )
     elif bonus_type == 'tariff':
-        # Показываем выбор тарифа
+        # Show tariff selection
         tariffs = await get_all_tariffs(db, include_inactive=False)
         if not tariffs:
             await callback.answer(
-                '❌ Нет доступных тарифов. Сначала создайте тариф.',
+                '❌ هیچ تعرفه‌ای موجود نیست. ابتدا یک تعرفه ایجاد کنید.',
                 show_alert=True,
             )
             return
 
         keyboard = []
-        for tariff in tariffs[:15]:  # Максимум 15 тарифов
+        for tariff in tariffs[:15]:  # Maximum 15 tariffs
             keyboard.append(
                 [
                     types.InlineKeyboardButton(
@@ -1343,15 +1343,15 @@ async def select_campaign_bonus_type(
                     )
                 ]
             )
-        keyboard.append([types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_campaigns')])
+        keyboard.append([types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_campaigns')])
 
         await state.set_state(AdminStates.creating_campaign_tariff_select)
         await callback.message.edit_text(
-            '🎁 Выберите тариф для выдачи:',
+            '🎁 تعرفه برای اعطا را انتخاب کنید:',
             reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard),
         )
     elif bonus_type == 'none':
-        # Сразу создаём кампанию без бонуса
+        # Create campaign immediately without bonus
         data = await state.get_data()
         campaign = await create_campaign(
             db,
@@ -1365,7 +1365,7 @@ async def select_campaign_bonus_type(
         deep_link = await _get_bot_deep_link(callback, campaign.start_parameter)
         texts = get_texts(db_user.language)
         summary = _format_campaign_summary(campaign, texts)
-        text = f'✅ <b>Кампания создана!</b>\n\n{summary}\n🔗 Ссылка: <code>{deep_link}</code>'
+        text = f'✅ <b>کمپین ایجاد شد!</b>\n\n{summary}\n🔗 لینک: <code>{deep_link}</code>'
 
         await callback.message.edit_text(
             text,
@@ -1386,11 +1386,11 @@ async def process_campaign_balance_value(
     try:
         amount_rubles = float(message.text.replace(',', '.'))
     except ValueError:
-        await message.answer('❌ Введите корректную сумму (например, 100 или 99.5)')
+        await message.answer('❌ مبلغ معتبری وارد کنید (مثلاً 100 یا 99.5)')
         return
 
     if amount_rubles <= 0:
-        await message.answer('❌ Сумма должна быть больше нуля')
+        await message.answer('❌ مبلغ باید بیشتر از صفر باشد')
         return
 
     amount_kopeks = int(round(amount_rubles * 100))
@@ -1410,7 +1410,7 @@ async def process_campaign_balance_value(
     deep_link = await _get_bot_deep_link_from_message(message, campaign.start_parameter)
     texts = get_texts(db_user.language)
     summary = _format_campaign_summary(campaign, texts)
-    text = f'✅ <b>Кампания создана!</b>\n\n{summary}\n🔗 Ссылка: <code>{deep_link}</code>'
+    text = f'✅ <b>کمپین ایجاد شد!</b>\n\n{summary}\n🔗 لینک: <code>{deep_link}</code>'
 
     await message.answer(
         text,
@@ -1429,16 +1429,16 @@ async def process_campaign_subscription_days(
     try:
         days = int(message.text.strip())
     except ValueError:
-        await message.answer('❌ Введите число дней (1-730)')
+        await message.answer('❌ تعداد روز را وارد کنید (1-730)')
         return
 
     if days <= 0 or days > 730:
-        await message.answer('❌ Длительность должна быть от 1 до 730 дней')
+        await message.answer('❌ مدت باید بین 1 تا 730 روز باشد')
         return
 
     await state.update_data(campaign_subscription_days=days)
     await state.set_state(AdminStates.creating_campaign_subscription_traffic)
-    await message.answer('🌐 Введите лимит трафика в ГБ (0 = безлимит):')
+    await message.answer('🌐 محدودیت ترافیک را به گیگابایت وارد کنید (0 = نامحدود):')
 
 
 @admin_required
@@ -1452,16 +1452,16 @@ async def process_campaign_subscription_traffic(
     try:
         traffic = int(message.text.strip())
     except ValueError:
-        await message.answer('❌ Введите целое число (0 или больше)')
+        await message.answer('❌ یک عدد صحیح وارد کنید (0 یا بیشتر)')
         return
 
     if traffic < 0 or traffic > 10000:
-        await message.answer('❌ Лимит трафика должен быть от 0 до 10000 ГБ')
+        await message.answer('❌ محدودیت ترافیک باید بین 0 تا 10000 گیگابایت باشد')
         return
 
     await state.update_data(campaign_subscription_traffic=traffic)
     await state.set_state(AdminStates.creating_campaign_subscription_devices)
-    await message.answer(f'📱 Введите количество устройств (1-{settings.MAX_DEVICES_LIMIT}):')
+    await message.answer(f'📱 تعداد دستگاه‌ها را وارد کنید (1-{settings.MAX_DEVICES_LIMIT}):')
 
 
 @admin_required
@@ -1475,11 +1475,11 @@ async def process_campaign_subscription_devices(
     try:
         devices = int(message.text.strip())
     except ValueError:
-        await message.answer('❌ Введите целое число устройств')
+        await message.answer('❌ یک عدد صحیح برای دستگاه‌ها وارد کنید')
         return
 
     if devices < 1 or devices > settings.MAX_DEVICES_LIMIT:
-        await message.answer(f'❌ Количество устройств должно быть от 1 до {settings.MAX_DEVICES_LIMIT}')
+        await message.answer(f'❌ تعداد دستگاه‌ها باید بین 1 تا {settings.MAX_DEVICES_LIMIT} باشد')
         return
 
     await state.update_data(campaign_subscription_devices=devices)
@@ -1489,14 +1489,14 @@ async def process_campaign_subscription_devices(
     servers, _ = await get_all_server_squads(db, available_only=False)
     if not servers:
         await message.answer(
-            '❌ Не найдены доступные серверы. Добавьте сервера перед созданием кампании.',
+            '❌ سرورهای موجود پیدا نشدند. قبل از ایجاد کمپین سرورها را اضافه کنید.',
         )
         await state.clear()
         return
 
     keyboard = _build_campaign_servers_keyboard(servers, [])
     await message.answer(
-        '🌍 Выберите серверы, которые будут доступны по подписке (максимум 20 отображаются).',
+        '🌍 سرورهایی را انتخاب کنید که بر اساس اشتراک در دسترس خواهند بود (حداکثر 20 نمایش داده می‌شود).',
         reply_markup=keyboard,
     )
 
@@ -1512,7 +1512,7 @@ async def toggle_campaign_server(
     server_id = int(callback.data.split('_')[-1])
     server = await get_server_squad_by_id(db, server_id)
     if not server:
-        await callback.answer('❌ Сервер не найден', show_alert=True)
+        await callback.answer('❌ سرور پیدا نشد', show_alert=True)
         return
 
     data = await state.get_data()
@@ -1544,7 +1544,7 @@ async def finalize_campaign_subscription(
     selected = data.get('campaign_subscription_squads', [])
 
     if not selected:
-        await callback.answer('❗ Выберите хотя бы один сервер', show_alert=True)
+        await callback.answer('❗ حداقل یک سرور انتخاب کنید', show_alert=True)
         return
 
     campaign = await create_campaign(
@@ -1564,7 +1564,7 @@ async def finalize_campaign_subscription(
     deep_link = await _get_bot_deep_link(callback, campaign.start_parameter)
     texts = get_texts(db_user.language)
     summary = _format_campaign_summary(campaign, texts)
-    text = f'✅ <b>Кампания создана!</b>\n\n{summary}\n🔗 Ссылка: <code>{deep_link}</code>'
+    text = f'✅ <b>کمپین ایجاد شد!</b>\n\n{summary}\n🔗 لینک: <code>{deep_link}</code>'
 
     await callback.message.edit_text(
         text,
@@ -1581,20 +1581,20 @@ async def select_campaign_tariff(
     state: FSMContext,
     db: AsyncSession,
 ):
-    """Обработка выбора тарифа для кампании."""
+    """Handle tariff selection for a campaign."""
     tariff_id = int(callback.data.split('_')[-1])
     tariff = await get_tariff_by_id(db, tariff_id)
 
     if not tariff:
-        await callback.answer('❌ Тариф не найден', show_alert=True)
+        await callback.answer('❌ تعرفه پیدا نشد', show_alert=True)
         return
 
     await state.update_data(campaign_tariff_id=tariff_id, campaign_tariff_name=tariff.name)
     await state.set_state(AdminStates.creating_campaign_tariff_days)
     await callback.message.edit_text(
-        f'🎁 Выбран тариф: <b>{html.escape(tariff.name)}</b>\n\n📅 Введите длительность тарифа в днях (1-730):',
+        f'🎁 تعرفه انتخاب شد: <b>{html.escape(tariff.name)}</b>\n\n📅 مدت تعرفه را به روز وارد کنید (1-730):',
         reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_campaigns')]]
+            inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_campaigns')]]
         ),
     )
     await callback.answer()
@@ -1608,22 +1608,22 @@ async def process_campaign_tariff_days(
     state: FSMContext,
     db: AsyncSession,
 ):
-    """Обработка ввода длительности тарифа для кампании."""
+    """Handle tariff duration input for a campaign."""
     try:
         days = int(message.text.strip())
     except ValueError:
-        await message.answer('❌ Введите число дней (1-730)')
+        await message.answer('❌ تعداد روز را وارد کنید (1-730)')
         return
 
     if days <= 0 or days > 730:
-        await message.answer('❌ Длительность должна быть от 1 до 730 дней')
+        await message.answer('❌ مدت باید بین 1 تا 730 روز باشد')
         return
 
     data = await state.get_data()
     tariff_id = data.get('campaign_tariff_id')
 
     if not tariff_id:
-        await message.answer('❌ Тариф не выбран. Начните создание кампании заново.')
+        await message.answer('❌ تعرفه انتخاب نشده. ایجاد کمپین را از نو شروع کنید.')
         await state.clear()
         return
 
@@ -1637,7 +1637,7 @@ async def process_campaign_tariff_days(
         created_by=db_user.id,
     )
 
-    # Перезагружаем кампанию с загруженным tariff relationship
+    # Reload campaign with loaded tariff relationship
     campaign = await get_campaign_by_id(db, campaign.id)
 
     await state.clear()
@@ -1645,7 +1645,7 @@ async def process_campaign_tariff_days(
     deep_link = await _get_bot_deep_link_from_message(message, campaign.start_parameter)
     texts = get_texts(db_user.language)
     summary = _format_campaign_summary(campaign, texts)
-    text = f'✅ <b>Кампания создана!</b>\n\n{summary}\n🔗 Ссылка: <code>{deep_link}</code>'
+    text = f'✅ <b>کمپین ایجاد شد!</b>\n\n{summary}\n🔗 لینک: <code>{deep_link}</code>'
 
     await message.answer(
         text,
@@ -1661,20 +1661,20 @@ async def start_edit_campaign_tariff(
     state: FSMContext,
     db: AsyncSession,
 ):
-    """Начало редактирования тарифа кампании."""
+    """Start editing campaign tariff."""
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     if not campaign.is_tariff_bonus:
-        await callback.answer("❌ Эта кампания не использует тип 'Тариф'", show_alert=True)
+        await callback.answer("❌ این کمپین از نوع 'تعرفه' استفاده نمی‌کند", show_alert=True)
         return
 
     tariffs = await get_all_tariffs(db, include_inactive=False)
     if not tariffs:
-        await callback.answer('❌ Нет доступных тарифов', show_alert=True)
+        await callback.answer('❌ هیچ تعرفه‌ای موجود نیست', show_alert=True)
         return
 
     keyboard = []
@@ -1689,14 +1689,14 @@ async def start_edit_campaign_tariff(
                 )
             ]
         )
-    keyboard.append([types.InlineKeyboardButton(text='⬅️ Назад', callback_data=f'admin_campaign_edit_{campaign_id}')])
+    keyboard.append([types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data=f'admin_campaign_edit_{campaign_id}')])
 
-    current_tariff_name = 'Не выбран'
+    current_tariff_name = 'انتخاب نشده'
     if campaign.tariff:
         current_tariff_name = campaign.tariff.name
 
     await callback.message.edit_text(
-        f'🎁 <b>Изменение тарифа кампании</b>\n\nТекущий тариф: <b>{current_tariff_name}</b>\nВыберите новый тариф:',
+        f'🎁 <b>تغییر تعرفه کمپین</b>\n\nتعرفه فعلی: <b>{current_tariff_name}</b>\nتعرفه جدید را انتخاب کنید:',
         reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard),
     )
     await callback.answer()
@@ -1710,23 +1710,23 @@ async def set_campaign_tariff(
     state: FSMContext,
     db: AsyncSession,
 ):
-    """Установка тарифа для кампании."""
+    """Set tariff for a campaign."""
     parts = callback.data.split('_')
     campaign_id = int(parts[-2])
     tariff_id = int(parts[-1])
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     tariff = await get_tariff_by_id(db, tariff_id)
     if not tariff:
-        await callback.answer('❌ Тариф не найден', show_alert=True)
+        await callback.answer('❌ تعرفه پیدا نشد', show_alert=True)
         return
 
     await update_campaign(db, campaign, tariff_id=tariff_id)
-    await callback.answer(f"✅ Тариф изменён на '{tariff.name}'")
+    await callback.answer(f"✅ تعرفه به '{tariff.name}' تغییر یافت")
 
     await _render_campaign_edit_menu(
         callback.bot,
@@ -1745,15 +1745,15 @@ async def start_edit_campaign_tariff_days(
     state: FSMContext,
     db: AsyncSession,
 ):
-    """Начало редактирования длительности тарифа."""
+    """Start editing tariff duration."""
     campaign_id = int(callback.data.split('_')[-1])
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await callback.answer('❌ Кампания не найдена', show_alert=True)
+        await callback.answer('❌ کمپین پیدا نشد', show_alert=True)
         return
 
     if not campaign.is_tariff_bonus:
-        await callback.answer("❌ Эта кампания не использует тип 'Тариф'", show_alert=True)
+        await callback.answer("❌ این کمپین از نوع 'تعرفه' استفاده نمی‌کند", show_alert=True)
         return
 
     await state.clear()
@@ -1764,14 +1764,14 @@ async def start_edit_campaign_tariff_days(
     )
 
     await callback.message.edit_text(
-        f'📅 <b>Изменение длительности тарифа</b>\n\n'
-        f'Текущее значение: <b>{campaign.tariff_duration_days or 0} д.</b>\n'
-        'Введите новое количество дней (1-730):',
+        f'📅 <b>تغییر مدت تعرفه</b>\n\n'
+        f'مقدار فعلی: <b>{campaign.tariff_duration_days or 0} روز</b>\n'
+        'تعداد روزهای جدید را وارد کنید (1-730):',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='❌ Отмена',
+                        text='❌ لغو',
                         callback_data=f'admin_campaign_edit_{campaign_id}',
                     )
                 ]
@@ -1789,34 +1789,34 @@ async def process_edit_campaign_tariff_days(
     state: FSMContext,
     db: AsyncSession,
 ):
-    """Обработка ввода новой длительности тарифа."""
+    """Handle new tariff duration input."""
     data = await state.get_data()
     campaign_id = data.get('editing_campaign_id')
     if not campaign_id:
-        await message.answer('❌ Сессия редактирования устарела. Попробуйте снова.')
+        await message.answer('❌ جلسه ویرایش منقضی شده. دوباره تلاش کنید.')
         await state.clear()
         return
 
     try:
         days = int(message.text.strip())
     except ValueError:
-        await message.answer('❌ Введите число дней (1-730)')
+        await message.answer('❌ تعداد روز را وارد کنید (1-730)')
         return
 
     if days <= 0 or days > 730:
-        await message.answer('❌ Длительность должна быть от 1 до 730 дней')
+        await message.answer('❌ مدت باید بین 1 تا 730 روز باشد')
         return
 
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
-        await message.answer('❌ Кампания не найдена')
+        await message.answer('❌ کمپین پیدا نشد')
         await state.clear()
         return
 
     await update_campaign(db, campaign, tariff_duration_days=days)
     await state.clear()
 
-    await message.answer('✅ Длительность тарифа обновлена.')
+    await message.answer('✅ مدت تعرفه به‌روزرسانی شد.')
 
     edit_message_id = data.get('campaign_edit_message_id')
     if edit_message_id:
@@ -1867,10 +1867,10 @@ def register_handlers(dp: Dispatcher):
         F.data.startswith('campaign_edit_servers_save_'),
     )
     dp.callback_query.register(toggle_edit_campaign_server, F.data.startswith('campaign_edit_toggle_'))
-    # Tariff handlers ДОЛЖНЫ быть ПЕРЕД общим admin_campaign_edit_
+    # Tariff handlers MUST come BEFORE the general admin_campaign_edit_
     dp.callback_query.register(start_edit_campaign_tariff_days, F.data.startswith('admin_campaign_edit_tariff_days_'))
     dp.callback_query.register(start_edit_campaign_tariff, F.data.startswith('admin_campaign_edit_tariff_'))
-    # Общий паттерн ПОСЛЕДНИМ
+    # General pattern LAST
     dp.callback_query.register(show_campaign_edit_menu, F.data.startswith('admin_campaign_edit_'))
     dp.callback_query.register(delete_campaign_confirmed, F.data.startswith('admin_campaign_delete_confirm_'))
     dp.callback_query.register(confirm_delete_campaign, F.data.startswith('admin_campaign_delete_'))
