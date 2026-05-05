@@ -731,8 +731,8 @@ async def show_detailed_stats_page(
     if contest_id is None or stats is None:
         # Parse from callback.data: admin_contest_detailed_stats_page_{contest_id}_page_{page}
         parts = callback.data.split('_')
-        contest_id = int(parts[5])  # contest_id после page
-        page = int(parts[7])  # page после второго page
+        contest_id = int(parts[5])  # contest_id after page
+        page = int(parts[7])  # page after the second page
 
         # Get stats if not provided
         from app.services.referral_contest_service import referral_contest_service
@@ -799,7 +799,7 @@ async def sync_contest(
         await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
-    await callback.answer('🔄 Синхронизация запущена...', show_alert=False)
+    await callback.answer('🔄 همگام‌سازی شروع شد...', show_alert=False)
 
     from app.services.referral_contest_service import referral_contest_service
 
@@ -912,14 +912,14 @@ async def debug_contest_transactions(
         await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
-    await callback.answer('🔍 Загружаю данные...', show_alert=False)
+    await callback.answer('🔍 در حال بارگذاری...', show_alert=False)
 
     from app.database.crud.referral_contest import debug_contest_transactions as debug_txs
 
     debug_data = await debug_txs(db, contest_id, limit=10)
 
     if 'error' in debug_data:
-        await callback.message.answer(f'❌ Ошибка: {debug_data["error"]}')
+        await callback.message.answer(f'❌ خطا: {debug_data["error"]}')
         return
 
     deposit_total = debug_data.get('deposit_total_kopeks', 0) // 100
@@ -946,7 +946,7 @@ async def debug_contest_transactions(
     txs_in = debug_data.get('transactions_in_period', [])
     if txs_in:
         lines.append(f'✅ <b>تراکنش‌ها در دوره</b> (اولین {len(txs_in)}):')
-        for tx in txs_in[:5]:  # Показываем максимум 5
+        for tx in txs_in[:5]:  # Show maximum 5
             lines.append(
                 f'  • {tx["created_at"][:10]} | {tx["type"]} | {tx["amount_kopeks"] // 100}₽ | user={tx["user_id"]}'
             )
@@ -1013,11 +1013,11 @@ async def show_virtual_participants(
     rows = [
         [
             types.InlineKeyboardButton(
-                text='➕ Добавить',
+                text='➕ افزودن',
                 callback_data=f'admin_contest_vp_add_{contest_id}',
             ),
             types.InlineKeyboardButton(
-                text='🎭 Массовка',
+                text='🎭 انبوه',
                 callback_data=f'admin_contest_vp_mass_{contest_id}',
             ),
         ],
@@ -1039,7 +1039,7 @@ async def show_virtual_participants(
     rows.append(
         [
             types.InlineKeyboardButton(
-                text='⬅️ Назад',
+                text='⬅️ بازگشت',
                 callback_data=f'admin_contest_view_{contest_id}',
             ),
         ]
@@ -1067,7 +1067,7 @@ async def start_add_virtual_participant(
         '👻 نام نمایشی شرکت‌کننده مجازی را وارد کنید:',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='❌ Отмена', callback_data=f'admin_contest_vp_{contest_id}')],
+                [types.InlineKeyboardButton(text='❌ لغو', callback_data=f'admin_contest_vp_{contest_id}')],
             ]
         ),
     )
@@ -1117,8 +1117,8 @@ async def process_virtual_participant_count(
         f'✅ شرکت‌کننده مجازی اضافه شد:\nنام: <b>{vp.display_name}</b>\nرفرال‌ها: <b>{vp.referral_count}</b>',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='👻 К списку', callback_data=f'admin_contest_vp_{contest_id}')],
-                [types.InlineKeyboardButton(text='⬅️ К конкурсу', callback_data=f'admin_contest_view_{contest_id}')],
+                [types.InlineKeyboardButton(text='👻 به لیست', callback_data=f'admin_contest_vp_{contest_id}')],
+                [types.InlineKeyboardButton(text='⬅️ به مسابقه', callback_data=f'admin_contest_view_{contest_id}')],
             ]
         ),
     )
@@ -1166,8 +1166,8 @@ async def delete_virtual_participant_handler(
 
     rows = [
         [
-            types.InlineKeyboardButton(text='➕ Добавить', callback_data=f'admin_contest_vp_add_{contest_id}'),
-            types.InlineKeyboardButton(text='🎭 Массовка', callback_data=f'admin_contest_vp_mass_{contest_id}'),
+            types.InlineKeyboardButton(text='➕ افزودن', callback_data=f'admin_contest_vp_add_{contest_id}'),
+            types.InlineKeyboardButton(text='🎭 انبوه', callback_data=f'admin_contest_vp_mass_{contest_id}'),
         ],
     ]
     if vps:
@@ -1180,7 +1180,7 @@ async def delete_virtual_participant_handler(
                     types.InlineKeyboardButton(text='🗑', callback_data=f'admin_contest_vp_del_{v.id}'),
                 ]
             )
-    rows.append([types.InlineKeyboardButton(text='⬅️ Назад', callback_data=f'admin_contest_view_{contest_id}')])
+    rows.append([types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data=f'admin_contest_view_{contest_id}')])
 
     await callback.message.edit_text(
         '\n'.join(lines),
@@ -1202,25 +1202,25 @@ async def start_mass_virtual_participants(
     await state.update_data(mass_vp_contest_id=contest_id)
 
     text = """
-🎭 <b>Массовка — массовое создание виртуальных участников</b>
+🎭 <b>انبوه — ایجاد دسته‌جمعی شرکت‌کنندگان مجازی</b>
 
-<i>Для чего это нужно?</i>
-Виртуальные участники (призраки) позволяют создать видимость активности в конкурсе. Они отображаются в таблице лидеров наравне с реальными участниками, но помечаются значком 👻.
+<i>این برای چیست؟</i>
+شرکت‌کنندگان مجازی (شبح‌ها) به ایجاد تصویری از فعالیت در مسابقه کمک می‌کنند. آن‌ها در جدول رتبه‌بندی کنار شرکت‌کنندگان واقعی نمایش داده می‌شوند، اما با نماد 👻 مشخص می‌شوند.
 
-Это помогает:
-• Мотивировать реальных участников соревноваться
-• Задать планку для участия
-• Сделать конкурс более живым
+این کمک می‌کند تا:
+• شرکت‌کنندگان واقعی انگیزه رقابت داشته باشند
+• سطح مشخصی برای شرکت تعیین شود
+• مسابقه پویاتر به نظر برسد
 
-<b>Введите количество призраков для создания:</b>
-<i>(от 1 до 50)</i>
+<b>تعداد شبح‌هایی که باید ایجاد شوند را وارد کنید:</b>
+<i>(از 1 تا 50)</i>
 """
 
     await callback.message.edit_text(
         text,
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='❌ Отмена', callback_data=f'admin_contest_vp_{contest_id}')],
+                [types.InlineKeyboardButton(text='❌ لغو', callback_data=f'admin_contest_vp_{contest_id}')],
             ]
         ),
     )
@@ -1243,7 +1243,7 @@ async def process_mass_virtual_count(
                 '❌ یک عدد از 1 تا 50 وارد کنید:',
                 reply_markup=types.InlineKeyboardMarkup(
                     inline_keyboard=[
-                        [types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_contests_referral')],
+                        [types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_contests_referral')],
                     ]
                 ),
             )
@@ -1253,7 +1253,7 @@ async def process_mass_virtual_count(
             '❌ یک عدد معتبر از 1 تا 50 وارد کنید:',
             reply_markup=types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_contests_referral')],
+                    [types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_contests_referral')],
                 ]
             ),
         )
@@ -1266,12 +1266,12 @@ async def process_mass_virtual_count(
     contest_id = data.get('mass_vp_contest_id')
 
     await message.answer(
-        f'✅ Будет создано <b>{count}</b> призраков.\n\n'
-        f'<b>Введите количество рефералов у каждого:</b>\n'
-        f'<i>(от 1 до 100)</i>',
+        f'✅ <b>{count}</b> شبح ایجاد خواهد شد.\n\n'
+        f'<b>تعداد رفرال‌های هر کدام را وارد کنید:</b>\n'
+        f'<i>(از 1 تا 100)</i>',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='❌ Отмена', callback_data=f'admin_contest_vp_{contest_id}')],
+                [types.InlineKeyboardButton(text='❌ لغو', callback_data=f'admin_contest_vp_{contest_id}')],
             ]
         ),
     )
@@ -1316,14 +1316,14 @@ async def process_mass_virtual_referrals(
 
     # Show result
     text = f"""
-✅ <b>Массовка создана!</b>
+✅ <b>ایجاد انبوه انجام شد!</b>
 
-📊 <b>Результат:</b>
-• Создано призраков: {len(created)}
-• Рефералов у каждого: {referrals_count}
-• Всего виртуальных рефералов: {len(created) * referrals_count}
+📊 <b>نتیجه:</b>
+• شبح‌های ایجادشده: {len(created)}
+• رفرال‌های هر کدام: {referrals_count}
+• مجموع رفرال‌های مجازی: {len(created) * referrals_count}
 
-👻 <b>Созданные призраки:</b>
+👻 <b>شبح‌های ایجادشده:</b>
 """
     for vp in created[:10]:
         text += f'• {vp.display_name} — {vp.referral_count} رف.\n'
@@ -1337,10 +1337,10 @@ async def process_mass_virtual_referrals(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text='👻 К списку призраков', callback_data=f'admin_contest_vp_{contest_id}'
+                        text='👻 به لیست شبح‌ها', callback_data=f'admin_contest_vp_{contest_id}'
                     )
                 ],
-                [types.InlineKeyboardButton(text='⬅️ К конкурсу', callback_data=f'admin_contest_view_{contest_id}')],
+                [types.InlineKeyboardButton(text='⬅️ به مسابقه', callback_data=f'admin_contest_view_{contest_id}')],
             ]
         ),
     )
@@ -1372,11 +1372,11 @@ async def start_edit_virtual_participant(
     await state.update_data(vp_edit_id=vp_id, vp_edit_contest_id=vp.contest_id)
     await callback.message.edit_text(
         f'✏️ <b>{vp.display_name}</b>\n'
-        f'Текущее кол-во рефералов: <b>{vp.referral_count}</b>\n\n'
-        f'Введите новое количество:',
+        f'تعداد فعلی رفرال‌ها: <b>{vp.referral_count}</b>\n\n'
+        f'تعداد جدید را وارد کنید:',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='❌ Отмена', callback_data=f'admin_contest_vp_{vp.contest_id}')],
+                [types.InlineKeyboardButton(text='❌ لغو', callback_data=f'admin_contest_vp_{vp.contest_id}')],
             ]
         ),
     )
@@ -1407,10 +1407,10 @@ async def process_edit_virtual_participant_count(
     vp = await update_virtual_participant_count(db, vp_id, count)
     if vp:
         await message.answer(
-            f'✅ Обновлено: <b>{vp.display_name}</b> — {vp.referral_count} реф.',
+            f'✅ به‌روزرسانی شد: <b>{vp.display_name}</b> — {vp.referral_count} رف.',
             reply_markup=types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='👻 К списку', callback_data=f'admin_contest_vp_{contest_id}')],
+                    [types.InlineKeyboardButton(text='👻 به لیست', callback_data=f'admin_contest_vp_{contest_id}')],
                 ]
             ),
         )

@@ -24,12 +24,12 @@ from app.utils.cache import RateLimitCache
 
 logger = structlog.get_logger(__name__)
 
-# Максимальная длина сообщения Telegram (с запасом)
+# Maximum Telegram message length (with margin)
 MAX_MESSAGE_LEN = 3500
 
 
 def _split_long_block(block: str, max_len: int) -> list[str]:
-    """Разбивает слишком длинный блок на части."""
+    """Splits a too-long block into parts."""
     if len(block) <= max_len:
         return [block]
 
@@ -55,7 +55,7 @@ def _split_long_block(block: str, max_len: int) -> list[str]:
 
 
 def _split_text_into_pages(header: str, message_blocks: list[str], max_len: int = MAX_MESSAGE_LEN) -> list[str]:
-    """Разбивает текст на страницы с учётом лимита Telegram."""
+    """Splits text into pages respecting the Telegram limit."""
     pages: list[str] = []
     current = header
     header_len = len(header)
@@ -85,7 +85,7 @@ def _split_text_into_pages(header: str, message_blocks: list[str], max_len: int 
 
 
 async def show_admin_tickets(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Показать все тикеты для админов"""
+    """Show all tickets for admins."""
     # permission gate: admin or active moderator only
     if not (settings.is_admin(callback.from_user.id) or SupportSettingsService.is_moderator(callback.from_user.id)):
         texts = get_texts(db_user.language)
@@ -93,7 +93,7 @@ async def show_admin_tickets(callback: types.CallbackQuery, db_user: User, db: A
         return
     texts = get_texts(db_user.language)
 
-    # Определяем текущую страницу и scope
+    # Determine current page and scope
     current_page = 1
     scope = 'open'
     data_str = callback.data
@@ -124,9 +124,9 @@ async def show_admin_tickets(callback: types.CallbackQuery, db_user: User, db: A
     offset = (current_page - 1) * page_size
     tickets = await TicketCRUD.get_tickets_by_statuses(db, statuses=statuses, limit=page_size, offset=offset)
 
-    # Даже если тикетов нет, показываем переключатели разделов
+    # Show section toggles even when there are no tickets
 
-    # Формируем данные для клавиатуры
+    # Build keyboard data
     ticket_data = []
     for ticket in tickets:
         user_name = ticket.user.full_name if ticket.user else 'Unknown'
@@ -146,11 +146,11 @@ async def show_admin_tickets(callback: types.CallbackQuery, db_user: User, db: A
             }
         )
 
-    # Итоговые страницы уже посчитаны выше
+    # Total pages already calculated above
     header_text = (
-        texts.t('ADMIN_TICKETS_TITLE_OPEN', '🎫 Открытые тикеты поддержки:')
+        texts.t('ADMIN_TICKETS_TITLE_OPEN', '�� تیکت‌های باز پشتیبانی:')
         if scope == 'open'
-        else texts.t('ADMIN_TICKETS_TITLE_CLOSED', '🎫 Закрытые тикеты поддержки:')
+        else texts.t('ADMIN_TICKETS_TITLE_CLOSED', '🎫 تیکت‌های بسته پشتیبانی:')
     )
     # Determine proper back target for moderators
     back_cb = 'admin_submenu_support'
@@ -186,13 +186,13 @@ async def view_admin_ticket(
     state: FSMContext | None = None,
     ticket_id: int | None = None,
 ):
-    """Показать детали тикета для админа с пагинацией"""
+    """Show admin ticket details with pagination."""
     if not (settings.is_admin(callback.from_user.id) or SupportSettingsService.is_moderator(callback.from_user.id)):
         texts = get_texts(db_user.language)
         await callback.answer(texts.ACCESS_DENIED, show_alert=True)
         return
 
-    # Парсим ticket_id и page из callback_data
+    # Parse ticket_id and page from callback_data
     page = 1
     data_str = callback.data or ''
 
@@ -209,7 +209,7 @@ async def view_admin_ticket(
             ticket_id = int(data_str.split('_')[-1])
         except (ValueError, AttributeError):
             texts = get_texts(db_user.language)
-            await callback.answer(texts.t('TICKET_NOT_FOUND', 'Тикет не найден.'), show_alert=True)
+            await callback.answer(texts.t('TICKET_NOT_FOUND', 'تیکت یافت نشد.'), show_alert=True)
             return
 
     if state is None:
@@ -219,17 +219,17 @@ async def view_admin_ticket(
 
     if not ticket:
         texts = get_texts(db_user.language)
-        await callback.answer(texts.t('TICKET_NOT_FOUND', 'Тикет не найден.'), show_alert=True)
+        await callback.answer(texts.t('TICKET_NOT_FOUND', 'تیکت یافت نشد.'), show_alert=True)
         return
 
     texts = get_texts(db_user.language)
 
-    # Формируем заголовок тикета
+    # Build ticket header
     status_text = {
-        TicketStatus.OPEN.value: texts.t('TICKET_STATUS_OPEN', 'Открыт'),
-        TicketStatus.ANSWERED.value: texts.t('TICKET_STATUS_ANSWERED', 'Отвечен'),
-        TicketStatus.CLOSED.value: texts.t('TICKET_STATUS_CLOSED', 'Закрыт'),
-        TicketStatus.PENDING.value: texts.t('TICKET_STATUS_PENDING', 'В ожидании'),
+        TicketStatus.OPEN.value: texts.t('TICKET_STATUS_OPEN', 'باز'),
+        TicketStatus.ANSWERED.value: texts.t('TICKET_STATUS_ANSWERED', 'پاسخ داده شده'),
+        TicketStatus.CLOSED.value: texts.t('TICKET_STATUS_CLOSED', 'بسته'),
+        TicketStatus.PENDING.value: texts.t('TICKET_STATUS_PENDING', 'در انتظار'),
     }.get(ticket.status, ticket.status)
 
     user_name = html.escape(ticket.user.full_name) if ticket.user else 'Unknown'
@@ -239,41 +239,41 @@ async def view_admin_ticket(
     username_value = ticket.user.username if ticket.user else None
     id_label = 'Telegram ID' if (ticket.user and ticket.user.telegram_id) else 'ID'
 
-    header = f'🎫 Тикет #{ticket.id}\n\n'
-    header += f'👤 Пользователь: {user_name}\n'
+    header = f'🎫 تیکت #{ticket.id}\n\n'
+    header += f'👤 کاربر: {user_name}\n'
     header += f'🆔 {id_label}: <code>{telegram_id_display}</code>\n'
     if username_value:
         safe_username = html.escape(username_value)
         header += f'📱 Username: @{safe_username}\n'
     else:
-        header += '📱 Username: отсутствует\n'
-    header += f'📝 Заголовок: {html.escape(ticket.title)}\n'
-    header += f'📊 Статус: {ticket.status_emoji} {status_text}\n'
-    header += f'📅 Создан: {ticket.created_at.strftime("%d.%m.%Y %H:%M")}\n\n'
+        header += '📱 نام کاربری: موجود نیست\n'
+    header += f'📝 موضوع: {html.escape(ticket.title)}\n'
+    header += f'📊 وضعیت: {ticket.status_emoji} {status_text}\n'
+    header += f'📅 ایجاد شده: {ticket.created_at.strftime("%d.%m.%Y %H:%M")}\n\n'
 
     if ticket.is_user_reply_blocked:
         if ticket.user_reply_block_permanent:
-            header += '🚫 Пользователь заблокирован навсегда\n\n'
+            header += '🚫 کاربر به صورت دائمی مسدود شده است\n\n'
         elif ticket.user_reply_block_until:
-            header += f'⏳ Блок до: {ticket.user_reply_block_until.strftime("%d.%m.%Y %H:%M")}\n\n'
+            header += f'⏳ مسدود تا: {ticket.user_reply_block_until.strftime("%d.%m.%Y %H:%M")}\n\n'
 
-    # Формируем блоки сообщений
+    # Build message blocks
     message_blocks: list[str] = []
     if ticket.messages:
-        message_blocks.append(f'💬 Сообщения ({len(ticket.messages)}):\n\n')
+        message_blocks.append(f'💬 پیام‌ها ({len(ticket.messages)}):\n\n')
         for msg in ticket.messages:
-            sender = '👤 Пользователь' if msg.is_user_message else '🛠️ Поддержка'
+            sender = '👤 کاربر' if msg.is_user_message else '🛠️ پشتیبانی'
             block = f'{sender} ({msg.created_at.strftime("%d.%m %H:%M")}):\n{html.escape(msg.message_text)}\n\n'
             if getattr(msg, 'has_media', False) and getattr(msg, 'media_type', None) == 'photo':
-                block += '📎 Вложение: фото\n\n'
+                block += '📎 پیوست: عکس\n\n'
             message_blocks.append(block)
 
-    # Разбиваем на страницы
+    # Split into pages
     pages = _split_text_into_pages(header, message_blocks, max_len=MAX_MESSAGE_LEN)
     total_pages = len(pages)
     page = min(page, total_pages)
 
-    # Формируем клавиатуру
+    # Build keyboard
     has_photos = any(
         getattr(m, 'has_media', False) and getattr(m, 'media_type', None) == 'photo' for m in ticket.messages or []
     )
@@ -281,38 +281,38 @@ async def view_admin_ticket(
         ticket_id, ticket.is_closed, db_user.language, is_user_blocked=ticket.is_user_reply_blocked
     )
 
-    # Кнопка профиля пользователя
+    # User profile button
     try:
         if ticket.user:
             admin_profile_btn = types.InlineKeyboardButton(
-                text='👤 К пользователю', callback_data=f'admin_user_manage_{ticket.user.id}_from_ticket_{ticket.id}'
+                text='👤 به کاربر', callback_data=f'admin_user_manage_{ticket.user.id}_from_ticket_{ticket.id}'
             )
             keyboard.inline_keyboard.insert(0, [admin_profile_btn])
     except Exception:
         pass
 
-    # Кнопки ЛС и профиль
+    # DM and profile buttons
     try:
         if ticket.user and ticket.user.telegram_id and ticket.user.username:
             safe_username = html.escape(ticket.user.username)
             buttons_row = []
             pm_url = f'tg://resolve?domain={safe_username}'
-            buttons_row.append(types.InlineKeyboardButton(text='✉ ЛС', url=pm_url))
+            buttons_row.append(types.InlineKeyboardButton(text='✉ پیام مستقیم', url=pm_url))
             profile_url = f'tg://user?id={ticket.user.telegram_id}'
-            buttons_row.append(types.InlineKeyboardButton(text='👤 Профиль', url=profile_url))
+            buttons_row.append(types.InlineKeyboardButton(text='�� پروفایل', url=profile_url))
             if buttons_row:
                 keyboard.inline_keyboard.insert(0, buttons_row)
     except Exception:
         pass
 
-    # Кнопка вложений
+    # Attachments button
     if has_photos:
         try:
             keyboard.inline_keyboard.insert(
                 0,
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('TICKET_ATTACHMENTS', '📎 Вложения'),
+                        text=texts.t('TICKET_ATTACHMENTS', '📎 پیوست‌ها'),
                         callback_data=f'admin_ticket_attachments_{ticket_id}',
                     )
                 ],
@@ -320,7 +320,7 @@ async def view_admin_ticket(
         except Exception:
             pass
 
-    # Пагинация
+    # Pagination
     if total_pages > 1:
         nav_row = []
         if page > 1:
@@ -339,7 +339,7 @@ async def view_admin_ticket(
 
     page_text = pages[page - 1]
 
-    # Отправка сообщения
+    # Send message
     try:
         await callback.message.edit_text(page_text, reply_markup=keyboard, parse_mode='HTML')
     except TelegramBadRequest:
@@ -349,7 +349,7 @@ async def view_admin_ticket(
             pass
         await callback.message.answer(page_text, reply_markup=keyboard, parse_mode='HTML')
 
-    # Сохраняем id для дальнейших действий
+    # Save id for further actions
     if state is not None:
         try:
             await state.update_data(ticket_id=ticket_id)
@@ -359,7 +359,7 @@ async def view_admin_ticket(
 
 
 async def reply_to_admin_ticket(callback: types.CallbackQuery, state: FSMContext, db_user: User):
-    """Начать ответ на тикет от админа"""
+    """Start an admin reply to a ticket."""
     if not (settings.is_admin(callback.from_user.id) or SupportSettingsService.is_moderator(callback.from_user.id)):
         texts = get_texts(db_user.language)
         await callback.answer(texts.ACCESS_DENIED, show_alert=True)
@@ -369,7 +369,7 @@ async def reply_to_admin_ticket(callback: types.CallbackQuery, state: FSMContext
     await state.update_data(ticket_id=ticket_id, reply_mode=True)
     texts = get_texts(db_user.language)
     await callback.message.edit_text(
-        texts.t('ADMIN_TICKET_REPLY_INPUT', 'Введите ответ от поддержки:'),
+        texts.t('ADMIN_TICKET_REPLY_INPUT', 'پاسخ پشتیبانی را وارد کنید:'),
         reply_markup=get_admin_ticket_reply_cancel_keyboard(db_user.language),
     )
 
@@ -383,12 +383,12 @@ async def handle_admin_ticket_reply(message: types.Message, state: FSMContext, d
         await message.answer(texts.ACCESS_DENIED)
         await state.clear()
         return
-    # Проверяем, что пользователь в правильном состоянии
+    # Check that the user is in the correct state
     current_state = await state.get_state()
     if current_state != AdminTicketStates.waiting_for_reply:
         return
 
-    # Анти-спам: одно сообщение за короткое окно по конкретному тикету
+    # Anti-spam: one message per short window per specific ticket
     try:
         data_rl = await state.get_data()
         rl_ticket_id = data_rl.get('ticket_id') or 'admin_reply'
@@ -409,8 +409,8 @@ async def handle_admin_ticket_reply(message: types.Message, state: FSMContext, d
     except Exception:
         pass
 
-    """Обработать ответ админа на тикет"""
-    # Поддержка фото вложений в ответе админа
+    """Process the admin reply to a ticket."""
+    # Support photo attachments in admin reply
     reply_text = (message.text or message.caption or '').strip()
     if len(reply_text) > 400:
         reply_text = reply_text[:400]
@@ -425,7 +425,7 @@ async def handle_admin_ticket_reply(message: types.Message, state: FSMContext, d
     if len(reply_text) < 1 and not media_file_id:
         texts = get_texts(db_user.language)
         await message.answer(
-            texts.t('TICKET_REPLY_TOO_SHORT', 'Ответ должен содержать минимум 5 символов. Попробуйте еще раз:')
+            texts.t('TICKET_REPLY_TOO_SHORT', 'پاسخ باید حداقل ۵ کاراکتر داشته باشد. دوباره امتحان کنید:')
         )
         return
 
@@ -438,37 +438,37 @@ async def handle_admin_ticket_reply(message: types.Message, state: FSMContext, d
 
     if not ticket_id:
         texts = get_texts(db_user.language)
-        await message.answer(texts.t('TICKET_REPLY_ERROR', 'Ошибка: не найден ID тикета.'))
+        await message.answer(texts.t('TICKET_REPLY_ERROR', 'خطا: شناسه تیکت یافت نشد.'))
         await state.clear()
         return
 
     try:
-        # Если это режим ввода длительности блокировки
+        # If this is block duration input mode
         if not data.get('reply_mode'):
             try:
                 minutes = int(reply_text)
                 minutes = max(1, min(60 * 24 * 365, minutes))
             except ValueError:
-                await message.answer('❌ Введите целое число минут')
+                await message.answer('❌ یک عدد صحیح برای دقیقه وارد کنید')
                 return
             until = datetime.now(UTC) + timedelta(minutes=minutes)
             ok = await TicketCRUD.set_user_reply_block(db, ticket_id, permanent=False, until=until)
             if ok:
-                await message.answer(f'✅ Пользователь заблокирован на {minutes} минут')
+                await message.answer(f'✅ کاربر برای {minutes} دقیقه مسدود شد')
             else:
-                await message.answer('❌ Ошибка блокировки')
+                await message.answer('❌ خطا در مسدودسازی')
             await state.clear()
             return
 
-        # Обычный режим ответа админа
+        # Normal admin reply mode
         ticket = await TicketCRUD.get_ticket_by_id(db, ticket_id, load_messages=False, load_user=True)
         if not ticket:
             texts = get_texts(db_user.language)
-            await message.answer(texts.t('TICKET_NOT_FOUND', 'Тикет не найден.'))
+            await message.answer(texts.t('TICKET_NOT_FOUND', 'تیکت یافت نشد.'))
             await state.clear()
             return
 
-        # Добавляем сообщение от админа (внутри add_message статус станет ANSWERED)
+        # Add message from admin (inside add_message status becomes ANSWERED)
         await TicketMessageCRUD.add_message(
             db,
             ticket_id,
@@ -483,18 +483,18 @@ async def handle_admin_ticket_reply(message: types.Message, state: FSMContext, d
         texts = get_texts(db_user.language)
 
         await message.answer(
-            texts.t('ADMIN_TICKET_REPLY_SENT', '✅ Ответ отправлен!'),
+            texts.t('ADMIN_TICKET_REPLY_SENT', '✅ پاسخ ارسال شد!'),
             reply_markup=types.InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
                         types.InlineKeyboardButton(
-                            text=texts.t('VIEW_TICKET', '👁️ Посмотреть тикет'),
+                            text=texts.t('VIEW_TICKET', '👁️ مشاهده تیکت'),
                             callback_data=f'admin_view_ticket_{ticket_id}',
                         )
                     ],
                     [
                         types.InlineKeyboardButton(
-                            text=texts.t('BACK_TO_TICKETS', '⬅️ К тикетам'), callback_data='admin_tickets'
+                            text=texts.t('BACK_TO_TICKETS', '⬅️ به تیکت‌ها'), callback_data='admin_tickets'
                         )
                     ],
                 ]
@@ -503,20 +503,20 @@ async def handle_admin_ticket_reply(message: types.Message, state: FSMContext, d
 
         await state.clear()
 
-        # Уведомляем пользователя о новом ответе
+        # Notify user about new reply
         await notify_user_about_ticket_reply(message.bot, ticket, reply_text, db)
-        # Админ-уведомления о ответе в тикет отключены по требованию
+        # Admin notifications about ticket replies are disabled by requirement
 
     except Exception as e:
         logger.error('Error adding admin ticket reply', error=e)
         texts = get_texts(db_user.language)
         await message.answer(
-            texts.t('TICKET_REPLY_ERROR', '❌ Произошла ошибка при отправке ответа. Попробуйте позже.')
+            texts.t('TICKET_REPLY_ERROR', '❌ خطایی در ارسال پاسخ رخ داد. بعداً دوباره امتحان کنید.')
         )
 
 
 async def mark_ticket_as_answered(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
-    """Отметить тикет как отвеченный"""
+    """Mark ticket as answered."""
     ticket_id = int(callback.data.replace('admin_mark_answered_', ''))
 
     try:
@@ -525,23 +525,23 @@ async def mark_ticket_as_answered(callback: types.CallbackQuery, db_user: User, 
         if success:
             texts = get_texts(db_user.language)
             await callback.answer(
-                texts.t('TICKET_MARKED_ANSWERED', '✅ Тикет отмечен как отвеченный.'), show_alert=True
+                texts.t('TICKET_MARKED_ANSWERED', '✅ تیکت به عنوان پاسخ داده شده علامت‌گذاری شد.'), show_alert=True
             )
 
-            # Обновляем сообщение
+            # Update message
             await view_admin_ticket(callback, db_user, db, state)
         else:
             texts = get_texts(db_user.language)
-            await callback.answer(texts.t('TICKET_UPDATE_ERROR', '❌ Ошибка при обновлении тикета.'), show_alert=True)
+            await callback.answer(texts.t('TICKET_UPDATE_ERROR', '❌ خطا در به‌روزرسانی تیکت.'), show_alert=True)
 
     except Exception as e:
         logger.error('Error marking ticket as answered', error=e)
         texts = get_texts(db_user.language)
-        await callback.answer(texts.t('TICKET_UPDATE_ERROR', '❌ Ошибка при обновлении тикета.'), show_alert=True)
+        await callback.answer(texts.t('TICKET_UPDATE_ERROR', '❌ خطا در به‌روزرسانی تیکت.'), show_alert=True)
 
 
 async def close_all_open_admin_tickets(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Закрыть все открытые тикеты."""
+    """Close all open tickets."""
     if not (settings.is_admin(callback.from_user.id) or SupportSettingsService.is_moderator(callback.from_user.id)):
         texts = get_texts(db_user.language)
         await callback.answer(texts.ACCESS_DENIED, show_alert=True)
@@ -553,14 +553,14 @@ async def close_all_open_admin_tickets(callback: types.CallbackQuery, db_user: U
         closed_ticket_ids = await TicketCRUD.close_all_open_tickets(db)
     except Exception as error:
         logger.error('Error closing all open tickets', error=error)
-        await callback.answer(texts.t('TICKET_UPDATE_ERROR', '❌ Ошибка при обновлении тикета.'), show_alert=True)
+        await callback.answer(texts.t('TICKET_UPDATE_ERROR', '❌ خطا در به‌روزرسانی تیکت.'), show_alert=True)
         return
 
     closed_count = len(closed_ticket_ids)
 
     if closed_count == 0:
         await callback.answer(
-            texts.t('ADMIN_CLOSE_ALL_OPEN_TICKETS_EMPTY', 'ℹ️ Нет открытых тикетов для закрытия.'), show_alert=True
+            texts.t('ADMIN_CLOSE_ALL_OPEN_TICKETS_EMPTY', 'ℹ️ تیکت باز برای بستن وجود ندارد.'), show_alert=True
         )
         return
 
@@ -584,21 +584,21 @@ async def close_all_open_admin_tickets(callback: types.CallbackQuery, db_user: U
     except Exception as audit_error:
         logger.warning('Failed to add support audit for bulk close', audit_error=audit_error)
 
-    # Обновляем список тикетов
+    # Update ticket list
     await show_admin_tickets(callback, db_user, db)
 
-    success_text = texts.t('ADMIN_CLOSE_ALL_OPEN_TICKETS_SUCCESS', '✅ Закрыто открытых тикетов: {count}').format(
+    success_text = texts.t('ADMIN_CLOSE_ALL_OPEN_TICKETS_SUCCESS', '✅ تیکت‌های باز بسته شده: {count}').format(
         count=closed_count
     )
 
     notification_keyboard = types.InlineKeyboardMarkup(
-        inline_keyboard=[[types.InlineKeyboardButton(text='🗑 Удалить', callback_data='admin_support_delete_msg')]]
+        inline_keyboard=[[types.InlineKeyboardButton(text='🗑 حذف', callback_data='admin_support_delete_msg')]]
     )
 
     try:
         await callback.message.answer(success_text, reply_markup=notification_keyboard)
     except Exception:
-        # Если не удалось отправить отдельное сообщение, пробуем ответить алертом
+        # If unable to send a separate message, try to respond with an alert
         try:
             await callback.answer(success_text, show_alert=True)
         except Exception:
@@ -606,7 +606,7 @@ async def close_all_open_admin_tickets(callback: types.CallbackQuery, db_user: U
 
 
 async def close_admin_ticket(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Закрыть тикет админом"""
+    """Close ticket by admin."""
     if not (settings.is_admin(callback.from_user.id) or SupportSettingsService.is_moderator(callback.from_user.id)):
         texts = get_texts(db_user.language)
         await callback.answer(texts.ACCESS_DENIED, show_alert=True)
@@ -622,7 +622,7 @@ async def close_admin_ticket(callback: types.CallbackQuery, db_user: User, db: A
                 is_mod = not settings.is_admin(callback.from_user.id) and SupportSettingsService.is_moderator(
                     callback.from_user.id
                 )
-                # обогатим details контактами пользователя тикета
+                # enrich details with ticket user contacts
                 details = {}
                 try:
                     t = await TicketCRUD.get_ticket_by_id(db, ticket_id, load_user=True)
@@ -651,32 +651,32 @@ async def close_admin_ticket(callback: types.CallbackQuery, db_user: User, db: A
             # Notify with deletable inline message
             try:
                 await callback.message.answer(
-                    texts.t('TICKET_CLOSED', '✅ Тикет закрыт.'),
+                    texts.t('TICKET_CLOSED', '✅ تیکت بسته شد.'),
                     reply_markup=types.InlineKeyboardMarkup(
                         inline_keyboard=[
-                            [types.InlineKeyboardButton(text='🗑 Удалить', callback_data='admin_support_delete_msg')]
+                            [types.InlineKeyboardButton(text='🗑 حذف', callback_data='admin_support_delete_msg')]
                         ]
                     ),
                 )
             except Exception:
-                await callback.answer(texts.t('TICKET_CLOSED', '✅ Тикет закрыт.'), show_alert=True)
+                await callback.answer(texts.t('TICKET_CLOSED', '✅ تیکت بسته شد.'), show_alert=True)
 
-            # Обновляем inline-клавиатуру в текущем сообщении без кнопок действий
+            # Update inline keyboard in current message without action buttons
             await callback.message.edit_reply_markup(
                 reply_markup=get_admin_ticket_view_keyboard(ticket_id, True, db_user.language)
             )
         else:
             texts = get_texts(db_user.language)
-            await callback.answer(texts.t('TICKET_CLOSE_ERROR', '❌ Ошибка при закрытии тикета.'), show_alert=True)
+            await callback.answer(texts.t('TICKET_CLOSE_ERROR', '❌ خطا در بستن تیکت.'), show_alert=True)
 
     except Exception as e:
         logger.error('Error closing admin ticket', error=e)
         texts = get_texts(db_user.language)
-        await callback.answer(texts.t('TICKET_CLOSE_ERROR', '❌ Ошибка при закрытии тикета.'), show_alert=True)
+        await callback.answer(texts.t('TICKET_CLOSE_ERROR', '❌ خطا در بستن تیکت.'), show_alert=True)
 
 
 async def cancel_admin_ticket_reply(callback: types.CallbackQuery, state: FSMContext, db_user: User):
-    """Отменить ответ админа на тикет"""
+    """Cancel admin reply to ticket."""
     if not (settings.is_admin(callback.from_user.id) or SupportSettingsService.is_moderator(callback.from_user.id)):
         texts = get_texts(db_user.language)
         await callback.answer(texts.ACCESS_DENIED, show_alert=True)
@@ -686,12 +686,12 @@ async def cancel_admin_ticket_reply(callback: types.CallbackQuery, state: FSMCon
     texts = get_texts(db_user.language)
 
     await callback.message.edit_text(
-        texts.t('TICKET_REPLY_CANCELLED', 'Ответ отменен.'),
+        texts.t('TICKET_REPLY_CANCELLED', 'پاسخ لغو شد.'),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('BACK_TO_TICKETS', '⬅️ К тикетам'), callback_data='admin_tickets'
+                        text=texts.t('BACK_TO_TICKETS', '⬅️ به تیکت‌ها'), callback_data='admin_tickets'
                     )
                 ]
             ]
@@ -713,12 +713,12 @@ async def block_user_in_ticket(callback: types.CallbackQuery, state: FSMContext,
     except Exception:
         pass
     await callback.message.edit_text(
-        texts.t('ENTER_BLOCK_MINUTES', 'Введите количество минут для блокировки пользователя (например, 15):'),
+        texts.t('ENTER_BLOCK_MINUTES', 'تعداد دقیقه‌های مسدودسازی کاربر را وارد کنید (مثلاً 15):'),
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('CANCEL_REPLY', '❌ Отменить ввод'), callback_data='cancel_admin_ticket_reply'
+                        text=texts.t('CANCEL_REPLY', '❌ لغو ورودی'), callback_data='cancel_admin_ticket_reply'
                     )
                 ]
             ]
@@ -736,14 +736,14 @@ async def handle_admin_block_duration_input(message: types.Message, state: FSMCo
         await message.answer(texts.ACCESS_DENIED)
         await state.clear()
         return
-    # Проверяем состояние
+    # Check state
     current_state = await state.get_state()
     if current_state != AdminTicketStates.waiting_for_block_duration:
         return
 
     reply_text = message.text.strip()
     if len(reply_text) < 1:
-        await message.answer('❌ Введите целое число минут')
+        await message.answer('❌ یک عدد صحیح برای دقیقه وارد کنید')
         return
 
     data = await state.get_data()
@@ -752,14 +752,14 @@ async def handle_admin_block_duration_input(message: types.Message, state: FSMCo
     origin_message_id = data.get('origin_message_id')
     try:
         minutes = int(reply_text)
-        minutes = max(1, min(60 * 24 * 365, minutes))  # максимум 1 год
+        minutes = max(1, min(60 * 24 * 365, minutes))  # maximum 1 year
     except ValueError:
-        await message.answer('❌ Введите целое число минут')
+        await message.answer('❌ یک عدد صحیح برای دقیقه وارد کنید')
         return
 
     if not ticket_id:
         texts = get_texts(db_user.language)
-        await message.answer(texts.t('TICKET_REPLY_ERROR', 'Ошибка: не найден ID тикета.'))
+        await message.answer(texts.t('TICKET_REPLY_ERROR', 'خطا: شناسه تیکت یافت نشد.'))
         await state.clear()
         return
 
@@ -767,14 +767,14 @@ async def handle_admin_block_duration_input(message: types.Message, state: FSMCo
         ticket = await TicketCRUD.get_ticket_by_id(db, ticket_id, load_messages=False)
         if not ticket:
             texts = get_texts(db_user.language)
-            await message.answer(texts.t('TICKET_NOT_FOUND', 'Тикет не найден.'))
+            await message.answer(texts.t('TICKET_NOT_FOUND', 'تیکت یافت نشد.'))
             await state.clear()
             return
 
         until = datetime.now(UTC) + timedelta(minutes=minutes)
         ok = await TicketCRUD.set_user_reply_block(db, ticket_id, permanent=False, until=until)
         if not ok:
-            await message.answer('❌ Ошибка блокировки')
+            await message.answer('❌ خطا در مسدودسازی')
             return
         # audit
         try:
@@ -798,73 +798,73 @@ async def handle_admin_block_duration_input(message: types.Message, state: FSMCo
             updated = await TicketCRUD.get_ticket_by_id(db, ticket_id, load_messages=True, load_user=True)
             texts = get_texts(db_user.language)
             status_text = {
-                TicketStatus.OPEN.value: texts.t('TICKET_STATUS_OPEN', 'Открыт'),
-                TicketStatus.ANSWERED.value: texts.t('TICKET_STATUS_ANSWERED', 'Отвечен'),
-                TicketStatus.CLOSED.value: texts.t('TICKET_STATUS_CLOSED', 'Закрыт'),
-                TicketStatus.PENDING.value: texts.t('TICKET_STATUS_PENDING', 'В ожидании'),
+                TicketStatus.OPEN.value: texts.t('TICKET_STATUS_OPEN', 'باز'),
+                TicketStatus.ANSWERED.value: texts.t('TICKET_STATUS_ANSWERED', 'پاسخ داده شده'),
+                TicketStatus.CLOSED.value: texts.t('TICKET_STATUS_CLOSED', 'بسته'),
+                TicketStatus.PENDING.value: texts.t('TICKET_STATUS_PENDING', 'در انتظار'),
             }.get(updated.status, updated.status)
             user_name = html.escape(updated.user.full_name) if updated.user else 'Unknown'
-            ticket_text = f'🎫 Тикет #{updated.id}\n\n'
-            ticket_text += f'👤 Пользователь: {user_name}\n'
-            ticket_text += f'📝 Заголовок: {html.escape(updated.title)}\n'
-            ticket_text += f'📊 Статус: {updated.status_emoji} {status_text}\n'
-            ticket_text += f'📅 Создан: {updated.created_at.strftime("%d.%m.%Y %H:%M")}\n'
-            ticket_text += f'🔄 Обновлен: {updated.updated_at.strftime("%d.%m.%Y %H:%M")}\n'
+            ticket_text = f'🎫 تیکت #{updated.id}\n\n'
+            ticket_text += f'👤 کاربر: {user_name}\n'
+            ticket_text += f'📝 موضوع: {html.escape(updated.title)}\n'
+            ticket_text += f'📊 وضعیت: {updated.status_emoji} {status_text}\n'
+            ticket_text += f'📅 ایجاد شده: {updated.created_at.strftime("%d.%m.%Y %H:%M")}\n'
+            ticket_text += f'🔄 به‌روزشده: {updated.updated_at.strftime("%d.%m.%Y %H:%M")}\n'
             if updated.user and updated.user.telegram_id:
                 ticket_text += f'🆔 Telegram ID: <code>{updated.user.telegram_id}</code>\n'
                 if updated.user.username:
                     safe_username = html.escape(updated.user.username)
                     ticket_text += f'📱 Username: @{safe_username}\n'
                     ticket_text += (
-                        f'🔗 ЛС: <a href="tg://resolve?domain={safe_username}">'
+                        f'🔗 پیام مستقیم: <a href="tg://resolve?domain={safe_username}">'
                         f'tg://resolve?domain={safe_username}</a>\n'
                     )
                 else:
-                    ticket_text += '📱 Username: отсутствует\n'
+                    ticket_text += '📱 نام کاربری: موجود نیست\n'
                     chat_link = f'tg://user?id={int(updated.user.telegram_id)}'
-                    ticket_text += f'🔗 Чат по ID: <a href="{chat_link}">{chat_link}</a>\n'
+                    ticket_text += f'🔗 چت با شناسه: <a href="{chat_link}">{chat_link}</a>\n'
             elif updated.user:
                 # Email-only user
                 user_id_display = html.escape(str(updated.user.email or f'#{updated.user.id}'))
                 ticket_text += f'🆔 ID: <code>{user_id_display}</code>\n'
-                ticket_text += '📧 Тип: Email-пользователь\n'
+                ticket_text += '📧 نوع: کاربر ایمیل\n'
             ticket_text += '\n'
             if updated.is_user_reply_blocked:
                 if updated.user_reply_block_permanent:
-                    ticket_text += '🚫 Пользователь заблокирован навсегда для ответов в этом тикете\n'
+                    ticket_text += '🚫 کاربر برای ارسال پاسخ در این تیکت به صورت دائمی مسدود شده است\n'
                 elif updated.user_reply_block_until:
-                    ticket_text += f'⏳ Блок до: {updated.user_reply_block_until.strftime("%d.%m.%Y %H:%M")}\n'
+                    ticket_text += f'⏳ مسدود تا: {updated.user_reply_block_until.strftime("%d.%m.%Y %H:%M")}\n'
             if updated.messages:
-                ticket_text += f'💬 Сообщения ({len(updated.messages)}):\n\n'
+                ticket_text += f'💬 پیام‌ها ({len(updated.messages)}):\n\n'
                 for msg in updated.messages:
-                    sender = '👤 Пользователь' if msg.is_user_message else '🛠️ Поддержка'
+                    sender = '👤 کاربر' if msg.is_user_message else '🛠️ پشتیبانی'
                     ticket_text += f'{sender} ({msg.created_at.strftime("%d.%m %H:%M")}):\n'
                     ticket_text += f'{html.escape(msg.message_text)}\n\n'
                     if getattr(msg, 'has_media', False) and getattr(msg, 'media_type', None) == 'photo':
-                        ticket_text += '📎 Вложение: фото\n\n'
+                        ticket_text += '📎 پیوست: عکس\n\n'
 
             kb = get_admin_ticket_view_keyboard(
                 updated.id, updated.is_closed, db_user.language, is_user_blocked=updated.is_user_reply_blocked
             )
-            # Кнопка открытия профиля пользователя в админке
+            # Button to open user profile in admin panel
             try:
                 if updated.user:
                     admin_profile_btn = types.InlineKeyboardButton(
-                        text='👤 К пользователю',
+                        text='👤 به کاربر',
                         callback_data=f'admin_user_manage_{updated.user.id}_from_ticket_{updated.id}',
                     )
                     kb.inline_keyboard.insert(0, [admin_profile_btn])
             except Exception:
                 pass
-            # Кнопки ЛС и профиль при обновлении карточки
+            # DM and profile buttons when updating card
             try:
                 if updated.user and updated.user.telegram_id and updated.user.username:
                     safe_username = html.escape(updated.user.username)
                     buttons_row = []
                     pm_url = f'tg://resolve?domain={safe_username}'
-                    buttons_row.append(types.InlineKeyboardButton(text='✉ Написать в ЛС', url=pm_url))
+                    buttons_row.append(types.InlineKeyboardButton(text='✉ پیام مستقیم', url=pm_url))
                     profile_url = f'tg://user?id={updated.user.telegram_id}'
-                    buttons_row.append(types.InlineKeyboardButton(text='👤 Профиль', url=profile_url))
+                    buttons_row.append(types.InlineKeyboardButton(text='�� پروفایل', url=profile_url))
                     if buttons_row:
                         kb.inline_keyboard.insert(0, buttons_row)
             except Exception:
@@ -879,7 +879,7 @@ async def handle_admin_block_duration_input(message: types.Message, state: FSMCo
                         0,
                         [
                             types.InlineKeyboardButton(
-                                text=texts.t('TICKET_ATTACHMENTS', '📎 Вложения'),
+                                text=texts.t('TICKET_ATTACHMENTS', '📎 پیوست‌ها'),
                                 callback_data=f'admin_ticket_attachments_{updated.id}',
                             )
                         ],
@@ -905,17 +905,17 @@ async def handle_admin_block_duration_input(message: types.Message, state: FSMCo
                             parse_mode='HTML',
                         )
                     except Exception:
-                        await message.answer(f'✅ Пользователь заблокирован на {minutes} минут')
+                        await message.answer(f'✅ کاربر برای {minutes} دقیقه مسدود شد')
             else:
-                await message.answer(f'✅ Пользователь заблокирован на {minutes} минут')
+                await message.answer(f'✅ کاربر برای {minutes} دقیقه مسدود شد')
         except Exception:
-            await message.answer(f'✅ Пользователь заблокирован на {minutes} минут')
+            await message.answer(f'✅ کاربر برای {minutes} دقیقه مسدود شد')
         finally:
             await state.clear()
     except Exception as e:
         logger.error('Error setting block duration', error=e)
         texts = get_texts(db_user.language)
-        await message.answer(texts.t('TICKET_REPLY_ERROR', '❌ Произошла ошибка. Попробуйте позже.'))
+        await message.answer(texts.t('TICKET_REPLY_ERROR', '❌ خطایی رخ داد. بعداً دوباره امتحان کنید.'))
 
 
 async def unblock_user_in_ticket(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
@@ -928,15 +928,15 @@ async def unblock_user_in_ticket(callback: types.CallbackQuery, db_user: User, d
     if ok:
         try:
             await callback.message.answer(
-                '✅ Блок снят',
+                '✅ مسدودیت برداشته شد',
                 reply_markup=types.InlineKeyboardMarkup(
                     inline_keyboard=[
-                        [types.InlineKeyboardButton(text='🗑 Удалить', callback_data='admin_support_delete_msg')]
+                        [types.InlineKeyboardButton(text='🗑 حذف', callback_data='admin_support_delete_msg')]
                     ]
                 ),
             )
         except Exception:
-            await callback.answer('✅ Блок снят')
+            await callback.answer('✅ مسدودیت برداشته شد')
         # audit
         try:
             is_mod = not settings.is_admin(callback.from_user.id) and SupportSettingsService.is_moderator(
@@ -969,7 +969,7 @@ async def unblock_user_in_ticket(callback: types.CallbackQuery, db_user: User, d
             pass
         await view_admin_ticket(callback, db_user, db, state)
     else:
-        await callback.answer('❌ Ошибка', show_alert=True)
+        await callback.answer('❌ خطا', show_alert=True)
 
 
 async def block_user_permanently(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
@@ -982,15 +982,15 @@ async def block_user_permanently(callback: types.CallbackQuery, db_user: User, d
     if ok:
         try:
             await callback.message.answer(
-                '✅ Пользователь заблокирован навсегда',
+                '✅ کاربر به صورت دائمی مسدود شد',
                 reply_markup=types.InlineKeyboardMarkup(
                     inline_keyboard=[
-                        [types.InlineKeyboardButton(text='🗑 Удалить', callback_data='admin_support_delete_msg')]
+                        [types.InlineKeyboardButton(text='🗑 حذف', callback_data='admin_support_delete_msg')]
                     ]
                 ),
             )
         except Exception:
-            await callback.answer('✅ Пользователь заблокирован')
+            await callback.answer('✅ کاربر مسدود شد')
         # audit
         try:
             is_mod = not settings.is_admin(callback.from_user.id) and SupportSettingsService.is_moderator(
@@ -1022,11 +1022,11 @@ async def block_user_permanently(callback: types.CallbackQuery, db_user: User, d
             pass
         await view_admin_ticket(callback, db_user, db, state)
     else:
-        await callback.answer('❌ Ошибка', show_alert=True)
+        await callback.answer('❌ خطا', show_alert=True)
 
 
 async def notify_user_about_ticket_reply(bot: Bot, ticket: Ticket, reply_text: str, db: AsyncSession):
-    """Уведомить пользователя о новом ответе в тикете"""
+    """Notify user about a new reply in the ticket."""
     try:
         # Respect runtime toggle for user ticket notifications
         try:
@@ -1036,7 +1036,7 @@ async def notify_user_about_ticket_reply(bot: Bot, ticket: Ticket, reply_text: s
             pass
         from app.localization.texts import get_texts
 
-        # Обеспечим наличие данных пользователя в объекте тикета
+        # Ensure user data is present in the ticket object
         ticket_with_user = ticket
         if not getattr(ticket_with_user, 'user', None):
             ticket_with_user = await TicketCRUD.get_ticket_by_id(db, ticket.id, load_user=True)
@@ -1058,28 +1058,28 @@ async def notify_user_about_ticket_reply(bot: Bot, ticket: Ticket, reply_text: s
         chat_id = int(user.telegram_id)
         texts = get_texts(user.language)
 
-        # Формируем уведомление
+        # Build notification
         base_text = texts.t(
             'TICKET_REPLY_NOTIFICATION',
-            '🎫 Получен ответ по тикету #{ticket_id}\n\n{reply_preview}\n\nНажмите кнопку ниже, чтобы перейти к тикету:',
+            '🎫 پاسخ جدید برای تیکت #{ticket_id}\n\n{reply_preview}\n\nدکمه زیر را برای مشاهده تیکت بفشارید:',
         ).format(ticket_id=ticket.id, reply_preview=reply_text[:100] + '...' if len(reply_text) > 100 else reply_text)
         keyboard = types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('VIEW_TICKET', '👁️ Посмотреть тикет'), callback_data=f'view_ticket_{ticket.id}'
+                        text=texts.t('VIEW_TICKET', '👁️ مشاهده تیکت'), callback_data=f'view_ticket_{ticket.id}'
                     )
                 ],
                 [
                     types.InlineKeyboardButton(
-                        text=texts.t('CLOSE_NOTIFICATION', '❌ Закрыть уведомление'),
+                        text=texts.t('CLOSE_NOTIFICATION', '❌ بستن اعلان'),
                         callback_data=f'close_ticket_notification_{ticket.id}',
                     )
                 ],
             ]
         )
 
-        # Если было фото в последнем ответе админа — отправим как фото
+        # If the last admin reply had a photo — send as photo
         last_message = await TicketMessageCRUD.get_last_message(db, ticket.id)
         if (
             last_message
@@ -1098,14 +1098,14 @@ async def notify_user_about_ticket_reply(bot: Bot, ticket: Ticket, reply_text: s
                 return
             except TelegramBadRequest as photo_error:
                 logger.error(
-                    'Не удалось отправить фото-уведомление пользователю для тикета',
+                    'Failed to send photo notification to user for ticket',
                     chat_id=chat_id,
                     ticket_id=ticket.id,
                     photo_error=photo_error,
                 )
             except Exception as e:
-                logger.error('Не удалось отправить фото-уведомление', error=e)
-        # Фоллбек: текстовое уведомление
+                logger.error('Failed to send photo notification', error=e)
+        # Fallback: text notification
         await bot.send_message(
             chat_id=chat_id,
             text=base_text,
@@ -1119,9 +1119,9 @@ async def notify_user_about_ticket_reply(bot: Bot, ticket: Ticket, reply_text: s
 
 
 def register_handlers(dp: Dispatcher):
-    """Регистрация админских обработчиков тикетов"""
+    """Register admin ticket handlers."""
 
-    # Просмотр тикетов
+    # View tickets
     dp.callback_query.register(show_admin_tickets, F.data == 'admin_tickets')
     dp.callback_query.register(show_admin_tickets, F.data == 'admin_tickets_scope_open')
     dp.callback_query.register(show_admin_tickets, F.data == 'admin_tickets_scope_closed')
@@ -1130,28 +1130,28 @@ def register_handlers(dp: Dispatcher):
     dp.callback_query.register(view_admin_ticket, F.data.startswith('admin_view_ticket_'))
     dp.callback_query.register(view_admin_ticket, F.data.startswith('admin_ticket_page_'))
 
-    # Ответы на тикеты
+    # Ticket replies
     dp.callback_query.register(reply_to_admin_ticket, F.data.startswith('admin_reply_ticket_'))
 
     dp.message.register(handle_admin_ticket_reply, AdminTicketStates.waiting_for_reply)
     dp.message.register(handle_admin_block_duration_input, AdminTicketStates.waiting_for_block_duration)
 
-    # Управление статусами: явная кнопка больше не используется (статус меняется автоматически)
+    # Status management: explicit button no longer used (status changes automatically)
 
     dp.callback_query.register(close_admin_ticket, F.data.startswith('admin_close_ticket_'))
     dp.callback_query.register(block_user_in_ticket, F.data.startswith('admin_block_user_ticket_'))
     dp.callback_query.register(unblock_user_in_ticket, F.data.startswith('admin_unblock_user_ticket_'))
     dp.callback_query.register(block_user_permanently, F.data.startswith('admin_block_user_perm_ticket_'))
 
-    # Отмена операций
+    # Cancel operations
     dp.callback_query.register(cancel_admin_ticket_reply, F.data == 'cancel_admin_ticket_reply')
 
-    # Пагинация админских тикетов
+    # Admin ticket pagination
     dp.callback_query.register(show_admin_tickets, F.data.startswith('admin_tickets_page_'))
 
-    # Управление компоновкой ответа — (отключено)
+    # Reply layout management — (disabled)
 
-    # Вложения в тикете (админ)
+    # Ticket attachments (admin)
     async def send_admin_ticket_attachments(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
         # permission gate for attachments view
         if not (settings.is_admin(callback.from_user.id) or SupportSettingsService.is_moderator(callback.from_user.id)):
@@ -1162,11 +1162,11 @@ def register_handlers(dp: Dispatcher):
         try:
             ticket_id = int(callback.data.replace('admin_ticket_attachments_', ''))
         except ValueError:
-            await callback.answer(texts.t('TICKET_NOT_FOUND', 'Тикет не найден.'), show_alert=True)
+            await callback.answer(texts.t('TICKET_NOT_FOUND', 'تیکت یافت نشد.'), show_alert=True)
             return
         ticket = await TicketCRUD.get_ticket_by_id(db, ticket_id, load_messages=True)
         if not ticket:
-            await callback.answer(texts.t('TICKET_NOT_FOUND', 'Тикет не найден.'), show_alert=True)
+            await callback.answer(texts.t('TICKET_NOT_FOUND', 'تیکت یافت نشد.'), show_alert=True)
             return
         photos = [
             m.media_file_id
@@ -1174,7 +1174,7 @@ def register_handlers(dp: Dispatcher):
             if getattr(m, 'has_media', False) and getattr(m, 'media_type', None) == 'photo' and m.media_file_id
         ]
         if not photos:
-            await callback.answer(texts.t('NO_ATTACHMENTS', 'Вложений нет.'), show_alert=True)
+            await callback.answer(texts.t('NO_ATTACHMENTS', 'پیوستی وجود ندارد.'), show_alert=True)
             return
         from aiogram.types import InputMediaPhoto
 
@@ -1188,14 +1188,14 @@ def register_handlers(dp: Dispatcher):
                     last_group_message = messages[-1]
             except Exception:
                 pass
-        # После отправки добавим кнопку удалить под последним сообщением группы
+        # After sending, add a delete button below the last message of the group
         if last_group_message:
             try:
                 kb = types.InlineKeyboardMarkup(
                     inline_keyboard=[
                         [
                             types.InlineKeyboardButton(
-                                text=texts.t('DELETE_MESSAGE', '🗑 Удалить'),
+                                text=texts.t('DELETE_MESSAGE', '🗑 حذف'),
                                 callback_data=f'admin_delete_message_{last_group_message.message_id}',
                             )
                         ]
@@ -1203,13 +1203,13 @@ def register_handlers(dp: Dispatcher):
                 )
                 await callback.message.bot.send_message(
                     chat_id=callback.from_user.id,
-                    text=texts.t('ATTACHMENTS_SENT', 'Вложения отправлены.'),
+                    text=texts.t('ATTACHMENTS_SENT', 'پیوست‌ها ارسال شدند.'),
                     reply_markup=kb,
                 )
             except Exception:
-                await callback.answer(texts.t('ATTACHMENTS_SENT', 'Вложения отправлены.'))
+                await callback.answer(texts.t('ATTACHMENTS_SENT', 'پیوست‌ها ارسال شدند.'))
         else:
-            await callback.answer(texts.t('ATTACHMENTS_SENT', 'Вложения отправлены.'))
+            await callback.answer(texts.t('ATTACHMENTS_SENT', 'پیوست‌ها ارسال شدند.'))
 
     dp.callback_query.register(send_admin_ticket_attachments, F.data.startswith('admin_ticket_attachments_'))
 
