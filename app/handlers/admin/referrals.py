@@ -64,40 +64,40 @@ async def show_referral_statistics(callback: types.CallbackQuery, db_user: User,
                 user_id = referrer.get('user_id', 'N/A')
 
                 if count > 0:
-                    text += f'{i}. ID {user_id}: {settings.format_price(earned)} ({count} реф.)\n'
+                    text += f'{i}. ID {user_id}: {settings.format_price(earned)} ({count} ref.)\n'
                 else:
-                    logger.warning('Реферер имеет рефералов, но есть в топе', user_id=user_id, count=count)
+                    logger.warning('Referrer has referrals but appears in top', user_id=user_id, count=count)
         else:
-            text += 'Нет данных\n'
+            text += 'داده‌ای وجود ندارد\n'
 
         text += f"""
 
-<b>Настройки реферальной системы:</b>
-- Минимальное пополнение: {settings.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS)}
-- Бонус за первое пополнение: {settings.format_price(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS)}
-- Бонус пригласившему: {settings.format_price(settings.REFERRAL_INVITER_BONUS_KOPEKS)}
-- Комиссия с покупок: {settings.REFERRAL_COMMISSION_PERCENT}%
-- Уведомления: {'✅ Включены' if settings.REFERRAL_NOTIFICATIONS_ENABLED else '❌ Отключены'}
+<b>تنظیمات سیستم معرفی:</b>
+- حداقل شارژ: {settings.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS)}
+- بونوس اول شارژ: {settings.format_price(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS)}
+- بونوس دعوت‌کننده: {settings.format_price(settings.REFERRAL_INVITER_BONUS_KOPEKS)}
+- کمیسیون خریدها: {settings.REFERRAL_COMMISSION_PERCENT}%
+- اعلان‌ها: {'✅ فعال' if settings.REFERRAL_NOTIFICATIONS_ENABLED else '❌ غیرفعال'}
 
-<i>🕐 Обновлено: {current_time}</i>
+<i>🕐 به‌روزشده: {current_time}</i>
 """
 
         keyboard_rows = [
-            [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_referrals')],
-            [types.InlineKeyboardButton(text='👥 Топ рефереров', callback_data='admin_referrals_top')],
-            [types.InlineKeyboardButton(text='🔍 Диагностика логов', callback_data='admin_referral_diagnostics')],
+            [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_referrals')],
+            [types.InlineKeyboardButton(text='👥 برترین معرف‌ها', callback_data='admin_referrals_top')],
+            [types.InlineKeyboardButton(text='🔍 تشخیص لاگ‌ها', callback_data='admin_referral_diagnostics')],
         ]
 
-        # Кнопка заявок на вывод (если функция включена)
+        # Withdrawal request button (if feature is enabled)
         if settings.is_referral_withdrawal_enabled():
             keyboard_rows.append(
-                [types.InlineKeyboardButton(text='💸 Заявки на вывод', callback_data='admin_withdrawal_requests')]
+                [types.InlineKeyboardButton(text='💸 درخواست‌های برداشت', callback_data='admin_withdrawal_requests')]
             )
 
         keyboard_rows.extend(
             [
-                [types.InlineKeyboardButton(text='⚙️ Настройки', callback_data='admin_referrals_settings')],
-                [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_panel')],
+                [types.InlineKeyboardButton(text='⚙️ تنظیمات', callback_data='admin_referrals_settings')],
+                [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_panel')],
             ]
         )
 
@@ -105,36 +105,36 @@ async def show_referral_statistics(callback: types.CallbackQuery, db_user: User,
 
         try:
             await callback.message.edit_text(text, reply_markup=keyboard)
-            await callback.answer('Обновлено')
+            await callback.answer('به‌روزرسانی شد')
         except Exception as edit_error:
             if 'message is not modified' in str(edit_error):
-                await callback.answer('Данные актуальны')
+                await callback.answer('داده‌ها به‌روز هستند')
             else:
-                logger.error('Ошибка редактирования сообщения', edit_error=edit_error)
-                await callback.answer('Ошибка обновления')
+                logger.error('Message edit error', edit_error=edit_error)
+                await callback.answer('خطا در به‌روزرسانی')
 
     except Exception as e:
-        logger.error('Ошибка в show_referral_statistics', error=e, exc_info=True)
+        logger.error('Error in show_referral_statistics', error=e, exc_info=True)
 
         current_time = datetime.now(UTC).strftime('%H:%M:%S')
         text = f"""
-🤝 <b>Реферальная статистика</b>
+🤝 <b>آمار معرفی</b>
 
-❌ <b>Ошибка загрузки данных</b>
+❌ <b>خطا در بارگذاری داده‌ها</b>
 
-<b>Текущие настройки:</b>
-- Минимальное пополнение: {settings.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS)}
-- Бонус за первое пополнение: {settings.format_price(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS)}
-- Бонус пригласившему: {settings.format_price(settings.REFERRAL_INVITER_BONUS_KOPEKS)}
-- Комиссия с покупок: {settings.REFERRAL_COMMISSION_PERCENT}%
+<b>تنظیمات فعلی:</b>
+- حداقل شارژ: {settings.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS)}
+- بونوس اول شارژ: {settings.format_price(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS)}
+- بونوس دعوت‌کننده: {settings.format_price(settings.REFERRAL_INVITER_BONUS_KOPEKS)}
+- کمیسیون خریدها: {settings.REFERRAL_COMMISSION_PERCENT}%
 
-<i>🕐 Время: {current_time}</i>
+<i>🕐 زمان: {current_time}</i>
 """
 
         keyboard = types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='🔄 Повторить', callback_data='admin_referrals')],
-                [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_panel')],
+                [types.InlineKeyboardButton(text='🔄 تکرار', callback_data='admin_referrals')],
+                [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_panel')],
             ]
         )
 
@@ -142,15 +142,15 @@ async def show_referral_statistics(callback: types.CallbackQuery, db_user: User,
             await callback.message.edit_text(text, reply_markup=keyboard)
         except:
             pass
-        await callback.answer('Произошла ошибка при загрузке статистики')
+        await callback.answer('خطا در بارگذاری آمار')
 
 
 def _get_top_keyboard(period: str, sort_by: str) -> types.InlineKeyboardMarkup:
-    """Создаёт клавиатуру для выбора периода и сортировки."""
-    period_week = '✅ Неделя' if period == 'week' else 'Неделя'
-    period_month = '✅ Месяц' if period == 'month' else 'Месяц'
-    sort_earnings = '✅ По заработку' if sort_by == 'earnings' else 'По заработку'
-    sort_invited = '✅ По приглашённым' if sort_by == 'invited' else 'По приглашённым'
+    """Creates keyboard for period and sorting selection."""
+    period_week = '✅ هفته' if period == 'week' else 'هفته'
+    period_month = '✅ ماه' if period == 'month' else 'ماه'
+    sort_earnings = '✅ بر اساس درآمد' if sort_by == 'earnings' else 'بر اساس درآمد'
+    sort_invited = '✅ بر اساس دعوت‌شدگان' if sort_by == 'invited' else 'بر اساس دعوت‌شدگان'
 
     return types.InlineKeyboardMarkup(
         inline_keyboard=[
@@ -162,8 +162,8 @@ def _get_top_keyboard(period: str, sort_by: str) -> types.InlineKeyboardMarkup:
                 types.InlineKeyboardButton(text=sort_earnings, callback_data=f'admin_top_ref:{period}:earnings'),
                 types.InlineKeyboardButton(text=sort_invited, callback_data=f'admin_top_ref:{period}:invited'),
             ],
-            [types.InlineKeyboardButton(text='🔄 Обновить', callback_data=f'admin_top_ref:{period}:{sort_by}')],
-            [types.InlineKeyboardButton(text='⬅️ К статистике', callback_data='admin_referrals')],
+            [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data=f'admin_top_ref:{period}:{sort_by}')],
+            [types.InlineKeyboardButton(text='⬅️ به آمار', callback_data='admin_referrals')],
         ]
     )
 
@@ -171,22 +171,22 @@ def _get_top_keyboard(period: str, sort_by: str) -> types.InlineKeyboardMarkup:
 @admin_required
 @error_handler
 async def show_top_referrers(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Показывает топ рефереров (по умолчанию: неделя, по заработку)."""
+    """Shows top referrers (default: week, by earnings)."""
     await _show_top_referrers_filtered(callback, db, period='week', sort_by='earnings')
 
 
 @admin_required
 @error_handler
 async def show_top_referrers_filtered(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Обрабатывает выбор периода и сортировки."""
-    # Парсим callback_data: admin_top_ref:period:sort_by
+    """Processes period and sorting selection."""
+    # Parse callback_data: admin_top_ref:period:sort_by
     parts = callback.data.split(':')
     if len(parts) != 3:
-        await callback.answer('Ошибка параметров')
+        await callback.answer('خطا در پارامترها')
         return
 
-    period = parts[1]  # week или month
-    sort_by = parts[2]  # earnings или invited
+    period = parts[1]  # week or month
+    sort_by = parts[2]  # earnings or invited
 
     if period not in ('week', 'month'):
         period = 'week'
@@ -197,15 +197,15 @@ async def show_top_referrers_filtered(callback: types.CallbackQuery, db_user: Us
 
 
 async def _show_top_referrers_filtered(callback: types.CallbackQuery, db: AsyncSession, period: str, sort_by: str):
-    """Внутренняя функция отображения топа с фильтрами."""
+    """Internal function to display top with filters."""
     try:
         top_referrers = await get_top_referrers_by_period(db, period=period, sort_by=sort_by)
 
-        period_text = 'за неделю' if period == 'week' else 'за месяц'
-        sort_text = 'по заработку' if sort_by == 'earnings' else 'по приглашённым'
+        period_text = 'هفتگی' if period == 'week' else 'ماهانه'
+        sort_text = 'بر اساس درآمد' if sort_by == 'earnings' else 'بر اساس دعوت‌شدگان'
 
-        text = f'🏆 <b>Топ рефереров {period_text}</b>\n'
-        text += f'<i>Сортировка: {sort_text}</i>\n\n'
+        text = f'🏆 <b>برترین معرف‌ها {period_text}</b>\n'
+        text += f'<i>مرتب‌سازی: {sort_text}</i>\n\n'
 
         if top_referrers:
             for i, referrer in enumerate(top_referrers[:20], 1):
@@ -233,15 +233,15 @@ async def _show_top_referrers_filtered(callback: types.CallbackQuery, db: AsyncS
                 elif i == 3:
                     emoji = '🥉 '
 
-                # Выделяем основную метрику в зависимости от сортировки
+                # Highlight the main metric based on sorting
                 if sort_by == 'invited':
                     text += f'{emoji}{i}. {display_text}\n'
-                    text += f'   👥 <b>{count} приглашённых</b> | 💰 {settings.format_price(earned)}\n\n'
+                    text += f'   👥 <b>{count} دعوت‌شده</b> | 💰 {settings.format_price(earned)}\n\n'
                 else:
                     text += f'{emoji}{i}. {display_text}\n'
-                    text += f'   💰 <b>{settings.format_price(earned)}</b> | 👥 {count} приглашённых\n\n'
+                    text += f'   💰 <b>{settings.format_price(earned)}</b> | 👥 {count} دعوت‌شده\n\n'
         else:
-            text += 'Нет данных за выбранный период\n'
+            text += 'داده‌ای برای دوره انتخاب‌شده وجود ندارد\n'
 
         keyboard = _get_top_keyboard(period, sort_by)
 
@@ -250,38 +250,38 @@ async def _show_top_referrers_filtered(callback: types.CallbackQuery, db: AsyncS
             await callback.answer()
         except Exception as edit_error:
             if 'message is not modified' in str(edit_error):
-                await callback.answer('Данные актуальны')
+                await callback.answer('داده‌ها به‌روز هستند')
             else:
                 raise
 
     except Exception as e:
-        logger.error('Ошибка в show_top_referrers_filtered', error=e, exc_info=True)
-        await callback.answer('Ошибка загрузки топа рефереров')
+        logger.error('Error in show_top_referrers_filtered', error=e, exc_info=True)
+        await callback.answer('خطا در بارگذاری برترین معرف‌ها')
 
 
 @admin_required
 @error_handler
 async def show_referral_settings(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
     text = f"""
-⚙️ <b>Настройки реферальной системы</b>
+⚙️ <b>تنظیمات سیستم معرفی</b>
 
-<b>Бонусы и награды:</b>
-• Минимальная сумма пополнения для участия: {settings.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS)}
-• Бонус за первое пополнение реферала: {settings.format_price(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS)}
-• Бонус пригласившему за первое пополнение: {settings.format_price(settings.REFERRAL_INVITER_BONUS_KOPEKS)}
+<b>بونوس‌ها و جوایز:</b>
+• حداقل مبلغ شارژ برای شرکت: {settings.format_price(settings.REFERRAL_MINIMUM_TOPUP_KOPEKS)}
+• بونوس اول شارژ معرفی‌شده: {settings.format_price(settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS)}
+• بونوس دعوت‌کننده برای اول شارژ: {settings.format_price(settings.REFERRAL_INVITER_BONUS_KOPEKS)}
 
-<b>Комиссионные:</b>
-• Процент с каждой покупки реферала: {settings.REFERRAL_COMMISSION_PERCENT}%
+<b>کمیسیون:</b>
+• درصد از هر خرید معرفی‌شده: {settings.REFERRAL_COMMISSION_PERCENT}%
 
-<b>Уведомления:</b>
-• Статус: {'✅ Включены' if settings.REFERRAL_NOTIFICATIONS_ENABLED else '❌ Отключены'}
-• Попытки отправки: {getattr(settings, 'REFERRAL_NOTIFICATION_RETRY_ATTEMPTS', 3)}
+<b>اعلان‌ها:</b>
+• وضعیت: {'✅ فعال' if settings.REFERRAL_NOTIFICATIONS_ENABLED else '❌ غیرفعال'}
+• تعداد تلاش ارسال: {getattr(settings, 'REFERRAL_NOTIFICATION_RETRY_ATTEMPTS', 3)}
 
-<i>💡 Для изменения настроек отредактируйте файл .env и перезапустите бота</i>
+<i>💡 برای تغییر تنظیمات، فایل .env را ویرایش کرده و بات را ری‌استارت کنید</i>
 """
 
     keyboard = types.InlineKeyboardMarkup(
-        inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ К статистике', callback_data='admin_referrals')]]
+        inline_keyboard=[[types.InlineKeyboardButton(text='⬅️ به آمار', callback_data='admin_referrals')]]
     )
 
     await callback.message.edit_text(text, reply_markup=keyboard)
@@ -291,29 +291,29 @@ async def show_referral_settings(callback: types.CallbackQuery, db_user: User, d
 @admin_required
 @error_handler
 async def show_pending_withdrawal_requests(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Показывает список ожидающих заявок на вывод."""
+    """Shows list of pending withdrawal requests."""
     requests = await referral_withdrawal_service.get_pending_requests(db)
 
     if not requests:
-        text = '📋 <b>Заявки на вывод</b>\n\nНет ожидающих заявок.'
+        text = '📋 <b>درخواست‌های برداشت</b>\n\nهیچ درخواست در انتظاری وجود ندارد.'
 
         keyboard_rows = []
-        # Кнопка тестового начисления (только в тестовом режиме)
+        # Test accrual button (test mode only)
         if settings.REFERRAL_WITHDRAWAL_TEST_MODE:
             keyboard_rows.append(
-                [types.InlineKeyboardButton(text='🧪 Тестовое начисление', callback_data='admin_test_referral_earning')]
+                [types.InlineKeyboardButton(text='🧪 پرداخت آزمایشی', callback_data='admin_test_referral_earning')]
             )
-        keyboard_rows.append([types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_referrals')])
+        keyboard_rows.append([types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_referrals')])
 
         await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows))
         await callback.answer()
         return
 
-    text = f'📋 <b>Заявки на вывод ({len(requests)})</b>\n\n'
+    text = f'📋 <b>درخواست‌های برداشت ({len(requests)})</b>\n\n'
 
     for req in requests[:10]:
         user = await get_user_by_id(db, req.user_id)
-        user_name = html.escape(user.full_name) if user and user.full_name else 'Неизвестно'
+        user_name = html.escape(user.full_name) if user and user.full_name else 'ناشناس'
         user_tg_id = user.telegram_id if user else 'N/A'
 
         risk_emoji = (
@@ -321,7 +321,7 @@ async def show_pending_withdrawal_requests(callback: types.CallbackQuery, db_use
         )
 
         text += f'<b>#{req.id}</b> — {user_name} (ID{user_tg_id})\n'
-        text += f'💰 {req.amount_kopeks / 100:.0f}₽ | {risk_emoji} Риск: {req.risk_score}/100\n'
+        text += f'💰 {req.amount_kopeks / 100:.0f}₽ | {risk_emoji} ریسک: {req.risk_score}/100\n'
         text += f'📅 {req.created_at.strftime("%d.%m.%Y %H:%M")}\n\n'
 
     keyboard_rows = []
@@ -334,13 +334,13 @@ async def show_pending_withdrawal_requests(callback: types.CallbackQuery, db_use
             ]
         )
 
-    # Кнопка тестового начисления (только в тестовом режиме)
+    # Test accrual button (test mode only)
     if settings.REFERRAL_WITHDRAWAL_TEST_MODE:
         keyboard_rows.append(
-            [types.InlineKeyboardButton(text='🧪 Тестовое начисление', callback_data='admin_test_referral_earning')]
+            [types.InlineKeyboardButton(text='🧪 پرداخت آزمایشی', callback_data='admin_test_referral_earning')]
         )
 
-    keyboard_rows.append([types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_referrals')])
+    keyboard_rows.append([types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_referrals')])
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows))
     await callback.answer()
@@ -349,42 +349,42 @@ async def show_pending_withdrawal_requests(callback: types.CallbackQuery, db_use
 @admin_required
 @error_handler
 async def view_withdrawal_request(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Показывает детали заявки на вывод."""
+    """Shows details of a withdrawal request."""
     request_id = int(callback.data.split('_')[-1])
 
     result = await db.execute(select(WithdrawalRequest).where(WithdrawalRequest.id == request_id))
     request = result.scalar_one_or_none()
 
     if not request:
-        await callback.answer('Заявка не найдена', show_alert=True)
+        await callback.answer('درخواست یافت نشد', show_alert=True)
         return
 
     user = await get_user_by_id(db, request.user_id)
-    user_name = html.escape(user.full_name) if user and user.full_name else 'Неизвестно'
+    user_name = html.escape(user.full_name) if user and user.full_name else 'ناشناس'
     user_tg_id = (user.telegram_id or user.email or f'#{user.id}') if user else 'N/A'
 
     analysis = json.loads(request.risk_analysis) if request.risk_analysis else {}
 
     status_text = {
-        WithdrawalRequestStatus.PENDING.value: '⏳ Ожидает',
-        WithdrawalRequestStatus.APPROVED.value: '✅ Одобрена',
-        WithdrawalRequestStatus.REJECTED.value: '❌ Отклонена',
-        WithdrawalRequestStatus.COMPLETED.value: '✅ Выполнена',
-        WithdrawalRequestStatus.CANCELLED.value: '🚫 Отменена',
+        WithdrawalRequestStatus.PENDING.value: '⏳ در انتظار',
+        WithdrawalRequestStatus.APPROVED.value: '✅ تأیید شده',
+        WithdrawalRequestStatus.REJECTED.value: '❌ رد شده',
+        WithdrawalRequestStatus.COMPLETED.value: '✅ انجام شده',
+        WithdrawalRequestStatus.CANCELLED.value: '🚫 لغو شده',
     }.get(request.status, request.status)
 
     text = f"""
-📋 <b>Заявка #{request.id}</b>
+📋 <b>درخواست #{request.id}</b>
 
-👤 Пользователь: {user_name}
+👤 کاربر: {user_name}
 🆔 ID: <code>{user_tg_id}</code>
-💰 Сумма: <b>{request.amount_kopeks / 100:.0f}₽</b>
-📊 Статус: {status_text}
+💰 مبلغ: <b>{request.amount_kopeks / 100:.0f}₽</b>
+📊 وضعیت: {status_text}
 
-💳 <b>Реквизиты:</b>
+💳 <b>اطلاعات پرداخت:</b>
 <code>{html.escape(request.payment_details or '')}</code>
 
-📅 Создана: {request.created_at.strftime('%d.%m.%Y %H:%M')}
+📅 ایجاد شده: {request.created_at.strftime('%d.%m.%Y %H:%M')}
 
 {referral_withdrawal_service.format_analysis_for_admin(analysis)}
 """
@@ -394,8 +394,8 @@ async def view_withdrawal_request(callback: types.CallbackQuery, db_user: User, 
     if request.status == WithdrawalRequestStatus.PENDING.value:
         keyboard.append(
             [
-                types.InlineKeyboardButton(text='✅ Одобрить', callback_data=f'admin_withdrawal_approve_{request.id}'),
-                types.InlineKeyboardButton(text='❌ Отклонить', callback_data=f'admin_withdrawal_reject_{request.id}'),
+                types.InlineKeyboardButton(text='✅ تأیید', callback_data=f'admin_withdrawal_approve_{request.id}'),
+                types.InlineKeyboardButton(text='❌ رد', callback_data=f'admin_withdrawal_reject_{request.id}'),
             ]
         )
 
@@ -403,16 +403,16 @@ async def view_withdrawal_request(callback: types.CallbackQuery, db_user: User, 
         keyboard.append(
             [
                 types.InlineKeyboardButton(
-                    text='✅ Деньги переведены', callback_data=f'admin_withdrawal_complete_{request.id}'
+                    text='✅ پول واریز شد', callback_data=f'admin_withdrawal_complete_{request.id}'
                 )
             ]
         )
 
     if user:
         keyboard.append(
-            [types.InlineKeyboardButton(text='👤 Профиль пользователя', callback_data=f'admin_user_manage_{user.id}')]
+            [types.InlineKeyboardButton(text='👤 پروفایل کاربر', callback_data=f'admin_user_manage_{user.id}')]
         )
-    keyboard.append([types.InlineKeyboardButton(text='⬅️ К списку', callback_data='admin_withdrawal_requests')])
+    keyboard.append([types.InlineKeyboardButton(text='⬅️ به لیست', callback_data='admin_withdrawal_requests')])
 
     await callback.message.edit_text(text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard))
     await callback.answer()
@@ -421,20 +421,20 @@ async def view_withdrawal_request(callback: types.CallbackQuery, db_user: User, 
 @admin_required
 @error_handler
 async def approve_withdrawal_request(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Одобряет заявку на вывод."""
+    """Approves a withdrawal request."""
     request_id = int(callback.data.split('_')[-1])
 
     result = await db.execute(select(WithdrawalRequest).where(WithdrawalRequest.id == request_id))
     request = result.scalar_one_or_none()
 
     if not request:
-        await callback.answer('Заявка не найдена', show_alert=True)
+        await callback.answer('درخواست یافت نشد', show_alert=True)
         return
 
     success, error = await referral_withdrawal_service.approve_request(db, request_id, db_user.id)
 
     if success:
-        # Уведомляем пользователя (только если есть telegram_id)
+        # Notify user (only if telegram_id exists)
         user = await get_user_by_id(db, request.user_id)
         if user and user.telegram_id:
             try:
@@ -443,18 +443,18 @@ async def approve_withdrawal_request(callback: types.CallbackQuery, db_user: Use
                     user.telegram_id,
                     texts.t(
                         'REFERRAL_WITHDRAWAL_APPROVED',
-                        '✅ <b>Заявка на вывод #{id} одобрена!</b>\n\n'
-                        'Сумма: <b>{amount}</b>\n'
-                        'Средства списаны с баланса.\n\n'
-                        'Ожидайте перевод на указанные реквизиты.',
+                        '✅ <b>درخواست برداشت #{id} تأیید شد!</b>\n\n'
+                        'مبلغ: <b>{amount}</b>\n'
+                        'وجه از موجودی کسر شد.\n\n'
+                        'منتظر واریز به اطلاعات پرداختی خود باشید.',
                     ).format(id=request.id, amount=texts.format_price(request.amount_kopeks)),
                 )
             except Exception as e:
-                logger.error('Ошибка отправки уведомления пользователю', error=e)
+                logger.error('Failed to send notification to user', error=e)
 
-        await callback.answer('✅ Заявка одобрена, средства списаны с баланса')
+        await callback.answer('✅ درخواست تأیید شد، مبلغ از موجودی کسر شد')
 
-        # Обновляем отображение
+        # Update display
         await view_withdrawal_request(callback, db_user, db)
     else:
         await callback.answer(f'❌ {error}', show_alert=True)
@@ -463,22 +463,22 @@ async def approve_withdrawal_request(callback: types.CallbackQuery, db_user: Use
 @admin_required
 @error_handler
 async def reject_withdrawal_request(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Отклоняет заявку на вывод."""
+    """Rejects a withdrawal request."""
     request_id = int(callback.data.split('_')[-1])
 
     result = await db.execute(select(WithdrawalRequest).where(WithdrawalRequest.id == request_id))
     request = result.scalar_one_or_none()
 
     if not request:
-        await callback.answer('Заявка не найдена', show_alert=True)
+        await callback.answer('درخواست یافت نشد', show_alert=True)
         return
 
     success, _error = await referral_withdrawal_service.reject_request(
-        db, request_id, db_user.id, 'Отклонено администратором'
+        db, request_id, db_user.id, 'Rejected by admin'
     )
 
     if success:
-        # Уведомляем пользователя (только если есть telegram_id)
+        # Notify user (only if telegram_id exists)
         user = await get_user_by_id(db, request.user_id)
         if user and user.telegram_id:
             try:
@@ -487,39 +487,39 @@ async def reject_withdrawal_request(callback: types.CallbackQuery, db_user: User
                     user.telegram_id,
                     texts.t(
                         'REFERRAL_WITHDRAWAL_REJECTED',
-                        '❌ <b>Заявка на вывод #{id} отклонена</b>\n\n'
-                        'Сумма: <b>{amount}</b>\n\n'
-                        'Если у вас есть вопросы, обратитесь в поддержку.',
+                        '❌ <b>درخواست برداشت #{id} رد شد</b>\n\n'
+                        'مبلغ: <b>{amount}</b>\n\n'
+                        'در صورت داشتن سوال با پشتیبانی تماس بگیرید.',
                     ).format(id=request.id, amount=texts.format_price(request.amount_kopeks)),
                 )
             except Exception as e:
-                logger.error('Ошибка отправки уведомления пользователю', error=e)
+                logger.error('Failed to send notification to user', error=e)
 
-        await callback.answer('❌ Заявка отклонена')
+        await callback.answer('❌ درخواست رد شد')
 
-        # Обновляем отображение
+        # Update display
         await view_withdrawal_request(callback, db_user, db)
     else:
-        await callback.answer('❌ Ошибка отклонения', show_alert=True)
+        await callback.answer('❌ خطا در رد درخواست', show_alert=True)
 
 
 @admin_required
 @error_handler
 async def complete_withdrawal_request(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Отмечает заявку как выполненную (деньги переведены)."""
+    """Marks a request as completed (money transferred)."""
     request_id = int(callback.data.split('_')[-1])
 
     result = await db.execute(select(WithdrawalRequest).where(WithdrawalRequest.id == request_id))
     request = result.scalar_one_or_none()
 
     if not request:
-        await callback.answer('Заявка не найдена', show_alert=True)
+        await callback.answer('درخواست یافت نشد', show_alert=True)
         return
 
-    success, _error = await referral_withdrawal_service.complete_request(db, request_id, db_user.id, 'Перевод выполнен')
+    success, _error = await referral_withdrawal_service.complete_request(db, request_id, db_user.id, 'Transfer completed')
 
     if success:
-        # Уведомляем пользователя (только если есть telegram_id)
+        # Notify user (only if telegram_id exists)
         user = await get_user_by_id(db, request.user_id)
         if user and user.telegram_id:
             try:
@@ -528,20 +528,20 @@ async def complete_withdrawal_request(callback: types.CallbackQuery, db_user: Us
                     user.telegram_id,
                     texts.t(
                         'REFERRAL_WITHDRAWAL_COMPLETED',
-                        '💸 <b>Выплата по заявке #{id} выполнена!</b>\n\n'
-                        'Сумма: <b>{amount}</b>\n\n'
-                        'Деньги отправлены на указанные реквизиты.',
+                        '💸 <b>پرداخت برداشت #{id} انجام شد!</b>\n\n'
+                        'مبلغ: <b>{amount}</b>\n\n'
+                        'پول به اطلاعات پرداختی شما ارسال شد.',
                     ).format(id=request.id, amount=texts.format_price(request.amount_kopeks)),
                 )
             except Exception as e:
-                logger.error('Ошибка отправки уведомления пользователю', error=e)
+                logger.error('Failed to send notification to user', error=e)
 
-        await callback.answer('✅ Заявка выполнена')
+        await callback.answer('✅ درخواست انجام شد')
 
-        # Обновляем отображение
+        # Update display
         await view_withdrawal_request(callback, db_user, db)
     else:
-        await callback.answer('❌ Ошибка выполнения', show_alert=True)
+        await callback.answer('❌ خطا در انجام درخواست', show_alert=True)
 
 
 @admin_required
@@ -549,28 +549,28 @@ async def complete_withdrawal_request(callback: types.CallbackQuery, db_user: Us
 async def start_test_referral_earning(
     callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext
 ):
-    """Начинает процесс тестового начисления реферального дохода."""
+    """Starts the process of test referral income accrual."""
     if not settings.REFERRAL_WITHDRAWAL_TEST_MODE:
-        await callback.answer('Тестовый режим отключён', show_alert=True)
+        await callback.answer('حالت آزمایشی غیرفعال است', show_alert=True)
         return
 
     await state.set_state(AdminStates.test_referral_earning_input)
 
     text = """
-🧪 <b>Тестовое начисление реферального дохода</b>
+🧪 <b>پرداخت آزمایشی درآمد معرفی</b>
 
-Введите данные в формате:
-<code>telegram_id сумма_в_рублях</code>
+داده‌ها را به فرمت زیر وارد کنید:
+<code>telegram_id مبلغ_به_تومان</code>
 
-Примеры:
-• <code>123456789 500</code> — начислит 500₽ пользователю 123456789
-• <code>987654321 1000</code> — начислит 1000₽ пользователю 987654321
+مثال‌ها:
+• <code>123456789 500</code> — 500₽ به کاربر 123456789 پرداخت می‌شود
+• <code>987654321 1000</code> — 1000₽ به کاربر 987654321 پرداخت می‌شود
 
-⚠️ Это создаст реальную запись ReferralEarning, как будто пользователь заработал с реферала.
+⚠️ این یک رکورد واقعی ReferralEarning ایجاد می‌کند، گویی کاربر از معرفی درآمد کسب کرده است.
 """
 
     keyboard = types.InlineKeyboardMarkup(
-        inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_withdrawal_requests')]]
+        inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_withdrawal_requests')]]
     )
 
     await callback.message.edit_text(text, reply_markup=keyboard)
@@ -580,9 +580,9 @@ async def start_test_referral_earning(
 @admin_required
 @error_handler
 async def process_test_referral_earning(message: types.Message, db_user: User, db: AsyncSession, state: FSMContext):
-    """Обрабатывает ввод тестового начисления."""
+    """Processes test accrual input."""
     if not settings.REFERRAL_WITHDRAWAL_TEST_MODE:
-        await message.answer('❌ Тестовый режим отключён')
+        await message.answer('❌ حالت آزمایشی غیرفعال است')
         await state.clear()
         return
 
@@ -591,7 +591,7 @@ async def process_test_referral_earning(message: types.Message, db_user: User, d
 
     if len(parts) != 2:
         await message.answer(
-            '❌ Неверный формат. Введите: <code>telegram_id сумма</code>\n\nНапример: <code>123456789 500</code>'
+            '❌ فرمت نادرست. وارد کنید: <code>telegram_id مبلغ</code>\n\nمثلاً: <code>123456789 500</code>'
         )
         return
 
@@ -601,35 +601,35 @@ async def process_test_referral_earning(message: types.Message, db_user: User, d
         amount_kopeks = int(amount_rubles * 100)
 
         if amount_kopeks <= 0:
-            await message.answer('❌ Сумма должна быть положительной')
+            await message.answer('❌ مبلغ باید مثبت باشد')
             return
 
-        if amount_kopeks > 10000000:  # Лимит 100 000₽
-            await message.answer('❌ Максимальная сумма тестового начисления: 100 000₽')
+        if amount_kopeks > 10000000:  # Limit 100,000₽
+            await message.answer('❌ حداکثر مبلغ پرداخت آزمایشی: 100,000₽')
             return
 
     except ValueError:
         await message.answer(
-            '❌ Неверный формат чисел. Введите: <code>telegram_id сумма</code>\n\nНапример: <code>123456789 500</code>'
+            '❌ فرمت اعداد نادرست. وارد کنید: <code>telegram_id مبلغ</code>\n\nمثلاً: <code>123456789 500</code>'
         )
         return
 
-    # Ищем целевого пользователя
+    # Find target user
     target_user = await get_user_by_telegram_id(db, target_telegram_id)
     if not target_user:
-        await message.answer(f'❌ Пользователь с ID {target_telegram_id} не найден в базе')
+        await message.answer(f'❌ کاربر با ID {target_telegram_id} در پایگاه داده یافت نشد')
         return
 
-    # Создаём тестовое начисление
+    # Create test accrual
     earning = ReferralEarning(
         user_id=target_user.id,
-        referral_id=target_user.id,  # Сам на себя (тестовое)
+        referral_id=target_user.id,  # Self-referral (test)
         amount_kopeks=amount_kopeks,
         reason='test_earning',
     )
     db.add(earning)
 
-    # Добавляем на баланс пользователя
+    # Add to user balance
     from app.database.crud.user import lock_user_for_update
 
     target_user = await lock_user_for_update(db, target_user)
@@ -639,22 +639,22 @@ async def process_test_referral_earning(message: types.Message, db_user: User, d
     await state.clear()
 
     await message.answer(
-        f'✅ <b>Тестовое начисление создано!</b>\n\n'
-        f'👤 Пользователь: {html.escape(target_user.full_name) if target_user.full_name else "Без имени"}\n'
+        f'✅ <b>پرداخت آزمایشی ایجاد شد!</b>\n\n'
+        f'👤 کاربر: {html.escape(target_user.full_name) if target_user.full_name else "بدون نام"}\n'
         f'🆔 ID: <code>{target_telegram_id}</code>\n'
-        f'💰 Сумма: <b>{amount_rubles:.0f}₽</b>\n'
-        f'💳 Новый баланс: <b>{target_user.balance_kopeks / 100:.0f}₽</b>\n\n'
-        f'Начисление добавлено как реферальный доход.',
+        f'💰 مبلغ: <b>{amount_rubles:.0f}₽</b>\n'
+        f'💳 موجودی جدید: <b>{target_user.balance_kopeks / 100:.0f}₽</b>\n\n'
+        f'پرداخت به عنوان درآمد معرفی اضافه شد.',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='📋 К заявкам', callback_data='admin_withdrawal_requests')],
-                [types.InlineKeyboardButton(text='👤 Профиль', callback_data=f'admin_user_manage_{target_user.id}')],
+                [types.InlineKeyboardButton(text='📋 به درخواست‌ها', callback_data='admin_withdrawal_requests')],
+                [types.InlineKeyboardButton(text='👤 پروفایل', callback_data=f'admin_user_manage_{target_user.id}')],
             ]
         ),
     )
 
     logger.info(
-        'Тестовое начисление: админ начислил ₽ пользователю',
+        'Test accrual: admin credited ₽ to user',
         telegram_id=db_user.telegram_id,
         amount_rubles=amount_rubles,
         target_telegram_id=target_telegram_id,
@@ -662,7 +662,7 @@ async def process_test_referral_earning(message: types.Message, db_user: User, d
 
 
 def _get_period_dates(period: str) -> tuple[datetime, datetime]:
-    """Возвращает начальную и конечную даты для заданного периода."""
+    """Returns start and end dates for the given period."""
     now = datetime.now(UTC)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -679,7 +679,7 @@ def _get_period_dates(period: str) -> tuple[datetime, datetime]:
         start_date = today - timedelta(days=30)
         end_date = today + timedelta(days=1)
     else:
-        # По умолчанию — сегодня
+        # Default — today
         start_date = today
         end_date = today + timedelta(days=1)
 
@@ -687,56 +687,56 @@ def _get_period_dates(period: str) -> tuple[datetime, datetime]:
 
 
 def _get_period_display_name(period: str) -> str:
-    """Возвращает человекочитаемое название периода."""
-    names = {'today': 'сегодня', 'yesterday': 'вчера', 'week': '7 дней', 'month': '30 дней'}
-    return names.get(period, 'сегодня')
+    """Returns a human-readable period name."""
+    names = {'today': 'امروز', 'yesterday': 'دیروز', 'week': '7 روز', 'month': '30 روز'}
+    return names.get(period, 'امروز')
 
 
 async def _show_diagnostics_for_period(callback: types.CallbackQuery, db: AsyncSession, state: FSMContext, period: str):
-    """Внутренняя функция для отображения диагностики за указанный период."""
+    """Internal function to display diagnostics for a given period."""
     try:
-        await callback.answer('Анализирую логи...')
+        await callback.answer('در حال تحلیل لاگ‌ها...')
 
         from app.services.referral_diagnostics_service import referral_diagnostics_service
 
-        # Сохраняем период в state
+        # Save period in state
         await state.update_data(diagnostics_period=period)
         from app.states import AdminStates
 
         await state.set_state(AdminStates.referral_diagnostics_period)
 
-        # Получаем даты периода
+        # Get period dates
         start_date, end_date = _get_period_dates(period)
 
-        # Анализируем логи
+        # Analyze logs
         report = await referral_diagnostics_service.analyze_period(db, start_date, end_date)
 
-        # Формируем отчёт
+        # Build report
         period_display = _get_period_display_name(period)
 
         text = f"""
-🔍 <b>Диагностика рефералов — {period_display}</b>
+🔍 <b>تشخیص معرفی‌ها — {period_display}</b>
 
-<b>📊 Статистика переходов:</b>
-• Всего кликов по реф-ссылкам: {report.total_ref_clicks}
-• Уникальных пользователей: {report.unique_users_clicked}
-• Потерянных рефералов: {len(report.lost_referrals)}
+<b>📊 آمار کلیک‌ها:</b>
+• مجموع کلیک‌های لینک معرفی: {report.total_ref_clicks}
+• کاربران یکتا: {report.unique_users_clicked}
+• معرفی‌های از‌دست‌رفته: {len(report.lost_referrals)}
 """
 
         if report.lost_referrals:
-            text += '\n<b>❌ Потерянные рефералы:</b>\n'
-            text += '<i>(пришли по ссылке, но реферер не засчитался)</i>\n\n'
+            text += '\n<b>❌ معرفی‌های از‌دست‌رفته:</b>\n'
+            text += '<i>(از لینک آمدند، اما معرف ثبت نشد)</i>\n\n'
 
             for i, lost in enumerate(report.lost_referrals[:15], 1):
-                # Статус пользователя
+                # User status
                 if not lost.registered:
-                    status = '⚠️ Не в БД'
+                    status = '⚠️ در DB نیست'
                 elif not lost.has_referrer:
-                    status = '❌ Без реферера'
+                    status = '❌ بدون معرف'
                 else:
-                    status = f'⚡ Другой реферер (ID{lost.current_referrer_id})'
+                    status = f'⚡ معرف دیگر (ID{lost.current_referrer_id})'
 
-                # Имя или ID
+                # Name or ID
                 if lost.username:
                     user_name = f'@{html.escape(lost.username)}'
                 elif lost.full_name:
@@ -744,25 +744,25 @@ async def _show_diagnostics_for_period(callback: types.CallbackQuery, db: AsyncS
                 else:
                     user_name = f'ID{lost.telegram_id}'
 
-                # Ожидаемый реферер
+                # Expected referrer
                 referrer_info = ''
                 if lost.expected_referrer_name:
                     referrer_info = f' → {html.escape(lost.expected_referrer_name)}'
                 elif lost.expected_referrer_id:
                     referrer_info = f' → ID{lost.expected_referrer_id}'
 
-                # Время
+                # Time
                 time_str = lost.click_time.strftime('%H:%M')
 
                 text += f'{i}. {user_name} — {status}\n'
                 text += f'   <code>{html.escape(lost.referral_code)}</code>{referrer_info} ({time_str})\n'
 
             if len(report.lost_referrals) > 15:
-                text += f'\n<i>... и ещё {len(report.lost_referrals) - 15}</i>\n'
+                text += f'\n<i>... و {len(report.lost_referrals) - 15} مورد دیگر</i>\n'
         else:
-            text += '\n✅ <b>Все рефералы засчитаны!</b>\n'
+            text += '\n✅ <b>همه معرفی‌ها ثبت شده‌اند!</b>\n'
 
-        # Информация о логах
+        # Log file info
         log_path = referral_diagnostics_service.log_path
         log_exists = await asyncio.to_thread(log_path.exists)
         log_size = (await asyncio.to_thread(log_path.stat)).st_size if log_exists else 0
@@ -770,35 +770,35 @@ async def _show_diagnostics_for_period(callback: types.CallbackQuery, db: AsyncS
         text += f'\n<i>📂 {log_path.name}'
         if log_exists:
             text += f' ({log_size / 1024:.0f} KB)'
-            text += f' | Строк: {report.lines_in_period}'
+            text += f' | سطرها: {report.lines_in_period}'
         else:
-            text += ' (не найден!)'
+            text += ' (یافت نشد!)'
         text += '</i>'
 
-        # Кнопки: только "Сегодня" (текущий лог) и "Загрузить файл" (старые логи)
+        # Buttons: only "Today" (current log) and "Upload file" (old logs)
         keyboard_rows = [
             [
-                types.InlineKeyboardButton(text='📅 Сегодня (текущий лог)', callback_data='admin_ref_diag:today'),
+                types.InlineKeyboardButton(text='📅 امروز (لاگ فعلی)', callback_data='admin_ref_diag:today'),
             ],
-            [types.InlineKeyboardButton(text='📤 Загрузить лог-файл', callback_data='admin_ref_diag_upload')],
-            [types.InlineKeyboardButton(text='🔍 Проверить бонусы (по БД)', callback_data='admin_ref_check_bonuses')],
+            [types.InlineKeyboardButton(text='📤 آپلود فایل لاگ', callback_data='admin_ref_diag_upload')],
+            [types.InlineKeyboardButton(text='🔍 بررسی بونوس‌ها (از DB)', callback_data='admin_ref_check_bonuses')],
             [
                 types.InlineKeyboardButton(
-                    text='🏆 Синхронизировать с конкурсом', callback_data='admin_ref_sync_contest'
+                    text='🏆 همگام‌سازی با مسابقه', callback_data='admin_ref_sync_contest'
                 )
             ],
         ]
 
-        # Кнопки действий (только если есть потерянные рефералы)
+        # Action buttons (only if there are lost referrals)
         if report.lost_referrals:
             keyboard_rows.append(
-                [types.InlineKeyboardButton(text='📋 Предпросмотр исправлений', callback_data='admin_ref_fix_preview')]
+                [types.InlineKeyboardButton(text='📋 پیش‌نمایش اصلاحات', callback_data='admin_ref_fix_preview')]
             )
 
         keyboard_rows.extend(
             [
-                [types.InlineKeyboardButton(text='🔄 Обновить', callback_data=f'admin_ref_diag:{period}')],
-                [types.InlineKeyboardButton(text='⬅️ К статистике', callback_data='admin_referrals')],
+                [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data=f'admin_ref_diag:{period}')],
+                [types.InlineKeyboardButton(text='⬅️ به آمار', callback_data='admin_referrals')],
             ]
         )
 
@@ -807,15 +807,15 @@ async def _show_diagnostics_for_period(callback: types.CallbackQuery, db: AsyncS
         await callback.message.edit_text(text, reply_markup=keyboard)
 
     except Exception as e:
-        logger.error('Ошибка в _show_diagnostics_for_period', error=e, exc_info=True)
-        await callback.answer('Ошибка при анализе логов', show_alert=True)
+        logger.error('Error in _show_diagnostics_for_period', error=e, exc_info=True)
+        await callback.answer('خطا در تحلیل لاگ‌ها', show_alert=True)
 
 
 @admin_required
 @error_handler
 async def show_referral_diagnostics(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
-    """Показывает диагностику реферальной системы по логам."""
-    # Определяем период из callback_data или используем "today" по умолчанию
+    """Shows referral system diagnostics from logs."""
+    # Determine period from callback_data or default to "today"
     if ':' in callback.data:
         period = callback.data.split(':')[1]
     else:
@@ -827,54 +827,54 @@ async def show_referral_diagnostics(callback: types.CallbackQuery, db_user: User
 @admin_required
 @error_handler
 async def preview_referral_fixes(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
-    """Показывает предпросмотр исправлений потерянных рефералов."""
+    """Shows preview of lost referral fixes."""
     try:
-        await callback.answer('Анализирую...')
+        await callback.answer('در حال تحلیل...')
 
-        # Получаем период из state
+        # Get period from state
         state_data = await state.get_data()
         period = state_data.get('diagnostics_period', 'today')
 
         from app.services.referral_diagnostics_service import DiagnosticReport, referral_diagnostics_service
 
-        # Проверяем, работаем ли с загруженным файлом
+        # Check if working with uploaded file
         if period == 'uploaded_file':
-            # Используем сохранённый отчёт из загруженного файла (десериализуем)
+            # Use saved report from uploaded file (deserialize)
             report_data = state_data.get('uploaded_file_report')
             if not report_data:
-                await callback.answer('Отчёт загруженного файла не найден', show_alert=True)
+                await callback.answer('گزارش فایل آپلودشده یافت نشد', show_alert=True)
                 return
             report = DiagnosticReport.from_dict(report_data)
-            period_display = 'загруженный файл'
+            period_display = 'فایل آپلودشده'
         else:
-            # Получаем даты периода
+            # Get period dates
             start_date, end_date = _get_period_dates(period)
 
-            # Анализируем логи
+            # Analyze logs
             report = await referral_diagnostics_service.analyze_period(db, start_date, end_date)
             period_display = _get_period_display_name(period)
 
         if not report.lost_referrals:
-            await callback.answer('Нет потерянных рефералов для исправления', show_alert=True)
+            await callback.answer('معرفی از‌دست‌رفته‌ای برای اصلاح وجود ندارد', show_alert=True)
             return
 
-        # Запускаем предпросмотр исправлений
+        # Start fix preview
         fix_report = await referral_diagnostics_service.fix_lost_referrals(db, report.lost_referrals, apply=False)
 
-        # Формируем отчёт
+        # Build report
         text = f"""
-📋 <b>Предпросмотр исправлений — {period_display}</b>
+📋 <b>پیش‌نمایش اصلاحات — {period_display}</b>
 
-<b>📊 Что будет сделано:</b>
-• Исправлено рефералов: {fix_report.users_fixed}
-• Бонусов рефералам: {settings.format_price(fix_report.bonuses_to_referrals)}
-• Бонусов рефереам: {settings.format_price(fix_report.bonuses_to_referrers)}
-• Ошибок: {fix_report.errors}
+<b>📊 چه اقداماتی انجام خواهد شد:</b>
+• معرفی‌های اصلاح‌شده: {fix_report.users_fixed}
+• بونوس معرفی‌شدگان: {settings.format_price(fix_report.bonuses_to_referrals)}
+• بونوس معرف‌ها: {settings.format_price(fix_report.bonuses_to_referrers)}
+• خطاها: {fix_report.errors}
 
-<b>🔍 Детали:</b>
+<b>🔍 جزئیات:</b>
 """
 
-        # Показываем первые 10 деталей
+        # Show first 10 details
         for i, detail in enumerate(fix_report.details[:10], 1):
             if detail.username:
                 user_name = f'@{html.escape(detail.username)}'
@@ -891,26 +891,26 @@ async def preview_referral_fixes(callback: types.CallbackQuery, db_user: User, d
                     referrer_display = (
                         html.escape(detail.referrer_name) if detail.referrer_name else f'ID{detail.referrer_id}'
                     )
-                    text += f'   • Реферер: {referrer_display}\n'
+                    text += f'   • معرف: {referrer_display}\n'
                 if detail.had_first_topup:
-                    text += f'   • Первое пополнение: {settings.format_price(detail.topup_amount_kopeks)}\n'
+                    text += f'   • اول شارژ: {settings.format_price(detail.topup_amount_kopeks)}\n'
                 if detail.bonus_to_referral_kopeks > 0:
-                    text += f'   • Бонус рефералу: {settings.format_price(detail.bonus_to_referral_kopeks)}\n'
+                    text += f'   • بونوس معرفی‌شده: {settings.format_price(detail.bonus_to_referral_kopeks)}\n'
                 if detail.bonus_to_referrer_kopeks > 0:
-                    text += f'   • Бонус рефереру: {settings.format_price(detail.bonus_to_referrer_kopeks)}\n'
+                    text += f'   • بونوس معرف: {settings.format_price(detail.bonus_to_referrer_kopeks)}\n'
 
         if len(fix_report.details) > 10:
-            text += f'\n<i>... и ещё {len(fix_report.details) - 10}</i>\n'
+            text += f'\n<i>... و {len(fix_report.details) - 10} مورد دیگر</i>\n'
 
-        text += '\n⚠️ <b>Внимание!</b> Это только предпросмотр. Нажмите "Применить", чтобы выполнить исправления.'
+        text += '\n⚠️ <b>توجه!</b> این فقط پیش‌نمایش است. برای اعمال اصلاحات «اعمال» را بفشارید.'
 
-        # Кнопка назад зависит от источника
-        back_button_text = '⬅️ К диагностике'
+        # Back button depends on source
+        back_button_text = '⬅️ به تشخیص'
         back_button_callback = f'admin_ref_diag:{period}' if period != 'uploaded_file' else 'admin_referral_diagnostics'
 
         keyboard = types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='✅ Применить исправления', callback_data='admin_ref_fix_apply')],
+                [types.InlineKeyboardButton(text='✅ اعمال اصلاحات', callback_data='admin_ref_fix_apply')],
                 [types.InlineKeyboardButton(text=back_button_text, callback_data=back_button_callback)],
             ]
         )
@@ -918,61 +918,61 @@ async def preview_referral_fixes(callback: types.CallbackQuery, db_user: User, d
         await callback.message.edit_text(text, reply_markup=keyboard)
 
     except Exception as e:
-        logger.error('Ошибка в preview_referral_fixes', error=e, exc_info=True)
-        await callback.answer('Ошибка при создании предпросмотра', show_alert=True)
+        logger.error('Error in preview_referral_fixes', error=e, exc_info=True)
+        await callback.answer('خطا در ایجاد پیش‌نمایش', show_alert=True)
 
 
 @admin_required
 @error_handler
 async def apply_referral_fixes(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
-    """Применяет исправления потерянных рефералов."""
+    """Applies lost referral fixes."""
     try:
-        await callback.answer('Применяю исправления...')
+        await callback.answer('در حال اعمال اصلاحات...')
 
-        # Получаем период из state
+        # Get period from state
         state_data = await state.get_data()
         period = state_data.get('diagnostics_period', 'today')
 
         from app.services.referral_diagnostics_service import DiagnosticReport, referral_diagnostics_service
 
-        # Проверяем, работаем ли с загруженным файлом
+        # Check if working with uploaded file
         if period == 'uploaded_file':
-            # Используем сохранённый отчёт из загруженного файла (десериализуем)
+            # Use saved report from uploaded file (deserialize)
             report_data = state_data.get('uploaded_file_report')
             if not report_data:
-                await callback.answer('Отчёт загруженного файла не найден', show_alert=True)
+                await callback.answer('گزارش فایل آپلودشده یافت نشد', show_alert=True)
                 return
             report = DiagnosticReport.from_dict(report_data)
-            period_display = 'загруженный файл'
+            period_display = 'فایل آپلودشده'
         else:
-            # Получаем даты периода
+            # Get period dates
             start_date, end_date = _get_period_dates(period)
 
-            # Анализируем логи
+            # Analyze logs
             report = await referral_diagnostics_service.analyze_period(db, start_date, end_date)
             period_display = _get_period_display_name(period)
 
         if not report.lost_referrals:
-            await callback.answer('Нет потерянных рефералов для исправления', show_alert=True)
+            await callback.answer('معرفی از‌دست‌رفته‌ای برای اصلاح وجود ندارد', show_alert=True)
             return
 
-        # Применяем исправления
+        # Apply fixes
         fix_report = await referral_diagnostics_service.fix_lost_referrals(db, report.lost_referrals, apply=True)
 
-        # Формируем отчёт
+        # Build report
         text = f"""
-✅ <b>Исправления применены — {period_display}</b>
+✅ <b>اصلاحات اعمال شد — {period_display}</b>
 
-<b>📊 Результаты:</b>
-• Исправлено рефералов: {fix_report.users_fixed}
-• Бонусов рефералам: {settings.format_price(fix_report.bonuses_to_referrals)}
-• Бонусов рефереам: {settings.format_price(fix_report.bonuses_to_referrers)}
-• Ошибок: {fix_report.errors}
+<b>📊 نتایج:</b>
+• معرفی‌های اصلاح‌شده: {fix_report.users_fixed}
+• بونوس معرفی‌شدگان: {settings.format_price(fix_report.bonuses_to_referrals)}
+• بونوس معرف‌ها: {settings.format_price(fix_report.bonuses_to_referrers)}
+• خطاها: {fix_report.errors}
 
-<b>🔍 Детали:</b>
+<b>🔍 جزئیات:</b>
 """
 
-        # Показываем первые 10 успешных деталей
+        # Show first 10 successful details
         success_count = 0
         for detail in fix_report.details:
             if not detail.error and success_count < 10:
@@ -989,18 +989,18 @@ async def apply_referral_fixes(callback: types.CallbackQuery, db_user: User, db:
                     referrer_display = (
                         html.escape(detail.referrer_name) if detail.referrer_name else f'ID{detail.referrer_id}'
                     )
-                    text += f'   • Реферер: {referrer_display}\n'
+                    text += f'   • معرف: {referrer_display}\n'
                 if detail.bonus_to_referral_kopeks > 0:
-                    text += f'   • Бонус рефералу: {settings.format_price(detail.bonus_to_referral_kopeks)}\n'
+                    text += f'   • بونوس معرفی‌شده: {settings.format_price(detail.bonus_to_referral_kopeks)}\n'
                 if detail.bonus_to_referrer_kopeks > 0:
-                    text += f'   • Бонус рефереру: {settings.format_price(detail.bonus_to_referrer_kopeks)}\n'
+                    text += f'   • بونوس معرف: {settings.format_price(detail.bonus_to_referrer_kopeks)}\n'
 
         if fix_report.users_fixed > 10:
-            text += f'\n<i>... и ещё {fix_report.users_fixed - 10} исправлений</i>\n'
+            text += f'\n<i>... و {fix_report.users_fixed - 10} اصلاح دیگر</i>\n'
 
-        # Показываем ошибки
+        # Show errors
         if fix_report.errors > 0:
-            text += '\n<b>❌ Ошибки:</b>\n'
+            text += '\n<b>❌ خطاها:</b>\n'
             error_count = 0
             for detail in fix_report.details:
                 if detail.error and error_count < 5:
@@ -1013,67 +1013,67 @@ async def apply_referral_fixes(callback: types.CallbackQuery, db_user: User, db:
                         user_name = f'ID{detail.telegram_id}'
                     text += f'• {user_name}: {html.escape(str(detail.error))}\n'
             if fix_report.errors > 5:
-                text += f'<i>... и ещё {fix_report.errors - 5} ошибок</i>\n'
+                text += f'<i>... و {fix_report.errors - 5} خطای دیگر</i>\n'
 
-        # Кнопки зависят от источника
+        # Buttons depend on source
         keyboard_rows = []
         if period != 'uploaded_file':
             keyboard_rows.append(
-                [types.InlineKeyboardButton(text='🔄 Обновить диагностику', callback_data=f'admin_ref_diag:{period}')]
+                [types.InlineKeyboardButton(text='🔄 به‌روزرسانی تشخیص', callback_data=f'admin_ref_diag:{period}')]
             )
-        keyboard_rows.append([types.InlineKeyboardButton(text='⬅️ К статистике', callback_data='admin_referrals')])
+        keyboard_rows.append([types.InlineKeyboardButton(text='⬅️ به آمار', callback_data='admin_referrals')])
 
         keyboard = types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows)
 
         await callback.message.edit_text(text, reply_markup=keyboard)
 
-        # Очищаем сохранённый отчёт из state
+        # Clear saved report from state
         if period == 'uploaded_file':
             await state.update_data(uploaded_file_report=None)
 
     except Exception as e:
-        logger.error('Ошибка в apply_referral_fixes', error=e, exc_info=True)
-        await callback.answer('Ошибка при применении исправлений', show_alert=True)
+        logger.error('Error in apply_referral_fixes', error=e, exc_info=True)
+        await callback.answer('خطا در اعمال اصلاحات', show_alert=True)
 
 
 # =============================================================================
-# Проверка бонусов по БД
+# Bonus check by DB
 # =============================================================================
 
 
 @admin_required
 @error_handler
 async def check_missing_bonuses(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
-    """Проверяет по БД — всем ли рефералам начислены бонусы."""
+    """Checks by DB whether all referrals received bonuses."""
     from app.services.referral_diagnostics_service import (
         referral_diagnostics_service,
     )
 
-    await callback.answer('🔍 Проверяю бонусы...')
+    await callback.answer('🔍 در حال بررسی بونوس‌ها...')
 
     try:
         report = await referral_diagnostics_service.check_missing_bonuses(db)
 
-        # Сохраняем отчёт в state для последующего применения
+        # Save report to state for later application
         await state.update_data(missing_bonuses_report=report.to_dict())
 
         text = f"""
-🔍 <b>Проверка бонусов по БД</b>
+🔍 <b>بررسی بونوس‌ها از DB</b>
 
-📊 <b>Статистика:</b>
-• Всего рефералов: {report.total_referrals_checked}
-• С пополнением ≥ минимума: {report.referrals_with_topup}
-• <b>Без бонусов: {len(report.missing_bonuses)}</b>
+📊 <b>آمار:</b>
+• مجموع معرفی‌شدگان: {report.total_referrals_checked}
+• با شارژ ≥ حداقل: {report.referrals_with_topup}
+• <b>بدون بونوس: {len(report.missing_bonuses)}</b>
 """
 
         if report.missing_bonuses:
             text += f"""
-💰 <b>Требуется начислить:</b>
-• Рефералам: {report.total_missing_to_referrals / 100:.0f}₽
-• Рефереерам: {report.total_missing_to_referrers / 100:.0f}₽
-• <b>Итого: {(report.total_missing_to_referrals + report.total_missing_to_referrers) / 100:.0f}₽</b>
+💰 <b>نیاز به پرداخت:</b>
+• به معرفی‌شدگان: {report.total_missing_to_referrals / 100:.0f}₽
+• به معرف‌ها: {report.total_missing_to_referrers / 100:.0f}₽
+• <b>جمع: {(report.total_missing_to_referrals + report.total_missing_to_referrers) / 100:.0f}₽</b>
 
-👤 <b>Список ({len(report.missing_bonuses)} чел.):</b>
+👤 <b>لیست ({len(report.missing_bonuses)} نفر):</b>
 """
             for i, mb in enumerate(report.missing_bonuses[:15], 1):
                 referral_name = html.escape(
@@ -1083,93 +1083,93 @@ async def check_missing_bonuses(callback: types.CallbackQuery, db_user: User, db
                     mb.referrer_full_name or mb.referrer_username or str(mb.referrer_telegram_id)
                 )
                 text += f'\n{i}. <b>{referral_name}</b>'
-                text += f'\n   └ Пригласил: {referrer_name}'
-                text += f'\n   └ Пополнение: {mb.first_topup_amount_kopeks / 100:.0f}₽'
-                text += f'\n   └ Бонусы: {mb.referral_bonus_amount / 100:.0f}₽ + {mb.referrer_bonus_amount / 100:.0f}₽'
+                text += f'\n   └ معرف: {referrer_name}'
+                text += f'\n   └ شارژ: {mb.first_topup_amount_kopeks / 100:.0f}₽'
+                text += f'\n   └ بونوس‌ها: {mb.referral_bonus_amount / 100:.0f}₽ + {mb.referrer_bonus_amount / 100:.0f}₽'
 
             if len(report.missing_bonuses) > 15:
-                text += f'\n\n<i>... и ещё {len(report.missing_bonuses) - 15} чел.</i>'
+                text += f'\n\n<i>... و {len(report.missing_bonuses) - 15} نفر دیگر</i>'
 
             keyboard = types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='✅ Начислить все бонусы', callback_data='admin_ref_bonus_apply')],
-                    [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_ref_check_bonuses')],
-                    [types.InlineKeyboardButton(text='⬅️ К диагностике', callback_data='admin_referral_diagnostics')],
+                    [types.InlineKeyboardButton(text='✅ پرداخت همه بونوس‌ها', callback_data='admin_ref_bonus_apply')],
+                    [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_ref_check_bonuses')],
+                    [types.InlineKeyboardButton(text='⬅️ به تشخیص', callback_data='admin_referral_diagnostics')],
                 ]
             )
         else:
-            text += '\n✅ <b>Все бонусы начислены!</b>'
+            text += '\n✅ <b>همه بونوس‌ها پرداخت شده‌اند!</b>'
             keyboard = types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='🔄 Обновить', callback_data='admin_ref_check_bonuses')],
-                    [types.InlineKeyboardButton(text='⬅️ К диагностике', callback_data='admin_referral_diagnostics')],
+                    [types.InlineKeyboardButton(text='🔄 به‌روزرسانی', callback_data='admin_ref_check_bonuses')],
+                    [types.InlineKeyboardButton(text='⬅️ به تشخیص', callback_data='admin_referral_diagnostics')],
                 ]
             )
 
         await callback.message.edit_text(text, reply_markup=keyboard)
 
     except Exception as e:
-        logger.error('Ошибка в check_missing_bonuses', error=e, exc_info=True)
-        await callback.answer('Ошибка при проверке бонусов', show_alert=True)
+        logger.error('Error in check_missing_bonuses', error=e, exc_info=True)
+        await callback.answer('خطا در بررسی بونوس‌ها', show_alert=True)
 
 
 @admin_required
 @error_handler
 async def apply_missing_bonuses(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
-    """Применяет начисление пропущенных бонусов."""
+    """Applies missing bonus accrual."""
     from app.services.referral_diagnostics_service import (
         MissingBonusReport,
         referral_diagnostics_service,
     )
 
-    await callback.answer('💰 Начисляю бонусы...')
+    await callback.answer('💰 در حال پرداخت بونوس‌ها...')
 
     try:
-        # Получаем сохранённый отчёт
+        # Get saved report
         data = await state.get_data()
         report_dict = data.get('missing_bonuses_report')
 
         if not report_dict:
-            await callback.answer('❌ Отчёт не найден. Обновите проверку.', show_alert=True)
+            await callback.answer('❌ گزارش یافت نشد. بررسی را به‌روز کنید.', show_alert=True)
             return
 
         report = MissingBonusReport.from_dict(report_dict)
 
         if not report.missing_bonuses:
-            await callback.answer('✅ Нет бонусов для начисления', show_alert=True)
+            await callback.answer('✅ بونوسی برای پرداخت وجود ندارد', show_alert=True)
             return
 
-        # Применяем исправления
+        # Apply fixes
         fix_report = await referral_diagnostics_service.fix_missing_bonuses(db, report.missing_bonuses, apply=True)
 
         text = f"""
-✅ <b>Бонусы начислены!</b>
+✅ <b>بونوس‌ها پرداخت شدند!</b>
 
-📊 <b>Результат:</b>
-• Обработано: {fix_report.users_fixed} пользователей
-• Начислено рефералам: {fix_report.bonuses_to_referrals / 100:.0f}₽
-• Начислено рефереерам: {fix_report.bonuses_to_referrers / 100:.0f}₽
-• <b>Итого: {(fix_report.bonuses_to_referrals + fix_report.bonuses_to_referrers) / 100:.0f}₽</b>
+📊 <b>نتیجه:</b>
+• پردازش‌شده: {fix_report.users_fixed} کاربر
+• پرداخت به معرفی‌شدگان: {fix_report.bonuses_to_referrals / 100:.0f}₽
+• پرداخت به معرف‌ها: {fix_report.bonuses_to_referrers / 100:.0f}₽
+• <b>جمع: {(fix_report.bonuses_to_referrals + fix_report.bonuses_to_referrers) / 100:.0f}₽</b>
 """
 
         if fix_report.errors > 0:
-            text += f'\n⚠️ Ошибок: {fix_report.errors}'
+            text += f'\n⚠️ خطاها: {fix_report.errors}'
 
-        # Очищаем отчёт из state
+        # Clear report from state
         await state.update_data(missing_bonuses_report=None)
 
         keyboard = types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='🔍 Проверить снова', callback_data='admin_ref_check_bonuses')],
-                [types.InlineKeyboardButton(text='⬅️ К диагностике', callback_data='admin_referral_diagnostics')],
+                [types.InlineKeyboardButton(text='🔍 بررسی مجدد', callback_data='admin_ref_check_bonuses')],
+                [types.InlineKeyboardButton(text='⬅️ به تشخیص', callback_data='admin_referral_diagnostics')],
             ]
         )
 
         await callback.message.edit_text(text, reply_markup=keyboard)
 
     except Exception as e:
-        logger.error('Ошибка в apply_missing_bonuses', error=e, exc_info=True)
-        await callback.answer('Ошибка при начислении бонусов', show_alert=True)
+        logger.error('Error in apply_missing_bonuses', error=e, exc_info=True)
+        await callback.answer('خطا در پرداخت بونوس‌ها', show_alert=True)
 
 
 @admin_required
@@ -1177,16 +1177,16 @@ async def apply_missing_bonuses(callback: types.CallbackQuery, db_user: User, db
 async def sync_referrals_with_contest(
     callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext
 ):
-    """Синхронизирует всех рефералов с активными конкурсами."""
+    """Syncs all referrals with active contests."""
     from app.database.crud.referral_contest import get_contests_for_events
     from app.services.referral_contest_service import referral_contest_service
 
-    await callback.answer('🏆 Синхронизирую с конкурсами...')
+    await callback.answer('🏆 در حال همگام‌سازی با مسابقات...')
 
     try:
         now_utc = datetime.now(UTC)
 
-        # Получаем активные конкурсы
+        # Get active contests
         paid_contests = await get_contests_for_events(db, now_utc, contest_types=['referral_paid'])
         reg_contests = await get_contests_for_events(db, now_utc, contest_types=['referral_registered'])
 
@@ -1194,17 +1194,17 @@ async def sync_referrals_with_contest(
 
         if not all_contests:
             await callback.message.edit_text(
-                '❌ <b>Нет активных конкурсов рефералов</b>\n\n'
-                'Создайте конкурс в разделе "Конкурсы" для синхронизации.',
+                '❌ <b>مسابقات معرفی فعالی وجود ندارد</b>\n\n'
+                'برای همگام‌سازی، یک مسابقه در بخش «مسابقات» ایجاد کنید.',
                 reply_markup=types.InlineKeyboardMarkup(
                     inline_keyboard=[
-                        [types.InlineKeyboardButton(text='⬅️ К диагностике', callback_data='admin_referral_diagnostics')]
+                        [types.InlineKeyboardButton(text='⬅️ به تشخیص', callback_data='admin_referral_diagnostics')]
                     ]
                 ),
             )
             return
 
-        # Синхронизируем каждый конкурс
+        # Sync each contest
         total_created = 0
         total_updated = 0
         total_skipped = 0
@@ -1216,60 +1216,60 @@ async def sync_referrals_with_contest(
                 total_created += stats.get('created', 0)
                 total_updated += stats.get('updated', 0)
                 total_skipped += stats.get('skipped', 0)
-                contest_results.append(f'• {html.escape(contest.title)}: +{stats.get("created", 0)} новых')
+                contest_results.append(f'• {html.escape(contest.title)}: +{stats.get("created", 0)} جدید')
             else:
-                contest_results.append(f'• {html.escape(contest.title)}: ошибка')
+                contest_results.append(f'• {html.escape(contest.title)}: خطا')
 
         text = f"""
-🏆 <b>Синхронизация с конкурсами завершена!</b>
+🏆 <b>همگام‌سازی با مسابقات انجام شد!</b>
 
-📊 <b>Результат:</b>
-• Конкурсов обработано: {len(all_contests)}
-• Новых событий добавлено: {total_created}
-• Обновлено: {total_updated}
-• Пропущено (уже есть): {total_skipped}
+📊 <b>نتیجه:</b>
+• مسابقات پردازش‌شده: {len(all_contests)}
+• رویدادهای جدید اضافه‌شده: {total_created}
+• به‌روزشده: {total_updated}
+• رد شده (از قبل وجود دارد): {total_skipped}
 
-📋 <b>По конкурсам:</b>
+📋 <b>به تفکیک مسابقه:</b>
 """
         text += '\n'.join(contest_results)
 
         keyboard = types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='🔄 Синхронизировать снова', callback_data='admin_ref_sync_contest')],
-                [types.InlineKeyboardButton(text='⬅️ К диагностике', callback_data='admin_referral_diagnostics')],
+                [types.InlineKeyboardButton(text='🔄 همگام‌سازی مجدد', callback_data='admin_ref_sync_contest')],
+                [types.InlineKeyboardButton(text='⬅️ به تشخیص', callback_data='admin_referral_diagnostics')],
             ]
         )
 
         await callback.message.edit_text(text, reply_markup=keyboard)
 
     except Exception as e:
-        logger.error('Ошибка в sync_referrals_with_contest', error=e, exc_info=True)
-        await callback.answer('Ошибка при синхронизации', show_alert=True)
+        logger.error('Error in sync_referrals_with_contest', error=e, exc_info=True)
+        await callback.answer('خطا در همگام‌سازی', show_alert=True)
 
 
 @admin_required
 @error_handler
 async def request_log_file_upload(callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext):
-    """Запрашивает загрузку лог-файла для анализа."""
+    """Requests log file upload for analysis."""
     await state.set_state(AdminStates.waiting_for_log_file)
 
     text = """
-📤 <b>Загрузка лог-файла для анализа</b>
+📤 <b>آپلود فایل لاگ برای تحلیل</b>
 
-Отправьте файл лога (расширение .log или .txt).
+فایل لاگ را ارسال کنید (پسوند .log یا .txt).
 
-Файл будет проанализирован на наличие потерянных рефералов за ВСЕ время, записанное в логе.
+فایل برای تمام مدت ثبت‌شده در لاگ تحلیل خواهد شد.
 
-⚠️ <b>Важно:</b>
-• Файл должен быть текстовым (.log, .txt)
-• Максимальный размер: 50 MB
-• После анализа файл будет автоматически удалён
+⚠️ <b>توجه:</b>
+• فایل باید متنی (.log, .txt) باشد
+• حداکثر اندازه: 50 MB
+• پس از تحلیل، فایل به صورت خودکار حذف می‌شود
 
-Если ротация логов удалила старые данные — загрузите резервную копию.
+اگر چرخش لاگ داده‌های قدیمی را حذف کرده، نسخه پشتیبان را آپلود کنید.
 """
 
     keyboard = types.InlineKeyboardMarkup(
-        inline_keyboard=[[types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_referral_diagnostics')]]
+        inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_referral_diagnostics')]]
     )
 
     await callback.message.edit_text(text, reply_markup=keyboard)
@@ -1279,102 +1279,102 @@ async def request_log_file_upload(callback: types.CallbackQuery, db_user: User, 
 @admin_required
 @error_handler
 async def receive_log_file(message: types.Message, db_user: User, db: AsyncSession, state: FSMContext):
-    """Получает и анализирует загруженный лог-файл."""
+    """Receives and analyzes the uploaded log file."""
     import tempfile
     from pathlib import Path
 
     if not message.document:
         await message.answer(
-            '❌ Пожалуйста, отправьте файл документом.',
+            '❌ لطفاً فایل را به عنوان سند ارسال کنید.',
             reply_markup=types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_referral_diagnostics')]
+                    [types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_referral_diagnostics')]
                 ]
             ),
         )
         return
 
-    # Проверяем расширение файла
+    # Check file extension
     file_name = message.document.file_name or 'unknown'
     file_ext = Path(file_name).suffix.lower()
 
     if file_ext not in ['.log', '.txt']:
         await message.answer(
-            f'❌ Неверный формат файла: {html.escape(file_ext)}\n\nПоддерживаются только текстовые файлы (.log, .txt)',
+            f'❌ فرمت فایل نادرست: {html.escape(file_ext)}\n\nفقط فایل‌های متنی (.log, .txt) پشتیبانی می‌شوند',
             reply_markup=types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_referral_diagnostics')]
+                    [types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_referral_diagnostics')]
                 ]
             ),
         )
         return
 
-    # Проверяем размер файла
+    # Check file size
     max_size = 50 * 1024 * 1024  # 50 MB
     if message.document.file_size > max_size:
         await message.answer(
-            f'❌ Файл слишком большой: {message.document.file_size / 1024 / 1024:.1f} MB\n\nМаксимальный размер: 50 MB',
+            f'❌ فایل خیلی بزرگ است: {message.document.file_size / 1024 / 1024:.1f} MB\n\nحداکثر اندازه: 50 MB',
             reply_markup=types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_referral_diagnostics')]
+                    [types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_referral_diagnostics')]
                 ]
             ),
         )
         return
 
-    # Информируем о начале загрузки
+    # Notify about upload start
     status_message = await message.answer(
-        f'📥 Загружаю файл {html.escape(file_name)} ({message.document.file_size / 1024 / 1024:.1f} MB)...'
+        f'📥 در حال دانلود فایل {html.escape(file_name)} ({message.document.file_size / 1024 / 1024:.1f} MB)...'
     )
 
     temp_file_path = None
 
     try:
-        # Скачиваем файл во временную директорию
+        # Download file to temp directory
         temp_dir = tempfile.gettempdir()
         temp_file_path = str(Path(temp_dir) / f'ref_diagnostics_{message.from_user.id}_{file_name}')
 
-        # Скачиваем файл
+        # Download file
         file = await message.bot.get_file(message.document.file_id)
         await message.bot.download_file(file.file_path, temp_file_path)
 
-        logger.info('📥 Файл загружен: ( байт)', temp_file_path=temp_file_path, file_size=message.document.file_size)
+        logger.info('File uploaded (bytes)', temp_file_path=temp_file_path, file_size=message.document.file_size)
 
-        # Обновляем статус
+        # Update status
         await status_message.edit_text(
-            f'🔍 Анализирую файл {html.escape(file_name)}...\n\nЭто может занять некоторое время.'
+            f'🔍 در حال تحلیل فایل {html.escape(file_name)}...\n\nممکن است کمی طول بکشد.'
         )
 
-        # Анализируем файл
+        # Analyze file
         from app.services.referral_diagnostics_service import referral_diagnostics_service
 
         report = await referral_diagnostics_service.analyze_file(db, temp_file_path)
 
-        # Формируем отчёт
+        # Build report
         text = f"""
-🔍 <b>Анализ лог-файла: {html.escape(file_name)}</b>
+🔍 <b>تحلیل فایل لاگ: {html.escape(file_name)}</b>
 
-<b>📊 Статистика переходов:</b>
-• Всего кликов по реф-ссылкам: {report.total_ref_clicks}
-• Уникальных пользователей: {report.unique_users_clicked}
-• Потерянных рефералов: {len(report.lost_referrals)}
-• Строк в файле: {report.lines_in_period}
+<b>📊 آمار کلیک‌ها:</b>
+• مجموع کلیک‌های لینک معرفی: {report.total_ref_clicks}
+• کاربران یکتا: {report.unique_users_clicked}
+• معرفی‌های از‌دست‌رفته: {len(report.lost_referrals)}
+• سطرهای فایل: {report.lines_in_period}
 """
 
         if report.lost_referrals:
-            text += '\n<b>❌ Потерянные рефералы:</b>\n'
-            text += '<i>(пришли по ссылке, но реферер не засчитался)</i>\n\n'
+            text += '\n<b>❌ معرفی‌های از‌دست‌رفته:</b>\n'
+            text += '<i>(از لینک آمدند، اما معرف ثبت نشد)</i>\n\n'
 
             for i, lost in enumerate(report.lost_referrals[:15], 1):
-                # Статус пользователя
+                # User status
                 if not lost.registered:
-                    status = '⚠️ Не в БД'
+                    status = '⚠️ در DB نیست'
                 elif not lost.has_referrer:
-                    status = '❌ Без реферера'
+                    status = '❌ بدون معرف'
                 else:
-                    status = f'⚡ Другой реферер (ID{lost.current_referrer_id})'
+                    status = f'⚡ معرف دیگر (ID{lost.current_referrer_id})'
 
-                # Имя или ID
+                # Name or ID
                 if lost.username:
                     user_name = f'@{html.escape(lost.username)}'
                 elif lost.full_name:
@@ -1382,75 +1382,75 @@ async def receive_log_file(message: types.Message, db_user: User, db: AsyncSessi
                 else:
                     user_name = f'ID{lost.telegram_id}'
 
-                # Ожидаемый реферер
+                # Expected referrer
                 referrer_info = ''
                 if lost.expected_referrer_name:
                     referrer_info = f' → {html.escape(lost.expected_referrer_name)}'
                 elif lost.expected_referrer_id:
                     referrer_info = f' → ID{lost.expected_referrer_id}'
 
-                # Время
+                # Time
                 time_str = lost.click_time.strftime('%d.%m.%Y %H:%M')
 
                 text += f'{i}. {user_name} — {status}\n'
                 text += f'   <code>{html.escape(lost.referral_code)}</code>{referrer_info} ({time_str})\n'
 
             if len(report.lost_referrals) > 15:
-                text += f'\n<i>... и ещё {len(report.lost_referrals) - 15}</i>\n'
+                text += f'\n<i>... و {len(report.lost_referrals) - 15} مورد دیگر</i>\n'
         else:
-            text += '\n✅ <b>Все рефералы засчитаны!</b>\n'
+            text += '\n✅ <b>همه معرفی‌ها ثبت شده‌اند!</b>\n'
 
-        # Сохраняем отчёт в state для дальнейшего использования (сериализуем в dict)
+        # Save report to state for later use (serialize to dict)
         await state.update_data(
             diagnostics_period='uploaded_file',
             uploaded_file_report=report.to_dict(),
         )
 
-        # Кнопки действий
+        # Action buttons
         keyboard_rows = []
 
         if report.lost_referrals:
             keyboard_rows.append(
-                [types.InlineKeyboardButton(text='📋 Предпросмотр исправлений', callback_data='admin_ref_fix_preview')]
+                [types.InlineKeyboardButton(text='📋 پیش‌نمایش اصلاحات', callback_data='admin_ref_fix_preview')]
             )
 
         keyboard_rows.extend(
             [
-                [types.InlineKeyboardButton(text='⬅️ К диагностике', callback_data='admin_referral_diagnostics')],
-                [types.InlineKeyboardButton(text='⬅️ К статистике', callback_data='admin_referrals')],
+                [types.InlineKeyboardButton(text='⬅️ به تشخیص', callback_data='admin_referral_diagnostics')],
+                [types.InlineKeyboardButton(text='⬅️ به آمار', callback_data='admin_referrals')],
             ]
         )
 
         keyboard = types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows)
 
-        # Удаляем статусное сообщение
+        # Delete status message
         await status_message.delete()
 
-        # Отправляем результат
+        # Send result
         await message.answer(text, reply_markup=keyboard)
 
-        # Очищаем состояние
+        # Clear state
         await state.set_state(AdminStates.referral_diagnostics_period)
 
     except Exception as e:
-        logger.error('❌ Ошибка при обработке файла', error=e, exc_info=True)
+        logger.error('Error processing file', error=e, exc_info=True)
 
         try:
             await status_message.edit_text(
-                f'❌ <b>Ошибка при анализе файла</b>\n\n'
-                f'Файл: {html.escape(file_name)}\n'
-                f'Ошибка: {html.escape(str(e))}\n\n'
-                f'Проверьте, что файл является текстовым логом бота.',
+                f'❌ <b>خطا در تحلیل فایل</b>\n\n'
+                f'فایل: {html.escape(file_name)}\n'
+                f'خطا: {html.escape(str(e))}\n\n'
+                f'بررسی کنید که فایل یک لاگ متنی بات باشد.',
                 reply_markup=types.InlineKeyboardMarkup(
                     inline_keyboard=[
                         [
                             types.InlineKeyboardButton(
-                                text='🔄 Попробовать снова', callback_data='admin_ref_diag_upload'
+                                text='🔄 تلاش مجدد', callback_data='admin_ref_diag_upload'
                             )
                         ],
                         [
                             types.InlineKeyboardButton(
-                                text='⬅️ К диагностике', callback_data='admin_referral_diagnostics'
+                                text='⬅️ به تشخیص', callback_data='admin_referral_diagnostics'
                             )
                         ],
                     ]
@@ -1458,22 +1458,22 @@ async def receive_log_file(message: types.Message, db_user: User, db: AsyncSessi
             )
         except:
             await message.answer(
-                f'❌ Ошибка при анализе файла: {html.escape(str(e))}',
+                f'❌ خطا در تحلیل فایل: {html.escape(str(e))}',
                 reply_markup=types.InlineKeyboardMarkup(
                     inline_keyboard=[
-                        [types.InlineKeyboardButton(text='⬅️ Назад', callback_data='admin_referral_diagnostics')]
+                        [types.InlineKeyboardButton(text='⬅️ بازگشت', callback_data='admin_referral_diagnostics')]
                     ]
                 ),
             )
 
     finally:
-        # Удаляем временный файл
+        # Delete temp file
         if temp_file_path and await asyncio.to_thread(Path(temp_file_path).exists):
             try:
                 await asyncio.to_thread(Path(temp_file_path).unlink)
-                logger.info('🗑️ Временный файл удалён', temp_file_path=temp_file_path)
+                logger.info('Temp file deleted', temp_file_path=temp_file_path)
             except Exception as e:
-                logger.error('Ошибка удаления временного файла', error=e)
+                logger.error('Error deleting temp file', error=e)
 
 
 def register_handlers(dp: Dispatcher):
@@ -1486,22 +1486,22 @@ def register_handlers(dp: Dispatcher):
     dp.callback_query.register(preview_referral_fixes, F.data == 'admin_ref_fix_preview')
     dp.callback_query.register(apply_referral_fixes, F.data == 'admin_ref_fix_apply')
 
-    # Загрузка лог-файла
+    # Log file upload
     dp.callback_query.register(request_log_file_upload, F.data == 'admin_ref_diag_upload')
     dp.message.register(receive_log_file, AdminStates.waiting_for_log_file)
 
-    # Проверка бонусов по БД
+    # Bonus check by DB
     dp.callback_query.register(check_missing_bonuses, F.data == 'admin_ref_check_bonuses')
     dp.callback_query.register(apply_missing_bonuses, F.data == 'admin_ref_bonus_apply')
     dp.callback_query.register(sync_referrals_with_contest, F.data == 'admin_ref_sync_contest')
 
-    # Хендлеры заявок на вывод
+    # Withdrawal request handlers
     dp.callback_query.register(show_pending_withdrawal_requests, F.data == 'admin_withdrawal_requests')
     dp.callback_query.register(view_withdrawal_request, F.data.startswith('admin_withdrawal_view_'))
     dp.callback_query.register(approve_withdrawal_request, F.data.startswith('admin_withdrawal_approve_'))
     dp.callback_query.register(reject_withdrawal_request, F.data.startswith('admin_withdrawal_reject_'))
     dp.callback_query.register(complete_withdrawal_request, F.data.startswith('admin_withdrawal_complete_'))
 
-    # Тестовое начисление
+    # Test accrual
     dp.callback_query.register(start_test_referral_earning, F.data == 'admin_test_referral_earning')
     dp.message.register(process_test_referral_earning, AdminStates.test_referral_earning_input)
