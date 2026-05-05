@@ -53,15 +53,15 @@ logger = structlog.get_logger(__name__)
 
 async def safe_edit_or_send_text(callback: types.CallbackQuery, text: str, reply_markup=None, parse_mode: str = 'HTML'):
     """
-    Безопасно редактирует сообщение или удаляет и отправляет новое.
-    Нужно для случаев, когда текущее сообщение - медиа (фото/видео),
-    которое нельзя отредактировать через edit_text.
+    Safely edits a message or deletes and sends a new one.
+    Needed for cases where the current message is media (photo/video)
+    that cannot be edited via edit_text.
     """
     try:
         await callback.message.edit_text(text, reply_markup=reply_markup, parse_mode=parse_mode)
     except TelegramBadRequest as e:
         if 'there is no text in the message to edit' in str(e):
-            # Сообщение - медиа без текста, удаляем и отправляем новое
+            # Message is media without text — delete and send a new one
             try:
                 await callback.message.delete()
             except Exception:
@@ -154,18 +154,18 @@ async def _persist_broadcast_result(
     blocked_count: int = 0,
 ) -> None:
     """
-    Сохраняет результаты рассылки в НОВОЙ сессии.
+    Persists broadcast results in a NEW session.
 
-    ВАЖНО: Используем свежую сессию вместо переданной, потому что за время
-    долгой рассылки (минуты/часы) оригинальное соединение гарантированно
-    закроется по таймауту PostgreSQL (idle_in_transaction_session_timeout).
+    IMPORTANT: We use a fresh session instead of the passed one, because over the
+    course of a long broadcast (minutes/hours) the original connection is guaranteed
+    to close due to PostgreSQL's idle_in_transaction_session_timeout.
 
     Args:
-        broadcast_id: ID записи BroadcastHistory (не ORM-объект!)
-        sent_count: Количество успешно отправленных сообщений
-        failed_count: Количество неудачных отправок
-        status: Финальный статус рассылки ('completed', 'partial', 'failed')
-        blocked_count: Количество пользователей, заблокировавших бота
+        broadcast_id: ID of the BroadcastHistory record (not an ORM object!)
+        sent_count: Number of successfully sent messages
+        failed_count: Number of failed sends
+        status: Final broadcast status ('completed', 'partial', 'failed')
+        blocked_count: Number of users who blocked the bot
     """
     completed_at = datetime.now(UTC)
     max_retries = 3
@@ -440,7 +440,7 @@ async def process_pinned_message_update(
         await message.answer(f'❌ {validation_error}')
         return
 
-    # Сообщение сохранено, спрашиваем о рассылке
+    # Message saved, ask about broadcast
     from app.keyboards.admin import get_pinned_broadcast_confirm_keyboard
     from app.states import AdminStates
 
@@ -466,13 +466,13 @@ async def handle_pinned_broadcast_now(
     state: FSMContext,
     db: AsyncSession,
 ):
-    """Разослать закреплённое сообщение сейчас всем пользователям."""
+    """Broadcast the pinned message now to all users."""
     texts = get_texts(db_user.language)
 
-    # Получаем ID сообщения из callback_data
+    # Get the message ID from callback_data
     pinned_message_id = int(callback.data.split(':')[1])
 
-    # Получаем сообщение из БД
+    # Get the message from the DB
     from sqlalchemy import select
 
     from app.database.models import PinnedMessage
@@ -519,7 +519,7 @@ async def handle_pinned_broadcast_skip(
     state: FSMContext,
     db: AsyncSession,
 ):
-    """Пропустить рассылку — пользователи увидят при /start."""
+    """Skip the broadcast — users will see it on /start."""
     texts = get_texts(db_user.language)
 
     await callback.message.edit_text(
@@ -548,7 +548,7 @@ async def show_broadcast_targets(callback: types.CallbackQuery, db_user: User, s
 @admin_required
 @error_handler
 async def show_tariff_filter(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Показывает список тарифов для фильтрации рассылки."""
+    """Shows the list of tariffs for broadcast filtering."""
     tariffs = await get_all_tariffs(db, include_inactive=False)
 
     if not tariffs:
@@ -562,7 +562,7 @@ async def show_tariff_filter(callback: types.CallbackQuery, db_user: User, db: A
         await callback.answer()
         return
 
-    # Получаем количество подписчиков на каждом тарифе
+    # Retrieve the number of subscribers on each tariff
     tariff_counts = {}
     for tariff in tariffs:
         count_query = select(func.count(Subscription.id)).where(
@@ -745,7 +745,7 @@ async def select_broadcast_target(callback: types.CallbackQuery, db_user: User, 
         'trial_zero': 'اشتراک آزمایشی، ترافیک ۰ گیگابایت',
     }
 
-    # Обработка фильтра по тарифу
+    # Handle tariff filter
     target_name = target_names.get(target, target)
     if target.startswith('tariff_'):
         tariff_id = int(target.split('_')[1])
@@ -823,7 +823,7 @@ async def handle_media_selection(callback: types.CallbackQuery, db_user: User, s
         inline_keyboard=[[types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_messages')]]
     )
 
-    # Проверяем, является ли текущее сообщение медиа-сообщением
+    # Check whether the current message is a media message
     is_media_message = (
         callback.message.photo
         or callback.message.video
@@ -834,7 +834,7 @@ async def handle_media_selection(callback: types.CallbackQuery, db_user: User, s
     )
 
     if is_media_message:
-        # Удаляем медиа-сообщение и отправляем новое текстовое
+        # Delete the media message and send a new text one
         try:
             await callback.message.delete()
         except Exception:
@@ -888,12 +888,12 @@ async def show_media_preview(message: types.Message, db_user: User, state: FSMCo
         f'مرحله بعد چیست؟'
     )
 
-    # Для предпросмотра рассылки используем оригинальный метод без патчинга логотипа
-    # чтобы показать именно загруженное фото
+    # For broadcast preview we use the original method without logo-patching
+    # so we show exactly the uploaded photo
     from app.utils.message_patch import _original_answer
 
     if media_type == 'photo' and media_file_id:
-        # Показываем предпросмотр с загруженным фото
+        # Show preview with the uploaded photo
         await message.bot.send_photo(
             chat_id=message.chat.id,
             photo=media_file_id,
@@ -902,7 +902,7 @@ async def show_media_preview(message: types.Message, db_user: User, state: FSMCo
             parse_mode='HTML',
         )
     else:
-        # Для других типов медиа или если нет фото, используем обычное сообщение
+        # For other media types or if there is no photo, use a regular message
         await _original_answer(
             message, preview_text, reply_markup=get_media_confirm_keyboard(db_user.language), parse_mode='HTML'
         )
@@ -971,8 +971,8 @@ async def show_button_selector_callback(callback: types.CallbackQuery, db_user: 
 
     keyboard = get_updated_message_buttons_selector_keyboard_with_media(selected_buttons, has_media, db_user.language)
 
-    # Проверяем, является ли текущее сообщение медиа-сообщением
-    # (фото, видео, документ и т.д.) - для них нельзя использовать edit_text
+    # Check whether the current message is a media message
+    # (photo, video, document, etc.) — edit_text cannot be used for those
     is_media_message = (
         callback.message.photo
         or callback.message.video
@@ -983,11 +983,11 @@ async def show_button_selector_callback(callback: types.CallbackQuery, db_user: 
     )
 
     if is_media_message:
-        # Удаляем медиа-сообщение и отправляем новое текстовое
+        # Delete the media message and send a new text one
         try:
             await callback.message.delete()
         except Exception:
-            pass  # Игнорируем ошибки удаления
+            pass  # Ignore deletion errors
         await callback.message.answer(text, reply_markup=keyboard, parse_mode='HTML')
     else:
         await callback.message.edit_text(text, reply_markup=keyboard, parse_mode='HTML')
@@ -1111,16 +1111,16 @@ async def confirm_button_selection(callback: types.CallbackQuery, db_user: User,
 
     keyboard.append([types.InlineKeyboardButton(text='❌ لغو', callback_data='admin_messages')])
 
-    # Если есть медиа, показываем его с загруженным фото, иначе обычное текстовое сообщение
+    # If there is media, show it with the uploaded photo; otherwise show a plain text message
     if has_media and media_type == 'photo':
         media_file_id = data.get('media_file_id')
         if media_file_id:
-            # Удаляем текущее сообщение и отправляем новое с фото
+            # Delete the current message and send a new one with the photo
             try:
                 await callback.message.delete()
             except Exception:
                 pass
-            # Telegram ограничивает caption до 1024 символов
+            # Telegram limits caption to 1024 characters
             if len(preview_text) <= 1024:
                 await callback.bot.send_photo(
                     chat_id=callback.message.chat.id,
@@ -1130,7 +1130,7 @@ async def confirm_button_selection(callback: types.CallbackQuery, db_user: User,
                     parse_mode='HTML',
                 )
             else:
-                # Фото без caption + текст отдельным сообщением
+                # Photo without caption + text as a separate message
                 await callback.bot.send_photo(
                     chat_id=callback.message.chat.id,
                     photo=media_file_id,
@@ -1142,7 +1142,7 @@ async def confirm_button_selection(callback: types.CallbackQuery, db_user: User,
                     parse_mode='HTML',
                 )
         else:
-            # Если нет file_id, используем safe редактирование
+            # If there is no file_id, use safe editing
             await safe_edit_or_send_text(
                 callback,
                 preview_text,
@@ -1150,7 +1150,7 @@ async def confirm_button_selection(callback: types.CallbackQuery, db_user: User,
                 parse_mode='HTML',
             )
     else:
-        # Для текстовых сообщений или других типов медиа используем safe редактирование
+        # For text messages or other media types use safe editing
         await safe_edit_or_send_text(
             callback, preview_text, reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode='HTML'
         )
@@ -1173,14 +1173,14 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
     media_caption = data.get('media_caption')
 
     # =========================================================================
-    # КРИТИЧНО: Извлекаем ВСЕ скалярные значения из ORM-объектов СЕЙЧАС,
-    # пока сессия активна. После начала рассылки соединение с БД может
-    # закрыться по таймауту, и любое обращение к атрибутам ORM вызовет:
-    # - MissingGreenlet (lazy loading вне async контекста)
-    # - InterfaceError (соединение закрыто)
+    # CRITICAL: Extract ALL scalar values from ORM objects NOW,
+    # while the session is still active. After the broadcast starts, the DB
+    # connection may close due to a timeout, and any access to ORM attributes will cause:
+    # - MissingGreenlet (lazy loading outside async context)
+    # - InterfaceError (connection closed)
     # =========================================================================
     admin_id: int = db_user.id
-    admin_name: str = db_user.full_name  # property, читает first_name/last_name
+    admin_name: str = db_user.full_name  # property, reads first_name/last_name
     admin_telegram_id: int | None = db_user.telegram_id
     admin_language: str = db_user.language
 
@@ -1191,19 +1191,19 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
         parse_mode='HTML',
     )
 
-    # Загружаем пользователей и сразу извлекаем telegram_id в список
-    # чтобы не обращаться к ORM-объектам во время долгой рассылки
+    # Load users and immediately extract telegram_id into a list
+    # so we don't access ORM objects during the long broadcast
     if target.startswith('custom_'):
         users_orm = await get_custom_users(db, target.replace('custom_', ''))
     else:
         users_orm = await get_target_users(db, target)
 
-    # Извлекаем только telegram_id - это всё что нужно для отправки
-    # Фильтруем None (email-only пользователи)
+    # Extract only telegram_id — that's all we need for sending
+    # Filter out None (email-only users)
     recipient_telegram_ids: list[int] = [user.telegram_id for user in users_orm if user.telegram_id is not None]
     total_users_count = len(users_orm)
 
-    # Создаём запись истории рассылки
+    # Create a broadcast history record
     broadcast_history = BroadcastHistory(
         target_type=target,
         message_text=message_text,
@@ -1222,12 +1222,12 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
     await db.commit()
     await db.refresh(broadcast_history)
 
-    # Сохраняем ID - это единственное что нам нужно после коммита
+    # Save the ID — it's the only thing we need after the commit
     broadcast_id: int = broadcast_history.id
 
     # =========================================================================
-    # С этого момента НЕ используем db сессию и ORM-объекты!
-    # Работаем только со скалярными значениями.
+    # From this point on we do NOT use the db session or ORM objects!
+    # We work only with scalar values.
     # =========================================================================
 
     sent_count = 0
@@ -1236,28 +1236,28 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
     broadcast_keyboard = create_broadcast_keyboard(selected_buttons, admin_language)
 
     # =========================================================================
-    # Rate limiting: Telegram допускает ~30 msg/sec для бота.
-    # Используем batch_size=25 + 1 сек задержка между батчами = ~25 msg/sec
-    # с запасом, чтобы не получать FloodWait.
-    # Semaphore=25 — все сообщения батча отправляются параллельно.
+    # Rate limiting: Telegram allows ~30 msg/sec for a bot.
+    # We use batch_size=25 + 1 sec delay between batches = ~25 msg/sec
+    # with headroom to avoid FloodWait.
+    # Semaphore=25 — all messages in the batch are sent in parallel.
     # =========================================================================
     _BATCH_SIZE = 25
-    _BATCH_DELAY = 1.0  # секунда между батчами
+    _BATCH_DELAY = 1.0  # seconds between batches
     _MAX_SEND_RETRIES = 3
-    # Обновляем прогресс каждые N батчей (не каждое сообщение — иначе FloodWait на edit_text)
-    _PROGRESS_UPDATE_INTERVAL = max(1, 500 // _BATCH_SIZE)  # ~каждые 500 сообщений
-    # Минимальный интервал между обновлениями прогресса (секунды)
+    # Update progress every N batches (not every message — otherwise FloodWait on edit_text)
+    _PROGRESS_UPDATE_INTERVAL = max(1, 500 // _BATCH_SIZE)  # ~every 500 messages
+    # Minimum interval between progress updates (seconds)
     _PROGRESS_MIN_INTERVAL = 5.0
 
-    # Глобальная пауза при FloodWait — тормозим ВСЕ отправки, а не один слот семафора
+    # Global pause on FloodWait — stalls ALL sends, not just one semaphore slot
     flood_wait_until: float = 0.0
 
     async def send_single_broadcast(telegram_id: int) -> str:
-        """Отправляет одно сообщение. Возвращает 'sent', 'blocked' или 'failed'."""
+        """Sends a single message. Returns 'sent', 'blocked', or 'failed'."""
         nonlocal flood_wait_until
 
         for attempt in range(_MAX_SEND_RETRIES):
-            # Глобальная пауза при FloodWait
+            # Global pause on FloodWait
             now = asyncio.get_event_loop().time()
             if flood_wait_until > now:
                 await asyncio.sleep(flood_wait_until - now)
@@ -1275,7 +1275,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                             'video': 'video',
                             'document': 'document',
                         }[media_type]
-                        # Telegram ограничивает caption до 1024 символов
+                        # Telegram limits caption to 1024 characters
                         if len(message_text) <= 1024:
                             await send_method(
                                 chat_id=telegram_id,
@@ -1285,7 +1285,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                                 reply_markup=broadcast_keyboard,
                             )
                         else:
-                            # Медиа без caption + текст отдельным сообщением
+                            # Media without caption + text as a separate message
                             await send_method(
                                 chat_id=telegram_id,
                                 **{media_kwarg: media_file_id},
@@ -1297,7 +1297,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                                 reply_markup=broadcast_keyboard,
                             )
                     else:
-                        # Неизвестный media_type — отправляем как текст
+                        # Unknown media_type — send as text
                         await callback.bot.send_message(
                             chat_id=telegram_id,
                             text=message_text,
@@ -1314,7 +1314,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                 return 'sent'
 
             except TelegramRetryAfter as e:
-                # Глобальная пауза — тормозим все корутины
+                # Global pause — stall all coroutines
                 wait_seconds = e.retry_after + 1
                 flood_wait_until = asyncio.get_event_loop().time() + wait_seconds
                 logger.warning(
@@ -1350,11 +1350,11 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
         return 'failed'
 
     # =========================================================================
-    # Прогресс-бар в реальном времени (как в сканере заблокированных)
+    # Real-time progress bar (like in the blocked-users scanner)
     # =========================================================================
     total_recipients = len(recipient_telegram_ids)
     last_progress_update: float = 0.0
-    # ID сообщения, которое обновляем (может быть заменено при ошибке)
+    # ID of the message being updated (may be replaced on error)
     progress_message = callback.message
 
     def _build_progress_text(
@@ -1385,7 +1385,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
         return ''
 
     async def _update_progress_message(current_sent: int, current_failed: int, current_blocked: int = 0) -> None:
-        """Безопасно обновляет сообщение с прогрессом."""
+        """Safely updates the progress message."""
         nonlocal last_progress_update, progress_message
         now = asyncio.get_event_loop().time()
         if now - last_progress_update < _PROGRESS_MIN_INTERVAL:
@@ -1396,10 +1396,10 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
         try:
             await progress_message.edit_text(text, parse_mode='HTML')
         except TelegramRetryAfter as e:
-            # Не паникуем — пропускаем обновление прогресса
+            # Don't panic — skip the progress update
             logger.debug('FloodWait while updating progress, skipping: sec', retry_after=e.retry_after)
         except TelegramBadRequest:
-            # Сообщение удалено или контент не изменился — отправляем новое
+            # Message deleted or content unchanged — send a new one
             try:
                 progress_message = await callback.bot.send_message(
                     chat_id=callback.message.chat.id,
@@ -1409,21 +1409,21 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
             except Exception:
                 pass
         except Exception:
-            pass  # Не ломаем рассылку из-за ошибок обновления прогресса
+            pass  # Don't break the broadcast due to progress update errors
 
-    # Первое обновление прогресса
+    # First progress update
     await _update_progress_message(0, 0)
 
     blocked_count = 0
     blocked_telegram_ids: list[int] = []
 
     # =========================================================================
-    # Основной цикл рассылки — батчами по _BATCH_SIZE
+    # Main broadcast loop — batches of _BATCH_SIZE
     # =========================================================================
     for batch_idx, i in enumerate(range(0, total_recipients, _BATCH_SIZE)):
         batch = recipient_telegram_ids[i : i + _BATCH_SIZE]
 
-        # Отправляем батч параллельно
+        # Send the batch in parallel
         results = await asyncio.gather(
             *[send_single_broadcast(tid) for tid in batch],
             return_exceptions=True,
@@ -1442,21 +1442,21 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
                 failed_count += 1
                 logger.error('Unhandled exception in broadcast', result=result)
 
-        # Обновляем прогресс каждые _PROGRESS_UPDATE_INTERVAL батчей
+        # Update progress every _PROGRESS_UPDATE_INTERVAL batches
         if batch_idx % _PROGRESS_UPDATE_INTERVAL == 0:
             await _update_progress_message(sent_count, failed_count, blocked_count)
 
-        # Задержка между батчами для соблюдения rate limits
+        # Delay between batches to respect rate limits
         await asyncio.sleep(_BATCH_DELAY)
 
-    # Учитываем пропущенных email-only пользователей
+    # Account for skipped email-only users
     skipped_email_users = total_users_count - total_recipients
     if skipped_email_users > 0:
         logger.info('Skipped email-only users during broadcast', skipped_email_users=skipped_email_users)
 
     status = 'completed' if failed_count == 0 and blocked_count == 0 else 'partial'
 
-    # Сохраняем результат в НОВОЙ сессии (старая уже мертва)
+    # Save the result in a NEW session (the old one is already dead)
     await _persist_broadcast_result(
         broadcast_id=broadcast_id,
         sent_count=sent_count,
@@ -1514,7 +1514,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, db_user: User, state:
 
 
 async def get_target_users_count(db: AsyncSession, target: str) -> int:
-    """Быстрый подсчёт пользователей через SQL COUNT вместо загрузки всех в память."""
+    """Fast user count via SQL COUNT instead of loading all users into memory."""
     from sqlalchemy import distinct, func as sql_func
 
     base_filter = User.status == UserStatus.ACTIVE.value
@@ -1525,7 +1525,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target == 'active':
-        # Активные платные подписки (не триал)
+        # Active paid subscriptions (not trial)
         query = (
             select(sql_func.count(distinct(User.id)))
             .join(Subscription, User.id == Subscription.user_id)
@@ -1539,7 +1539,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target == 'trial':
-        # Триальные подписки (без проверки is_active, как в оригинале)
+        # Trial subscriptions (without is_active check, as in the original)
         query = (
             select(sql_func.count(distinct(User.id)))
             .join(Subscription, User.id == Subscription.user_id)
@@ -1552,7 +1552,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target == 'no':
-        # Без активной подписки - используем NOT EXISTS для корректности
+        # No active subscription — use NOT EXISTS for correctness
         subquery = (
             select(Subscription.id)
             .where(
@@ -1567,7 +1567,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target == 'expiring':
-        # Истекающие в ближайшие 3 дня
+        # Expiring in the next 3 days
         now = datetime.now(UTC)
         expiry_threshold = now + timedelta(days=3)
         query = (
@@ -1584,7 +1584,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target == 'expiring_subscribers':
-        # Истекающие в ближайшие 7 дней
+        # Expiring in the next 7 days
         now = datetime.now(UTC)
         expiry_threshold = now + timedelta(days=7)
         query = (
@@ -1601,7 +1601,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target in ('expired', 'expired_subscribers'):
-        # Истекшие подписки — исключаем юзеров с хотя бы одной активной
+        # Expired subscriptions — exclude users with at least one active subscription
         now = datetime.now(UTC)
         expired_statuses = [
             SubscriptionStatus.EXPIRED.value,
@@ -1634,7 +1634,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target == 'active_zero':
-        # Активные платные с нулевым трафиком
+        # Active paid subscriptions with zero traffic
         query = (
             select(sql_func.count(distinct(User.id)))
             .join(Subscription, User.id == Subscription.user_id)
@@ -1649,7 +1649,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target == 'trial_zero':
-        # Триальные с нулевым трафиком
+        # Trial subscriptions with zero traffic
         query = (
             select(sql_func.count(distinct(User.id)))
             .join(Subscription, User.id == Subscription.user_id)
@@ -1664,7 +1664,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         return result.scalar() or 0
 
     if target == 'zero':
-        # Все активные с нулевым трафиком
+        # All active subscriptions with zero traffic
         query = (
             select(sql_func.count(distinct(User.id)))
             .join(Subscription, User.id == Subscription.user_id)
@@ -1677,7 +1677,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         result = await db.execute(query)
         return result.scalar() or 0
 
-    # Фильтр по тарифу
+    # Tariff filter
     if target.startswith('tariff_'):
         tariff_id = int(target.split('_')[1])
         query = (
@@ -1692,7 +1692,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
         result = await db.execute(query)
         return result.scalar() or 0
 
-    # Custom filters — быстрый COUNT вместо загрузки всех пользователей
+    # Custom filters — fast COUNT instead of loading all users
     if target.startswith('custom_'):
         now = datetime.now(UTC)
         today = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -1724,7 +1724,7 @@ async def get_target_users_count(db: AsyncSession, target: str) -> int:
 
 
 async def get_target_users(db: AsyncSession, target: str) -> list:
-    # Загружаем всех активных пользователей батчами, чтобы не ограничиваться 10к
+    # Load all active users in batches to avoid the 10k limit
     users: list[User] = []
     offset = 0
     batch_size = 5000
@@ -1880,7 +1880,7 @@ async def get_target_users(db: AsyncSession, target: str) -> list:
         return [user for user in users if user.id in failed_user_ids]
 
     if target == 'low_balance':
-        threshold_kopeks = 10000  # 100 рублей
+        threshold_kopeks = 10000  # 100 rubles
         return [
             user for user in users if (user.balance_kopeks or 0) < threshold_kopeks and (user.balance_kopeks or 0) > 0
         ]
@@ -1897,7 +1897,7 @@ async def get_target_users(db: AsyncSession, target: str) -> list:
         threshold = datetime.now(UTC) - timedelta(days=90)
         return [user for user in users if user.last_activity and user.last_activity < threshold]
 
-    # Фильтр по тарифу
+    # Tariff filter
     if target.startswith('tariff_'):
         tariff_id = int(target.split('_')[1])
         return [
@@ -2018,7 +2018,7 @@ def get_target_name(target_type: str) -> str:
         'custom_referrals': 'از طریق ارجاع',
         'custom_direct': 'ثبت‌نام مستقیم',
     }
-    # Обработка фильтра по тарифу
+    # Handle tariff filter
     if target_type.startswith('tariff_'):
         tariff_id = target_type.split('_')[1]
         return f'تعرفه #{tariff_id}'

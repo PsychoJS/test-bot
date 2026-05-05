@@ -1433,7 +1433,7 @@ async def show_node_statistics(callback: types.CallbackQuery, db_user: User, db:
         await callback.answer()
 
     except Exception as e:
-        logger.error('Ошибка получения статистики ноды', node_uuid=node_uuid, error=e)
+        logger.error('Error getting node statistics', node_uuid=node_uuid, error=e)
 
         text = f"""
 📊 <b>آمار نود: {html.escape(node['name'])}</b>
@@ -2401,7 +2401,7 @@ async def save_auto_sync_schedule(
     text = (message.text or '').strip()
     data = await state.get_data()
 
-    if text.lower() in {'отмена', 'cancel'}:
+    if text.lower() in {'لغو', 'cancel'}:
         await state.clear()
         status = remnawave_sync_service.get_status()
         view_text, keyboard = _build_auto_sync_view(status)
@@ -2467,7 +2467,7 @@ async def save_auto_sync_schedule(
 @admin_required
 @error_handler
 async def sync_all_users(callback: types.CallbackQuery, db_user: User, db: AsyncSession):
-    """Выполняет полную синхронизацию всех пользователей"""
+    """Performs a full synchronization of all users."""
 
     progress_text = """
 🔄 <b>همگام‌سازی کامل در حال انجام...</b>

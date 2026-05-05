@@ -248,7 +248,7 @@ def _format_auto_assign_value(value_kopeks: int | None) -> str:
 def _parse_auto_assign_threshold_input(value: str) -> int:
     cleaned = (value or '').strip()
 
-    if not cleaned or cleaned in {'0', '-', 'off', 'нет'}:
+    if not cleaned or cleaned in {'0', '-', 'off', 'نه'}:
         return 0
 
     normalized = cleaned.replace(' ', '').replace(',', '.')

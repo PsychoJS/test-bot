@@ -1127,7 +1127,7 @@ async def _handle_edit_field(
             hours = max(1, int(value))
             await update_promo_offer_template(db, template, test_duration_hours=hours)
         elif field == 'test_squad_uuids':
-            if value.lower() in {'clear', 'очистить'}:
+            if value.lower() in {'clear', 'پاک کردن'}:
                 squads: list[str] = []
             else:
                 squads = [item for item in re.split(r'[\s,]+', value) if item]
@@ -1978,11 +1978,11 @@ async def _send_offer_to_users(
     sent = 0
     failed = 0
 
-    # Ограничение на количество одновременных отправок
+    # Limit on the number of concurrent sends
     semaphore = asyncio.Semaphore(20)
 
     async def send_single_offer(user):
-        """Отправляет одно предложение с семафором ограничения"""
+        """Sends a single offer with the concurrency semaphore."""
         # Skip email-only users (no telegram_id)
         if not user.telegram_id:
             logger.debug('Skipping email-only user during promo broadcast', user_id=user.id)
@@ -1990,7 +1990,7 @@ async def _send_offer_to_users(
 
         async with semaphore:
             try:
-                # Используем отдельную сессию для изоляции транзакции
+                # Use a separate session to isolate the transaction
                 async with AsyncSessionLocal() as new_db:
                     if settings.is_multi_tariff_enabled():
                         _user_subs = getattr(user, 'subscriptions', None) or []
@@ -2069,7 +2069,7 @@ async def _send_offer_to_users(
                 )
                 return False
 
-    # Отправляем предложения пакетами для эффективности
+    # Send offers in batches for efficiency
     batch_size = 100
     for i in range(0, len(users), batch_size):
         batch = users[i : i + batch_size]
@@ -2077,15 +2077,15 @@ async def _send_offer_to_users(
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for result in results:
-            if isinstance(result, bool):  # Успешно или неуспешно
+            if isinstance(result, bool):  # Success or failure
                 if result:
                     sent += 1
                 else:
                     failed += 1
-            elif isinstance(result, Exception):  # Ошибка выполнения задачи
+            elif isinstance(result, Exception):  # Task execution error
                 failed += 1
 
-        # Небольшая задержка между пакетами для снижения нагрузки на API
+        # Small delay between batches to reduce API load
         await asyncio.sleep(0.1)
 
     return sent, failed

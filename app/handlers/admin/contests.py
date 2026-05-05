@@ -45,7 +45,7 @@ def _ensure_timezone(tz_name: str) -> ZoneInfo:
     try:
         return ZoneInfo(tz_name)
     except Exception:
-        logger.warning('Не удалось загрузить TZ , используем UTC', tz_name=tz_name)
+        logger.warning('Failed to load TZ, falling back to UTC', tz_name=tz_name)
         return ZoneInfo('UTC')
 
 
@@ -56,9 +56,9 @@ def _format_contest_summary(contest, texts, tz: ZoneInfo) -> str:
     end_local = end_local.astimezone(tz)
 
     status = (
-        texts.t('ADMIN_CONTEST_STATUS_ACTIVE', '🟢 Активен')
+        texts.t('ADMIN_CONTEST_STATUS_ACTIVE', '🟢 فعال')
         if contest.is_active
-        else texts.t('ADMIN_CONTEST_STATUS_INACTIVE', '⚪️ Выключен')
+        else texts.t('ADMIN_CONTEST_STATUS_INACTIVE', '⚪️ غیرفعال')
     )
 
     period = f'{start_local.strftime("%d.%m %H:%M")} — {end_local.strftime("%d.%m %H:%M")} ({tz.key})'
@@ -67,14 +67,14 @@ def _format_contest_summary(contest, texts, tz: ZoneInfo) -> str:
     summary_times = contest.daily_summary_times or summary_time
     parts = [
         f'{status}',
-        f'Период: <b>{period}</b>',
-        f'Дневная сводка: <b>{summary_times}</b>',
+        f'دوره: <b>{period}</b>',
+        f'خلاصه روزانه: <b>{summary_times}</b>',
     ]
     if contest.prize_text:
-        parts.append(texts.t('ADMIN_CONTEST_PRIZE', 'Приз: {prize}').format(prize=html.escape(contest.prize_text)))
+        parts.append(texts.t('ADMIN_CONTEST_PRIZE', 'جایزه: {prize}').format(prize=html.escape(contest.prize_text)))
     if contest.last_daily_summary_date:
         parts.append(
-            texts.t('ADMIN_CONTEST_LAST_DAILY', 'Последняя сводка: {date}').format(
+            texts.t('ADMIN_CONTEST_LAST_DAILY', 'آخرین خلاصه: {date}').format(
                 date=contest.last_daily_summary_date.strftime('%d.%m')
             )
         )
@@ -121,7 +121,7 @@ async def show_contests_menu(
         await callback.message.edit_text(
             texts.t(
                 'ADMIN_CONTESTS_DISABLED',
-                'Конкурсы отключены через переменную окружения CONTESTS_ENABLED.',
+                'مسابقات از طریق متغیر محیطی CONTESTS_ENABLED غیرفعال شده‌اند.',
             ),
             reply_markup=get_admin_contests_root_keyboard(db_user.language),
         )
@@ -129,7 +129,7 @@ async def show_contests_menu(
         return
 
     await callback.message.edit_text(
-        texts.t('ADMIN_CONTESTS_TITLE', '🏆 <b>Конкурсы</b>\n\nВыберите действие:'),
+        texts.t('ADMIN_CONTESTS_TITLE', '🏆 <b>مسابقات</b>\n\nیک عملیات را انتخاب کنید:'),
         reply_markup=get_admin_contests_root_keyboard(db_user.language),
     )
     await callback.answer()
@@ -145,7 +145,7 @@ async def show_referral_contests_menu(
     texts = get_texts(db_user.language)
 
     await callback.message.edit_text(
-        texts.t('ADMIN_CONTESTS_TITLE', '🏆 <b>Конкурсы</b>\n\nВыберите действие:'),
+        texts.t('ADMIN_CONTESTS_TITLE', '🏆 <b>مسابقات</b>\n\nیک عملیات را انتخاب کنید:'),
         reply_markup=get_admin_contests_keyboard(db_user.language),
     )
     await callback.answer()
@@ -162,7 +162,7 @@ async def list_contests(
         await callback.answer(
             get_texts(db_user.language).t(
                 'ADMIN_CONTESTS_DISABLED',
-                'Конкурсы отключены через переменную окружения CONTESTS_ENABLED.',
+                'مسابقات از طریق متغیر محیطی CONTESTS_ENABLED غیرفعال شده‌اند.',
             ),
             show_alert=True,
         )
@@ -183,10 +183,10 @@ async def list_contests(
     contests = await list_referral_contests(db, limit=PAGE_SIZE, offset=offset)
     texts = get_texts(db_user.language)
 
-    lines = [texts.t('ADMIN_CONTESTS_LIST_HEADER', '🏆 <b>Конкурсы</b>\n')]
+    lines = [texts.t('ADMIN_CONTESTS_LIST_HEADER', '🏆 <b>مسابقات</b>\n')]
 
     if not contests:
-        lines.append(texts.t('ADMIN_CONTESTS_EMPTY', 'Пока нет созданных конкурсов.'))
+        lines.append(texts.t('ADMIN_CONTESTS_EMPTY', 'هیچ مسابقه‌ای ایجاد نشده است.'))
     else:
         for contest in contests:
             lines.append(f'• <b>{html.escape(contest.title)}</b> (#{contest.id})')
@@ -231,7 +231,7 @@ async def show_contest_details(
 ):
     if not settings.is_contests_enabled():
         await callback.answer(
-            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'Конкурсы отключены.'),
+            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'مسابقات غیرفعال شده‌اند.'),
             show_alert=True,
         )
         return
@@ -241,7 +241,7 @@ async def show_contest_details(
     texts = get_texts(db_user.language)
 
     if not contest:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه یافت نشد.'), show_alert=True)
         return
 
     tz = _ensure_timezone(contest.timezone or settings.TIMEZONE)
@@ -253,7 +253,7 @@ async def show_contest_details(
     lines = [
         f'🏆 <b>{html.escape(contest.title)}</b>',
         _format_contest_summary(contest, texts, tz),
-        texts.t('ADMIN_CONTEST_TOTAL_EVENTS', 'Зачётов: <b>{count}</b>').format(count=total_events),
+        texts.t('ADMIN_CONTEST_TOTAL_EVENTS', 'امتیازات: <b>{count}</b>').format(count=total_events),
     ]
 
     if contest.description:
@@ -262,7 +262,7 @@ async def show_contest_details(
 
     if leaderboard:
         lines.append('')
-        lines.append(texts.t('ADMIN_CONTEST_LEADERBOARD_TITLE', '📊 Топ участников:'))
+        lines.append(texts.t('ADMIN_CONTEST_LEADERBOARD_TITLE', '📊 برترین شرکت‌کنندگان:'))
         for idx, (name, score, _, is_virtual) in enumerate(leaderboard, start=1):
             virt_mark = ' 👻' if is_virtual else ''
             lines.append(f'{idx}. {html.escape(name)}{virt_mark} — {score}')
@@ -292,7 +292,7 @@ async def toggle_contest(
 ):
     if not settings.is_contests_enabled():
         await callback.answer(
-            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'Конкурсы отключены.'),
+            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'مسابقات غیرفعال شده‌اند.'),
             show_alert=True,
         )
         return
@@ -301,7 +301,7 @@ async def toggle_contest(
     contest = await get_referral_contest(db, contest_id)
 
     if not contest:
-        await callback.answer('Конкурс не найден', show_alert=True)
+        await callback.answer('مسابقه یافت نشد', show_alert=True)
         return
 
     await toggle_referral_contest(db, contest, not contest.is_active)
@@ -320,7 +320,7 @@ async def prompt_edit_summary_times(
     contest_id = int(callback.data.split('_')[-1])
     contest = await get_referral_contest(db, contest_id)
     if not contest:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه یافت نشد.'), show_alert=True)
         return
     await state.set_state(AdminStates.editing_referral_contest_summary_times)
     await state.update_data(contest_id=contest_id)
@@ -337,7 +337,7 @@ async def prompt_edit_summary_times(
     await callback.message.edit_text(
         texts.t(
             'ADMIN_CONTEST_ENTER_DAILY_TIME',
-            'Во сколько отправлять ежедневные итоги? Формат ЧЧ:ММ или несколько через запятую (12:00,18:00).',
+            'چه زمانی خلاصه‌های روزانه ارسال شود؟ فرمت HH:MM یا چند مورد با کاما (12:00,18:00).',
         ),
         reply_markup=kb,
     )
@@ -364,14 +364,14 @@ async def process_edit_summary_times(
     summary_time = times[0] if times else _parse_time(message.text or '')
     if not summary_time:
         await message.answer(
-            texts.t('ADMIN_CONTEST_INVALID_TIME', 'Не удалось распознать время. Формат: 12:00 или 12:00,18:00')
+            texts.t('ADMIN_CONTEST_INVALID_TIME', 'زمان قابل تشخیص نیست. فرمت: 12:00 یا 12:00,18:00')
         )
         await state.clear()
         return
 
     contest = await get_referral_contest(db, int(contest_id))
     if not contest:
-        await message.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'))
+        await message.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه یافت نشد.'))
         await state.clear()
         return
 
@@ -382,7 +382,7 @@ async def process_edit_summary_times(
         daily_summary_times=','.join(t.strftime('%H:%M') for t in times) if times else None,
     )
 
-    await message.answer(texts.t('ADMIN_UPDATED', 'Обновлено'))
+    await message.answer(texts.t('ADMIN_UPDATED', 'به‌روز شد'))
     await state.clear()
 
 
@@ -397,19 +397,19 @@ async def delete_contest(
     contest_id = int(callback.data.split('_')[-1])
     contest = await get_referral_contest(db, contest_id)
     if not contest:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه یافت نشد.'), show_alert=True)
         return
 
     now_utc = datetime.now(UTC)
     if contest.is_active or contest.end_at > now_utc:
         await callback.answer(
-            texts.t('ADMIN_CONTEST_DELETE_RESTRICT', 'Удалять можно только завершённые конкурсы.'),
+            texts.t('ADMIN_CONTEST_DELETE_RESTRICT', 'فقط مسابقات پایان‌یافته قابل حذف هستند.'),
             show_alert=True,
         )
         return
 
     await delete_referral_contest(db, contest)
-    await callback.answer(texts.t('ADMIN_CONTEST_DELETED', 'Конкурс удалён.'), show_alert=True)
+    await callback.answer(texts.t('ADMIN_CONTEST_DELETED', 'مسابقه حذف شد.'), show_alert=True)
     await list_contests(callback, db_user, db)
 
 
@@ -422,7 +422,7 @@ async def show_leaderboard(
 ):
     if not settings.is_contests_enabled():
         await callback.answer(
-            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'Конкурсы отключены.'),
+            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'مسابقات غیرفعال شده‌اند.'),
             show_alert=True,
         )
         return
@@ -432,16 +432,16 @@ async def show_leaderboard(
     texts = get_texts(db_user.language)
 
     if not contest:
-        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'Конкурс не найден.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_NOT_FOUND', 'مسابقه یافت نشد.'), show_alert=True)
         return
 
     leaderboard = await get_contest_leaderboard_with_virtual(db, contest_id, limit=10)
     if not leaderboard:
-        await callback.answer(texts.t('ADMIN_CONTEST_EMPTY_LEADERBOARD', 'Пока нет участников.'), show_alert=True)
+        await callback.answer(texts.t('ADMIN_CONTEST_EMPTY_LEADERBOARD', 'هیچ شرکت‌کننده‌ای وجود ندارد.'), show_alert=True)
         return
 
     lines = [
-        texts.t('ADMIN_CONTEST_LEADERBOARD_TITLE', '📊 Топ участников:'),
+        texts.t('ADMIN_CONTEST_LEADERBOARD_TITLE', '📊 برترین شرکت‌کنندگان:'),
     ]
     for idx, (name, score, _, is_virtual) in enumerate(leaderboard, start=1):
         virt_mark = ' 👻' if is_virtual else ''
@@ -467,7 +467,7 @@ async def start_contest_creation(
     texts = get_texts(db_user.language)
     if not settings.is_contests_enabled():
         await callback.answer(
-            texts.t('ADMIN_CONTESTS_DISABLED', 'Конкурсы отключены.'),
+            texts.t('ADMIN_CONTESTS_DISABLED', 'مسابقات غیرفعال است.'),
             show_alert=True,
         )
         return
@@ -477,7 +477,7 @@ async def start_contest_creation(
     await callback.message.edit_text(
         texts.t(
             'ADMIN_CONTEST_MODE_PROMPT',
-            'Выберите условие зачёта: реферал должен купить подписку или достаточно регистрации.',
+            'شرط امتیاز را انتخاب کنید: رفرال باید اشتراک خریداری کند یا فقط ثبت‌نام کافی است.',
         ),
         reply_markup=get_contest_mode_keyboard(db_user.language),
     )
@@ -497,7 +497,7 @@ async def select_contest_mode(
     await state.update_data(contest_type=mode)
     await state.set_state(AdminStates.creating_referral_contest_title)
     await callback.message.edit_text(
-        texts.t('ADMIN_CONTEST_ENTER_TITLE', 'Введите название конкурса:'),
+        texts.t('ADMIN_CONTEST_ENTER_TITLE', 'نام مسابقه را وارد کنید:'),
         reply_markup=None,
     )
     await callback.answer()
@@ -512,7 +512,7 @@ async def process_title(message: types.Message, state: FSMContext, db_user, db: 
     await state.update_data(title=title)
     await state.set_state(AdminStates.creating_referral_contest_description)
     await message.answer(
-        texts.t('ADMIN_CONTEST_ENTER_DESCRIPTION', "Опишите конкурс (или отправьте '-' чтобы пропустить):")
+        texts.t('ADMIN_CONTEST_ENTER_DESCRIPTION', "مسابقه را توصیف کنید (یا '-' برای رد کردن ارسال کنید):")
     )
 
 
@@ -520,14 +520,14 @@ async def process_title(message: types.Message, state: FSMContext, db_user, db: 
 @error_handler
 async def process_description(message: types.Message, state: FSMContext, db_user, db: AsyncSession):
     description = message.text.strip()
-    if description in {'-', 'skip', 'пропустить'}:
+    if description in {'-', 'skip', 'رد'}:
         description = None
 
     await state.update_data(description=description)
     await state.set_state(AdminStates.creating_referral_contest_prize)
     texts = get_texts(db_user.language)
     await message.answer(
-        texts.t('ADMIN_CONTEST_ENTER_PRIZE', "Укажите призы/выгоды конкурса (или '-' чтобы пропустить):")
+        texts.t('ADMIN_CONTEST_ENTER_PRIZE', "جوایز/مزایای مسابقه را مشخص کنید (یا '-' برای رد کردن):")
     )
 
 
@@ -535,7 +535,7 @@ async def process_description(message: types.Message, state: FSMContext, db_user
 @error_handler
 async def process_prize(message: types.Message, state: FSMContext, db_user, db: AsyncSession):
     prize = message.text.strip()
-    if prize in {'-', 'skip', 'пропустить'}:
+    if prize in {'-', 'skip', 'رد'}:
         prize = None
 
     await state.update_data(prize=prize)
@@ -544,7 +544,7 @@ async def process_prize(message: types.Message, state: FSMContext, db_user, db: 
     await message.answer(
         texts.t(
             'ADMIN_CONTEST_ENTER_START',
-            'Введите дату и время старта (дд.мм.гггг чч:мм) по вашему часовому поясу:',
+            'تاریخ و زمان شروع را وارد کنید (DD.MM.YYYY HH:MM) بر اساس منطقه زمانی شما:',
         )
     )
 
@@ -558,7 +558,7 @@ async def process_start_date(message: types.Message, state: FSMContext, db_user,
 
     if not start_dt:
         await message.answer(
-            texts.t('ADMIN_CONTEST_INVALID_DATE', 'Не удалось распознать дату. Формат: 01.06.2024 12:00')
+            texts.t('ADMIN_CONTEST_INVALID_DATE', 'تاریخ قابل تشخیص نیست. فرمت: 01.06.2024 12:00')
         )
         return
 
@@ -567,7 +567,7 @@ async def process_start_date(message: types.Message, state: FSMContext, db_user,
     await message.answer(
         texts.t(
             'ADMIN_CONTEST_ENTER_END',
-            'Введите дату и время окончания (дд.мм.гггг чч:мм) по вашему часовому поясу:',
+            'تاریخ و زمان پایان را وارد کنید (DD.MM.YYYY HH:MM) بر اساس منطقه زمانی شما:',
         )
     )
 
@@ -581,7 +581,7 @@ async def process_end_date(message: types.Message, state: FSMContext, db_user, d
 
     if not end_dt:
         await message.answer(
-            texts.t('ADMIN_CONTEST_INVALID_DATE', 'Не удалось распознать дату. Формат: 01.06.2024 12:00')
+            texts.t('ADMIN_CONTEST_INVALID_DATE', 'تاریخ قابل تشخیص نیست. فرمت: 01.06.2024 12:00')
         )
         return
 
@@ -592,7 +592,7 @@ async def process_end_date(message: types.Message, state: FSMContext, db_user, d
         await message.answer(
             texts.t(
                 'ADMIN_CONTEST_END_BEFORE_START',
-                'Дата окончания должна быть позже даты начала.',
+                'تاریخ پایان باید بعد از تاریخ شروع باشد.',
             )
         )
         return
@@ -602,7 +602,7 @@ async def process_end_date(message: types.Message, state: FSMContext, db_user, d
     await message.answer(
         texts.t(
             'ADMIN_CONTEST_ENTER_DAILY_TIME',
-            'Во сколько отправлять ежедневные итоги? Укажите время в формате ЧЧ:ММ (например, 12:00).',
+            'چه زمانی خلاصه‌های روزانه ارسال شود؟ زمان را به فرمت HH:MM وارد کنید (مثلاً 12:00).',
         )
     )
 
@@ -616,7 +616,7 @@ async def finalize_contest_creation(message: types.Message, state: FSMContext, d
 
     if not summary_time:
         await message.answer(
-            texts.t('ADMIN_CONTEST_INVALID_TIME', 'Не удалось распознать время. Формат: 12:00 или 12:00,18:00')
+            texts.t('ADMIN_CONTEST_INVALID_TIME', 'زمان قابل تشخیص نیست. فرمت: 12:00 یا 12:00,18:00')
         )
         return
 
@@ -626,7 +626,7 @@ async def finalize_contest_creation(message: types.Message, state: FSMContext, d
     start_at_raw = data.get('start_at')
     end_at_raw = data.get('end_at')
     if not start_at_raw or not end_at_raw:
-        await message.answer(texts.t('ADMIN_CONTEST_INVALID_DATE', 'Не удалось распознать дату.'))
+        await message.answer(texts.t('ADMIN_CONTEST_INVALID_DATE', 'تاریخ قابل تشخیص نیست.'))
         return
 
     start_at = datetime.fromisoformat(start_at_raw).astimezone(UTC)
@@ -651,7 +651,7 @@ async def finalize_contest_creation(message: types.Message, state: FSMContext, d
     await state.clear()
 
     await message.answer(
-        texts.t('ADMIN_CONTEST_CREATED', 'Конкурс создан!'),
+        texts.t('ADMIN_CONTEST_CREATED', 'مسابقه ایجاد شد!'),
         reply_markup=get_referral_contest_manage_keyboard(
             contest.id,
             is_active=contest.is_active,
@@ -669,7 +669,7 @@ async def show_detailed_stats(
 ):
     if not settings.is_contests_enabled():
         await callback.answer(
-            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'Конкурсы отключены.'),
+            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'مسابقات غیرفعال شده‌اند.'),
             show_alert=True,
         )
         return
@@ -678,7 +678,7 @@ async def show_detailed_stats(
     contest = await get_referral_contest(db, contest_id)
 
     if not contest:
-        await callback.answer('Конкурс не найден.', show_alert=True)
+        await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
     from app.services.referral_contest_service import referral_contest_service
@@ -688,25 +688,25 @@ async def show_detailed_stats(
     virtual_count = len(virtual)
     virtual_referrals = sum(vp.referral_count for vp in virtual)
 
-    # Общее сообщение с основной статистикой
+    # General message with main statistics
     general_lines = [
-        '📈 <b>Статистика конкурса</b>',
+        '📈 <b>آمار مسابقه</b>',
         f'🏆 {html.escape(contest.title)}',
         '',
-        f'👥 Участников (рефереров): <b>{stats["total_participants"]}</b>',
-        f'📨 Приглашено рефералов: <b>{stats["total_invited"]}</b>',
+        f'👥 شرکت‌کنندگان (معرف‌ها): <b>{stats["total_participants"]}</b>',
+        f'📨 رفرال‌های دعوت‌شده: <b>{stats["total_invited"]}</b>',
         '',
-        f'💳 Рефералов оплатили: <b>{stats.get("paid_count", 0)}</b>',
-        f'❌ Рефералов не оплатили: <b>{stats.get("unpaid_count", 0)}</b>',
+        f'💳 رفرال‌های پرداخت‌کننده: <b>{stats.get("paid_count", 0)}</b>',
+        f'❌ رفرال‌های بدون پرداخت: <b>{stats.get("unpaid_count", 0)}</b>',
         '',
-        '<b>💰 СУММЫ:</b>',
-        f'   🛒 Покупки подписок: <b>{stats.get("subscription_total", 0) // 100} руб.</b>',
-        f'   📥 Пополнения баланса: <b>{stats.get("deposit_total", 0) // 100} руб.</b>',
+        '<b>💰 مبالغ:</b>',
+        f'   🛒 خریدهای اشتراک: <b>{stats.get("subscription_total", 0) // 100} ر.</b>',
+        f'   📥 شارژ موجودی: <b>{stats.get("deposit_total", 0) // 100} ر.</b>',
     ]
 
     if virtual_count > 0:
         general_lines.append('')
-        general_lines.append(f'👻 Виртуальных: <b>{virtual_count}</b> (рефералов: {virtual_referrals})')
+        general_lines.append(f'👻 مجازی‌ها: <b>{virtual_count}</b> (رفرال‌ها: {virtual_referrals})')
 
     await callback.message.edit_text(
         '\n'.join(general_lines),
@@ -729,12 +729,12 @@ async def show_detailed_stats_page(
     stats: dict = None,
 ):
     if contest_id is None or stats is None:
-        # Парсим из callback.data: admin_contest_detailed_stats_page_{contest_id}_page_{page}
+        # Parse from callback.data: admin_contest_detailed_stats_page_{contest_id}_page_{page}
         parts = callback.data.split('_')
         contest_id = int(parts[5])  # contest_id после page
         page = int(parts[7])  # page после второго page
 
-        # Получаем stats если не переданы
+        # Get stats if not provided
         from app.services.referral_contest_service import referral_contest_service
 
         stats = await referral_contest_service.get_detailed_contest_stats(db, contest_id)
@@ -748,16 +748,16 @@ async def show_detailed_stats_page(
     offset = (page - 1) * PAGE_SIZE
     page_participants = participants[offset : offset + PAGE_SIZE]
 
-    lines = [f'📊 По участникам (страница {page}/{total_pages}):']
+    lines = [f'📊 بر اساس شرکت‌کنندگان (صفحه {page}/{total_pages}):']
     for p in page_participants:
         lines.extend(
             [
                 f'• <b>{html.escape(p["full_name"] or "")}</b>',
-                f'  📨 Приглашено: {p["total_referrals"]}',
-                f'  💰 Оплатили: {p["paid_referrals"]}',
-                f'  ❌ Не оплатили: {p["unpaid_referrals"]}',
-                f'  💵 Сумма: {p["total_paid_amount"] // 100} руб.',
-                '',  # Пустая строка для разделения
+                f'  📨 دعوت‌شده: {p["total_referrals"]}',
+                f'  💰 پرداخت‌کرده: {p["paid_referrals"]}',
+                f'  ❌ بدون پرداخت: {p["unpaid_referrals"]}',
+                f'  💵 مبلغ: {p["total_paid_amount"] // 100} ر.',
+                '',  # Empty line for separation
             ]
         )
 
@@ -784,10 +784,10 @@ async def sync_contest(
     db_user,
     db: AsyncSession,
 ):
-    """Синхронизировать события конкурса с реальными платежами."""
+    """Synchronize contest events with real payments."""
     if not settings.is_contests_enabled():
         await callback.answer(
-            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'Конкурсы отключены.'),
+            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'مسابقات غیرفعال شده‌اند.'),
             show_alert=True,
         )
         return
@@ -796,69 +796,69 @@ async def sync_contest(
     contest = await get_referral_contest(db, contest_id)
 
     if not contest:
-        await callback.answer('Конкурс не найден.', show_alert=True)
+        await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
     await callback.answer('🔄 Синхронизация запущена...', show_alert=False)
 
     from app.services.referral_contest_service import referral_contest_service
 
-    # ШАГ 1: Очистка невалидных событий (рефералы зарегистрированные вне периода конкурса)
+    # STEP 1: Clean up invalid events (referrals registered outside the contest period)
     cleanup_stats = await referral_contest_service.cleanup_contest(db, contest_id)
 
     if 'error' in cleanup_stats:
         await callback.message.answer(
-            f'❌ Ошибка очистки:\n{cleanup_stats["error"]}',
+            f'❌ Cleanup error:\n{cleanup_stats["error"]}',
         )
         return
 
-    # ШАГ 2: Синхронизация сумм для оставшихся валидных событий
+    # STEP 2: Synchronize amounts for remaining valid events
     stats = await referral_contest_service.sync_contest(db, contest_id)
 
     if 'error' in stats:
         await callback.message.answer(
-            f'❌ Ошибка синхронизации:\n{stats["error"]}',
+            f'❌ Sync error:\n{stats["error"]}',
         )
         return
 
-    # Формируем сообщение о результатах
-    # Показываем точные даты которые использовались для фильтрации
+    # Build result message
+    # Show exact dates used for filtering
     start_str = stats.get('contest_start', contest.start_at.isoformat())
     end_str = stats.get('contest_end', contest.end_at.isoformat())
 
     lines = [
-        '✅ <b>Синхронизация завершена!</b>',
+        '✅ <b>همگام‌سازی کامل شد!</b>',
         '',
-        f'📊 <b>Конкурс:</b> {html.escape(contest.title)}',
-        f'📅 <b>Период:</b> {contest.start_at.strftime("%d.%m.%Y")} - {contest.end_at.strftime("%d.%m.%Y")}',
-        '🔍 <b>Фильтр транзакций:</b>',
+        f'📊 <b>مسابقه:</b> {html.escape(contest.title)}',
+        f'📅 <b>دوره:</b> {contest.start_at.strftime("%d.%m.%Y")} - {contest.end_at.strftime("%d.%m.%Y")}',
+        '🔍 <b>فیلتر تراکنش‌ها:</b>',
         f'   <code>{start_str}</code>',
         f'   <code>{end_str}</code>',
         '',
-        '🧹 <b>ОЧИСТКА:</b>',
-        f'   🗑 Удалено невалидных событий: <b>{cleanup_stats.get("deleted", 0)}</b>',
-        f'   ✅ Осталось валидных событий: <b>{cleanup_stats.get("remaining", 0)}</b>',
-        f'   📊 Было событий до очистки: <b>{cleanup_stats.get("total_before", 0)}</b>',
+        '�� <b>پاکسازی:</b>',
+        f'   🗑 رویدادهای نامعتبر حذف‌شده: <b>{cleanup_stats.get("deleted", 0)}</b>',
+        f'   ✅ رویدادهای معتبر باقی‌مانده: <b>{cleanup_stats.get("remaining", 0)}</b>',
+        f'   📊 رویدادهای قبل از پاکسازی: <b>{cleanup_stats.get("total_before", 0)}</b>',
         '',
-        '📊 <b>СИНХРОНИЗАЦИЯ:</b>',
-        f'   📝 Рефералов в периоде: <b>{stats.get("total_events", 0)}</b>',
-        f'   ⚠️ Отфильтровано (вне периода): <b>{stats.get("filtered_out_events", 0)}</b>',
-        f'   🔄 Обновлено сумм: <b>{stats.get("updated", 0)}</b>',
-        f'   ⏭ Без изменений: <b>{stats.get("skipped", 0)}</b>',
+        '📊 <b>همگام‌سازی:</b>',
+        f'   📝 رفرال‌ها در دوره: <b>{stats.get("total_events", 0)}</b>',
+        f'   ⚠️ فیلترشده (خارج از دوره): <b>{stats.get("filtered_out_events", 0)}</b>',
+        f'   🔄 مبالغ به‌روزشده: <b>{stats.get("updated", 0)}</b>',
+        f'   ⏭ بدون تغییر: <b>{stats.get("skipped", 0)}</b>',
         '',
-        f'💳 Рефералов оплатили: <b>{stats.get("paid_count", 0)}</b>',
-        f'❌ Рефералов не оплатили: <b>{stats.get("unpaid_count", 0)}</b>',
+        f'💳 رفرال‌های پرداخت‌کننده: <b>{stats.get("paid_count", 0)}</b>',
+        f'❌ رفرال‌های بدون پرداخت: <b>{stats.get("unpaid_count", 0)}</b>',
         '',
-        '<b>💰 СУММЫ:</b>',
-        f'   🛒 Покупки подписок: <b>{stats.get("subscription_total", 0) // 100} руб.</b>',
-        f'   📥 Пополнения баланса: <b>{stats.get("deposit_total", 0) // 100} руб.</b>',
+        '<b>💰 مبالغ:</b>',
+        f'   🛒 خریدهای اشتراک: <b>{stats.get("subscription_total", 0) // 100} ر.</b>',
+        f'   📥 شارژ موجودی: <b>{stats.get("deposit_total", 0) // 100} ر.</b>',
     ]
 
     from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
     back_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='⬅️ Назад к конкурсу', callback_data=f'admin_contest_view_{contest_id}')]
+            [InlineKeyboardButton(text='⬅️ بازگشت به مسابقه', callback_data=f'admin_contest_view_{contest_id}')]
         ]
     )
 
@@ -868,18 +868,18 @@ async def sync_contest(
         reply_markup=back_keyboard,
     )
 
-    # Обновляем основное сообщение с новой статистикой
+    # Update the main message with new statistics
     detailed_stats = await referral_contest_service.get_detailed_contest_stats(db, contest_id)
     general_lines = [
         f'🏆 <b>{html.escape(contest.title)}</b>',
-        f'📅 Период: {contest.start_at.strftime("%d.%m.%Y")} - {contest.end_at.strftime("%d.%m.%Y")}',
+        f'📅 دوره: {contest.start_at.strftime("%d.%m.%Y")} - {contest.end_at.strftime("%d.%m.%Y")}',
         '',
-        f'👥 Участников (рефереров): <b>{detailed_stats["total_participants"]}</b>',
-        f'📨 Приглашено рефералов: <b>{detailed_stats["total_invited"]}</b>',
+        f'👥 شرکت‌کنندگان (معرف‌ها): <b>{detailed_stats["total_participants"]}</b>',
+        f'📨 رفرال‌های دعوت‌شده: <b>{detailed_stats["total_invited"]}</b>',
         '',
-        f'💳 Рефералов оплатили: <b>{detailed_stats.get("paid_count", 0)}</b>',
-        f'❌ Рефералов не оплатили: <b>{detailed_stats.get("unpaid_count", 0)}</b>',
-        f'🛒 Покупки подписок: <b>{detailed_stats["total_paid_amount"] // 100} руб.</b>',
+        f'💳 رفرال‌های پرداخت‌کننده: <b>{detailed_stats.get("paid_count", 0)}</b>',
+        f'❌ رفرال‌های بدون پرداخت: <b>{detailed_stats.get("unpaid_count", 0)}</b>',
+        f'🛒 خریدهای اشتراک: <b>{detailed_stats["total_paid_amount"] // 100} ر.</b>',
     ]
 
     await callback.message.edit_text(
@@ -897,10 +897,10 @@ async def debug_contest_transactions(
     db_user,
     db: AsyncSession,
 ):
-    """Показать транзакции рефералов конкурса для отладки."""
+    """Show referral transactions of the contest for debugging."""
     if not settings.is_contests_enabled():
         await callback.answer(
-            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'Конкурсы отключены.'),
+            get_texts(db_user.language).t('ADMIN_CONTESTS_DISABLED', 'مسابقات غیرفعال شده‌اند.'),
             show_alert=True,
         )
         return
@@ -909,7 +909,7 @@ async def debug_contest_transactions(
     contest = await get_referral_contest(db, contest_id)
 
     if not contest:
-        await callback.answer('Конкурс не найден.', show_alert=True)
+        await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
     await callback.answer('🔍 Загружаю данные...', show_alert=False)
@@ -926,55 +926,55 @@ async def debug_contest_transactions(
     subscription_total = debug_data.get('subscription_total_kopeks', 0) // 100
 
     lines = [
-        '🔍 <b>Отладка транзакций конкурса</b>',
+        '🔍 <b>اشکال‌زدایی تراکنش‌های مسابقه</b>',
         '',
-        f'📊 <b>Конкурс:</b> {html.escape(contest.title)}',
-        '📅 <b>Период фильтрации:</b>',
-        f'   Начало: <code>{debug_data.get("contest_start")}</code>',
-        f'   Конец: <code>{debug_data.get("contest_end")}</code>',
-        f'👥 <b>Рефералов в периоде:</b> {debug_data.get("referral_count", 0)}',
-        f'⚠️ <b>Отфильтровано (вне периода):</b> {debug_data.get("filtered_out", 0)}',
-        f'📊 <b>Всего событий в БД:</b> {debug_data.get("total_all_events", 0)}',
+        f'📊 <b>مسابقه:</b> {html.escape(contest.title)}',
+        '📅 <b>دوره فیلتر:</b>',
+        f'   شروع: <code>{debug_data.get("contest_start")}</code>',
+        f'   پایان: <code>{debug_data.get("contest_end")}</code>',
+        f'👥 <b>رفرال‌ها در دوره:</b> {debug_data.get("referral_count", 0)}',
+        f'⚠️ <b>فیلترشده (خارج از دوره):</b> {debug_data.get("filtered_out", 0)}',
+        f'📊 <b>کل رویدادها در پایگاه داده:</b> {debug_data.get("total_all_events", 0)}',
         '',
-        '<b>💰 СУММЫ:</b>',
-        f'   📥 Пополнения баланса: <b>{deposit_total}</b> руб.',
-        f'   🛒 Покупки подписок: <b>{subscription_total}</b> руб.',
+        '<b>💰 مبالغ:</b>',
+        f'   📥 شارژ موجودی: <b>{deposit_total}</b> ر.',
+        f'   🛒 خریدهای اشتراک: <b>{subscription_total}</b> ر.',
         '',
     ]
 
-    # Показываем транзакции В периоде
+    # Show transactions IN period
     txs_in = debug_data.get('transactions_in_period', [])
     if txs_in:
-        lines.append(f'✅ <b>Транзакции в периоде</b> (первые {len(txs_in)}):')
+        lines.append(f'✅ <b>تراکنش‌ها در دوره</b> (اولین {len(txs_in)}):')
         for tx in txs_in[:5]:  # Показываем максимум 5
             lines.append(
                 f'  • {tx["created_at"][:10]} | {tx["type"]} | {tx["amount_kopeks"] // 100}₽ | user={tx["user_id"]}'
             )
         if len(txs_in) > 5:
-            lines.append(f'  ... и ещё {len(txs_in) - 5}')
+            lines.append(f'  ... و {len(txs_in) - 5} مورد دیگر')
     else:
-        lines.append('✅ <b>Транзакций в периоде:</b> 0')
+        lines.append('✅ <b>تراکنش‌ها در دوره:</b> 0')
 
     lines.append('')
 
-    # Показываем транзакции ВНЕ периода
+    # Show transactions OUTSIDE period
     txs_out = debug_data.get('transactions_outside_period', [])
     if txs_out:
-        lines.append(f'❌ <b>Транзакции вне периода</b> (первые {len(txs_out)}):')
+        lines.append(f'❌ <b>تراکنش‌ها خارج از دوره</b> (اولین {len(txs_out)}):')
         for tx in txs_out[:5]:
             lines.append(
                 f'  • {tx["created_at"][:10]} | {tx["type"]} | {tx["amount_kopeks"] // 100}₽ | user={tx["user_id"]}'
             )
         if len(txs_out) > 5:
-            lines.append(f'  ... и ещё {len(txs_out) - 5}')
+            lines.append(f'  ... و {len(txs_out) - 5} مورد دیگر')
     else:
-        lines.append('❌ <b>Транзакций вне периода:</b> 0')
+        lines.append('❌ <b>تراکنش‌ها خارج از دوره:</b> 0')
 
     from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
     back_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='⬅️ Назад к конкурсу', callback_data=f'admin_contest_view_{contest_id}')]
+            [InlineKeyboardButton(text='⬅️ بازگشت به مسابقه', callback_data=f'admin_contest_view_{contest_id}')]
         ]
     )
 
@@ -985,7 +985,7 @@ async def debug_contest_transactions(
     )
 
 
-# ── Виртуальные участники ──────────────────────────────────────────────
+# ── Virtual Participants ──────────────────────────────────────────────
 
 
 @admin_required
@@ -998,17 +998,17 @@ async def show_virtual_participants(
     contest_id = int(callback.data.split('_')[-1])
     contest = await get_referral_contest(db, contest_id)
     if not contest:
-        await callback.answer('Конкурс не найден.', show_alert=True)
+        await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
     vps = await list_virtual_participants(db, contest_id)
 
-    lines = [f'👻 <b>Виртуальные участники</b> — {html.escape(contest.title)}', '']
+    lines = [f'👻 <b>شرکت‌کنندگان مجازی</b> — {html.escape(contest.title)}', '']
     if vps:
         for vp in vps:
-            lines.append(f'• {html.escape(vp.display_name)} — {vp.referral_count} реф.')
+            lines.append(f'• {html.escape(vp.display_name)} — {vp.referral_count} رف.')
     else:
-        lines.append('Пока нет виртуальных участников.')
+        lines.append('هیچ شرکت‌کننده مجازی وجود ندارد.')
 
     rows = [
         [
@@ -1064,7 +1064,7 @@ async def start_add_virtual_participant(
     await state.set_state(AdminStates.adding_virtual_participant_name)
     await state.update_data(vp_contest_id=contest_id)
     await callback.message.edit_text(
-        '👻 Введите отображаемое имя виртуального участника:',
+        '👻 نام نمایشی شرکت‌کننده مجازی را وارد کنید:',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [types.InlineKeyboardButton(text='❌ Отмена', callback_data=f'admin_contest_vp_{contest_id}')],
@@ -1084,11 +1084,11 @@ async def process_virtual_participant_name(
 ):
     name = message.text.strip()
     if not name or len(name) > 200:
-        await message.answer('Имя должно быть от 1 до 200 символов. Попробуйте ещё раз:')
+        await message.answer('نام باید بین 1 تا 200 کاراکتر باشد. دوباره امتحان کنید:')
         return
     await state.update_data(vp_name=name)
     await state.set_state(AdminStates.adding_virtual_participant_count)
-    await message.answer(f'Имя: <b>{name}</b>\n\nВведите количество рефералов (число):')
+    await message.answer(f'نام: <b>{name}</b>\n\nتعداد رفرال‌ها را وارد کنید (عدد):')
 
 
 @admin_required
@@ -1104,7 +1104,7 @@ async def process_virtual_participant_count(
         if count < 1:
             raise ValueError
     except (ValueError, TypeError):
-        await message.answer('Введите положительное целое число:')
+        await message.answer('یک عدد صحیح مثبت وارد کنید:')
         return
 
     data = await state.get_data()
@@ -1114,7 +1114,7 @@ async def process_virtual_participant_count(
 
     vp = await add_virtual_participant(db, contest_id, display_name, count)
     await message.answer(
-        f'✅ Виртуальный участник добавлен:\nИмя: <b>{vp.display_name}</b>\nРефералов: <b>{vp.referral_count}</b>',
+        f'✅ شرکت‌کننده مجازی اضافه شد:\nنام: <b>{vp.display_name}</b>\nرفرال‌ها: <b>{vp.referral_count}</b>',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [types.InlineKeyboardButton(text='👻 К списку', callback_data=f'admin_contest_vp_{contest_id}')],
@@ -1133,7 +1133,7 @@ async def delete_virtual_participant_handler(
 ):
     vp_id = int(callback.data.split('_')[-1])
 
-    # Получим contest_id до удаления
+    # Get contest_id before deletion
     from sqlalchemy import select as sa_select
 
     from app.database.models import ReferralContestVirtualParticipant
@@ -1143,26 +1143,26 @@ async def delete_virtual_participant_handler(
     )
     vp = result.scalar_one_or_none()
     if not vp:
-        await callback.answer('Участник не найден.', show_alert=True)
+        await callback.answer('شرکت‌کننده یافت نشد.', show_alert=True)
         return
 
     contest_id = vp.contest_id
     deleted = await delete_virtual_participant(db, vp_id)
     if deleted:
-        await callback.answer('✅ Удалён', show_alert=False)
+        await callback.answer('✅ حذف شد', show_alert=False)
     else:
-        await callback.answer('Не удалось удалить.', show_alert=True)
+        await callback.answer('حذف ناموفق بود.', show_alert=True)
 
-    # Вернуться к списку
+    # Return to list
     vps = await list_virtual_participants(db, contest_id)
     contest = await get_referral_contest(db, contest_id)
 
-    lines = [f'👻 <b>Виртуальные участники</b> — {html.escape(contest.title)}', '']
+    lines = [f'👻 <b>شرکت‌کنندگان مجازی</b> — {html.escape(contest.title)}', '']
     if vps:
         for v in vps:
-            lines.append(f'• {html.escape(v.display_name)} — {v.referral_count} реф.')
+            lines.append(f'• {html.escape(v.display_name)} — {v.referral_count} رف.')
     else:
-        lines.append('Пока нет виртуальных участников.')
+        lines.append('هیچ شرکت‌کننده مجازی وجود ندارد.')
 
     rows = [
         [
@@ -1196,7 +1196,7 @@ async def start_mass_virtual_participants(
     db: AsyncSession,
     state: FSMContext,
 ):
-    """Начинает массовое создание виртуальных участников (массовка)."""
+    """Starts bulk creation of virtual participants (extras)."""
     contest_id = int(callback.data.split('_')[-1])
     await state.set_state(AdminStates.adding_mass_virtual_count)
     await state.update_data(mass_vp_contest_id=contest_id)
@@ -1235,12 +1235,12 @@ async def process_mass_virtual_count(
     db: AsyncSession,
     state: FSMContext,
 ):
-    """Обрабатывает количество призраков для массового создания."""
+    """Processes the number of ghosts for bulk creation."""
     try:
         count = int(message.text.strip())
         if count < 1 or count > 50:
             await message.answer(
-                '❌ Введите число от 1 до 50:',
+                '❌ یک عدد از 1 تا 50 وارد کنید:',
                 reply_markup=types.InlineKeyboardMarkup(
                     inline_keyboard=[
                         [types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_contests_referral')],
@@ -1250,7 +1250,7 @@ async def process_mass_virtual_count(
             return
     except ValueError:
         await message.answer(
-            '❌ Введите корректное число от 1 до 50:',
+            '❌ یک عدد معتبر از 1 تا 50 وارد کنید:',
             reply_markup=types.InlineKeyboardMarkup(
                 inline_keyboard=[
                     [types.InlineKeyboardButton(text='❌ Отмена', callback_data='admin_contests_referral')],
@@ -1285,17 +1285,17 @@ async def process_mass_virtual_referrals(
     db: AsyncSession,
     state: FSMContext,
 ):
-    """Создаёт массовку призраков с рандомными именами."""
+    """Creates bulk ghosts with random names."""
     import random
     import string
 
     try:
         referrals_count = int(message.text.strip())
         if referrals_count < 1 or referrals_count > 100:
-            await message.answer('❌ Введите число от 1 до 100:')
+            await message.answer('❌ یک عدد از 1 تا 100 وارد کنید:')
             return
     except ValueError:
-        await message.answer('❌ Введите корректное число от 1 до 100:')
+        await message.answer('❌ یک عدد معتبر از 1 تا 100 وارد کنید:')
         return
 
     data = await state.get_data()
@@ -1304,17 +1304,17 @@ async def process_mass_virtual_referrals(
 
     await state.clear()
 
-    # Генерируем и создаём призраков
+    # Generate and create ghosts
     created = []
     for _ in range(ghost_count):
-        # Рандомное имя до 5 символов (буквы + цифры)
+        # Random name up to 5 characters (letters + digits)
         name_length = random.randint(3, 5)
         name = ''.join(random.choices(string.ascii_letters + string.digits, k=name_length))
 
         vp = await add_virtual_participant(db, contest_id, name, referrals_count)
         created.append(vp)
 
-    # Показываем результат
+    # Show result
     text = f"""
 ✅ <b>Массовка создана!</b>
 
@@ -1326,10 +1326,10 @@ async def process_mass_virtual_referrals(
 👻 <b>Созданные призраки:</b>
 """
     for vp in created[:10]:
-        text += f'• {vp.display_name} — {vp.referral_count} реф.\n'
+        text += f'• {vp.display_name} — {vp.referral_count} رف.\n'
 
     if len(created) > 10:
-        text += f'<i>... и ещё {len(created) - 10}</i>\n'
+        text += f'<i>... و {len(created) - 10} مورد دیگر</i>\n'
 
     await message.answer(
         text,
@@ -1365,7 +1365,7 @@ async def start_edit_virtual_participant(
     )
     vp = result.scalar_one_or_none()
     if not vp:
-        await callback.answer('Участник не найден.', show_alert=True)
+        await callback.answer('شرکت‌کننده یافت نشد.', show_alert=True)
         return
 
     await state.set_state(AdminStates.editing_virtual_participant_count)
@@ -1396,7 +1396,7 @@ async def process_edit_virtual_participant_count(
         if count < 1:
             raise ValueError
     except (ValueError, TypeError):
-        await message.answer('Введите положительное целое число:')
+        await message.answer('یک عدد صحیح مثبت وارد کنید:')
         return
 
     data = await state.get_data()
@@ -1415,7 +1415,7 @@ async def process_edit_virtual_participant_count(
             ),
         )
     else:
-        await message.answer('Участник не найден.')
+        await message.answer('شرکت‌کننده یافت نشد.')
 
 
 def register_handlers(dp: Dispatcher):
