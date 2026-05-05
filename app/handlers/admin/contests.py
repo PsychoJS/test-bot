@@ -467,7 +467,7 @@ async def start_contest_creation(
     texts = get_texts(db_user.language)
     if not settings.is_contests_enabled():
         await callback.answer(
-            texts.t('ADMIN_CONTESTS_DISABLED', 'Конкурсы отключены.'),
+            texts.t('ADMIN_CONTESTS_DISABLED', 'مسابقات غیرفعال است.'),
             show_alert=True,
         )
         return
@@ -592,7 +592,7 @@ async def process_end_date(message: types.Message, state: FSMContext, db_user, d
         await message.answer(
             texts.t(
                 'ADMIN_CONTEST_END_BEFORE_START',
-                'Дата окончания должна быть позже даты начала.',
+                'تاریخ پایان باید بعد از تاریخ شروع باشد.',
             )
         )
         return
@@ -678,7 +678,7 @@ async def show_detailed_stats(
     contest = await get_referral_contest(db, contest_id)
 
     if not contest:
-        await callback.answer('Конкурс не найден.', show_alert=True)
+        await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
     from app.services.referral_contest_service import referral_contest_service
@@ -796,7 +796,7 @@ async def sync_contest(
     contest = await get_referral_contest(db, contest_id)
 
     if not contest:
-        await callback.answer('Конкурс не найден.', show_alert=True)
+        await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
     await callback.answer('🔄 Синхронизация запущена...', show_alert=False)
@@ -909,7 +909,7 @@ async def debug_contest_transactions(
     contest = await get_referral_contest(db, contest_id)
 
     if not contest:
-        await callback.answer('Конкурс не найден.', show_alert=True)
+        await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
     await callback.answer('🔍 Загружаю данные...', show_alert=False)
@@ -998,7 +998,7 @@ async def show_virtual_participants(
     contest_id = int(callback.data.split('_')[-1])
     contest = await get_referral_contest(db, contest_id)
     if not contest:
-        await callback.answer('Конкурс не найден.', show_alert=True)
+        await callback.answer('مسابقه یافت نشد.', show_alert=True)
         return
 
     vps = await list_virtual_participants(db, contest_id)
